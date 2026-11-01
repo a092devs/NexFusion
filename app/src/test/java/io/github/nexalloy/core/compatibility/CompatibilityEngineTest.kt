@@ -55,6 +55,13 @@ class CompatibilityEngineTest {
         // Dynamic bytecode hooking when targets list is empty (e.g. Spotify, Google Photos)
         val status = CompatibilityEngine.resolve("8.9.18.512", emptyList())
         assertIs<CompatibilityStatus.Dynamic>(status)
+
+        // Universal dynamic matching applies to uninstalled apps as well
+        val statusNull = CompatibilityEngine.resolve(null, emptyList())
+        assertIs<CompatibilityStatus.Dynamic>(statusNull)
+
+        val statusBlank = CompatibilityEngine.resolve("   ", emptyList())
+        assertIs<CompatibilityStatus.Dynamic>(statusBlank)
     }
 
     @Test

@@ -57,13 +57,13 @@ object CompatibilityEngine {
         installedVersion: String?,
         targets: List<AppTarget>,
     ): CompatibilityStatus {
-        if (installedVersion.isNullOrBlank()) {
-            return CompatibilityStatus.NotInstalled(recommendedVersion(targets))
-        }
-
-        // Apps like Spotify or Google Photos that declare no specific targets hook dynamically.
+        // Universal dynamic matching (empty targets): compatible across all versions dynamically.
         if (targets.isEmpty()) {
             return CompatibilityStatus.Dynamic()
+        }
+
+        if (installedVersion.isNullOrBlank()) {
+            return CompatibilityStatus.NotInstalled(recommendedVersion(targets))
         }
 
         // Exact match with an officially verified target (stable or experimental).

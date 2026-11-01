@@ -5,6 +5,18 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.6.0
+
+- Universal Dynamic Patch Architecture:
+  * Synchronized compatibility engine and application discovery catalog with the universal dynamic patch suite, removing rigid target version gating across all 18 supported applications.
+  * Target applications hook dynamically at process startup across app updates without triggering false incompatibility or untested version warnings.
+  * Evaluates universal dynamic bundles to display Dynamic compatibility status consistently across all supported applications, including uninstalled catalog apps.
+- Supported Applications Catalog Visibility:
+  * Revamped Home screen application discovery with dual-section categorization: "Installed Applications" and "Supported Applications".
+  * Users can discover, browse, and configure runtime patch preferences for all supported applications (YouTube, YT Music, Google Photos, Crunchyroll, Discord, Facebook, Instagram, Gboard, Gmail, Google Discover, LinkedIn, MiXplorer, Proton VPN, Reddit, Spotify, X, Telegram, Telegram Web) directly from the manager regardless of whether the app is currently installed on the device.
+- Bundle Compatibility Series 3.6:
+  * Upgraded manager runtime compatibility series to `3.6` and synchronized with NexFusion 3.6.0.
+
 ## 3.5.10
 
 - Application Catalog Expansion: Added Crunchyroll (`com.crunchyroll.crunchyroid`) with verified targets `3.126.0` and `3.117.0` supporting native Picture-in-Picture mode and Continue Watching feed removal.

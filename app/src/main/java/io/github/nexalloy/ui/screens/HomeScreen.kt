@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import io.github.nexalloy.core.BuildConfig
+import io.github.nexalloy.core.discovery.AppItemState
 import io.github.nexalloy.core.R
 import io.github.nexalloy.core.compatibility.VersionComparator
 import io.github.nexalloy.ui.MainActivity
@@ -288,15 +289,16 @@ fun HomeContent(
                     }
                 }
 
-                // Only apps installed on this device are listed.
-                val installedApps = state.appCatalog.filter { item ->
-                    if (!item.isInstalled) false
-                    else if (state.searchQuery.isBlank()) true
+                val matchesQuery: (AppItemState) -> Boolean = { item ->
+                    if (state.searchQuery.isBlank()) true
                     else {
                         val q = state.searchQuery.trim().lowercase()
                         item.appName.lowercase().contains(q) || item.packageName.lowercase().contains(q)
                     }
                 }
+
+                val installedApps = state.appCatalog.filter { it.isInstalled && matchesQuery(it) }
+                val supportedApps = state.appCatalog.filter { !it.isInstalled && matchesQuery(it) }
 
                 val filteredApps = when (selectedFilter) {
                     AppFilter.ALL -> installedApps
@@ -314,6 +316,15 @@ fun HomeContent(
                         SectionTitle(stringResource(R.string.category_installed_apps))
                     }
                     items(filteredApps, key = { it.packageName }) { app ->
+                        AppCard(app = app, onClick = { onOpenApp(app.packageName) })
+                    }
+                }
+
+                if (selectedFilter == AppFilter.ALL && supportedApps.isNotEmpty()) {
+                    item {
+                        SectionTitle(stringResource(R.string.category_supported_apps))
+                    }
+                    items(supportedApps, key = { it.packageName }) { app ->
                         AppCard(app = app, onClick = { onOpenApp(app.packageName) })
                     }
                 }

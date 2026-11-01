@@ -104,6 +104,7 @@
     <string name="status_missing_bundle">Missing Bundle</string>
     <string name="status_not_installed">Not Installed</string>
     <string name="category_installed_apps">Installed Applications</string>
+    <string name="category_supported_apps">Supported Applications</string>
     <string name="search_apps_hint">Search applications or packages…</string>
     <string name="filter_all">All</string>
     <string name="filter_updates">Updates</string>
