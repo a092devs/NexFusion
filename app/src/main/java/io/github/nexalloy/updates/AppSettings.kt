@@ -63,6 +63,14 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("miuix_floating_bar_translucent", true)
         set(value) = prefs.edit().putBoolean("miuix_floating_bar_translucent", value).apply()
 
+    /**
+     * Whether to hide applications from the Home screen that are supported by installed bundles
+     * but not currently installed on the device.
+     */
+    var hideUninstalledApps: Boolean
+        get() = prefs.getBoolean("hide_uninstalled_apps", false)
+        set(value) = prefs.edit().putBoolean("hide_uninstalled_apps", value).apply()
+
     /** Version last notified about per update key, so every version notifies once. */
     fun lastNotified(key: String): String? = prefs.getString("notified_$key", null)
 

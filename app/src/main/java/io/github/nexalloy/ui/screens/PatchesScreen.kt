@@ -383,6 +383,7 @@ private fun SourceCard(
     val release = state.releases[source.id]
     val busy = source.id in state.busySources
     val hasUpdate = state.hasUpdate(source)
+    val isDowngrade = state.isDowngrade(source)
 
     val isMiuix = isMiuixStyle
     val icons = appIcons()
@@ -472,6 +473,7 @@ private fun SourceCard(
                 release.isFailure -> stringResource(R.string.source_error, release.exceptionOrNull()?.message.orEmpty())
                 source.installedVersion == null -> stringResource(R.string.source_available, release.getOrThrow().version)
                 hasUpdate -> stringResource(R.string.source_update_available, source.installedVersion.orEmpty(), release.getOrThrow().version)
+                isDowngrade -> stringResource(R.string.source_downgrade_available, source.installedVersion.orEmpty(), release.getOrThrow().version)
                 else -> stringResource(R.string.source_up_to_date, source.installedVersion.orEmpty())
             }
             Row(
@@ -593,10 +595,11 @@ private fun SourceCard(
                             when {
                                 source.installedVersion == null -> R.string.action_install
                                 hasUpdate -> R.string.action_update
+                                isDowngrade -> R.string.action_downgrade
                                 else -> R.string.action_reinstall
                             }
                         ),
-                        icon = if (hasUpdate) icons.update else icons.install,
+                        icon = if (hasUpdate || isDowngrade) icons.update else icons.install,
                         onClick = onInstall,
                     )
                 }
@@ -703,6 +706,33 @@ private fun BundleCard(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 8.dp),
                 )
+            }
+
+            if (bundle.compatibilityWarning != null) {
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                            RoundedCornerShape(8.dp),
+                        )
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        bundle.compatibilityWarning,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
             }
 
             Spacer(Modifier.height(8.dp))

@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -98,6 +100,7 @@ fun HomeScreen(viewModel: ManagerViewModel, navController: NavHostController, ou
         onOpenPatches = { navController.navigateTopLevel(MainActivity.DESTINATION_PATCHES) },
         onOpenApp = { navController.navigate("${MainActivity.DESTINATION_APP}/$it") },
         onDownloadUpdate = viewModel::downloadAndInstallUpdate,
+        onToggleHideUninstalled = { viewModel.setHideUninstalledApps(!state.hideUninstalledApps) },
     )
 }
 
@@ -113,6 +116,7 @@ fun HomeContent(
     onOpenPatches: () -> Unit,
     onOpenApp: (String) -> Unit,
     onDownloadUpdate: (AppRelease) -> Unit = {},
+    onToggleHideUninstalled: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -320,7 +324,7 @@ fun HomeContent(
                     }
                 }
 
-                if (selectedFilter == AppFilter.ALL && supportedApps.isNotEmpty()) {
+                if (selectedFilter == AppFilter.ALL && supportedApps.isNotEmpty() && !state.hideUninstalledApps) {
                     item {
                         SectionTitle(stringResource(R.string.category_supported_apps))
                     }
@@ -341,6 +345,18 @@ fun HomeContent(
             MiuixTopAppBar(
                 title = stringResource(R.string.app_name),
                 color = MaterialTheme.colorScheme.background,
+                actions = {
+                    ThemedIconButton(onClick = onToggleHideUninstalled) {
+                        Icon(
+                            imageVector = if (state.hideUninstalledApps) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (state.hideUninstalledApps) {
+                                stringResource(R.string.action_show_all_apps)
+                            } else {
+                                stringResource(R.string.action_hide_uninstalled)
+                            },
+                        )
+                    }
+                },
             )
             listContent(PaddingValues(0.dp))
         }
@@ -355,6 +371,18 @@ fun HomeContent(
                         containerColor = MaterialTheme.colorScheme.background,
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
+                    actions = {
+                        ThemedIconButton(onClick = onToggleHideUninstalled) {
+                            Icon(
+                                imageVector = if (state.hideUninstalledApps) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = if (state.hideUninstalledApps) {
+                                    stringResource(R.string.action_show_all_apps)
+                                } else {
+                                    stringResource(R.string.action_hide_uninstalled)
+                                },
+                            )
+                        }
+                    },
                     scrollBehavior = scrollBehavior,
                 )
             },

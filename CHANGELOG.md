@@ -5,6 +5,19 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.6.3
+
+- Universal Cross-Compatibility System:
+  * Removed rigid bundle version and series installation locks. Any version of the manager can install, update, or downgrade patch bundles across versions directly without artificial blockage.
+  * Transformed version mismatch enforcement into a non-blocking advisory notification system: bundles targeting newer manager versions display helpful recommendation warnings rather than rejecting installation.
+- Direct Bundle Updates & Downgrades:
+  * Full direct lifecycle control across bundle releases with dedicated update, downgrade, and reinstall actions.
+- Uninstalled Applications Visibility Preference:
+  * Added "Hide uninstalled applications" setting under General settings and a 1-tap visibility toggle on the Home screen header.
+  * When enabled, supported but uninstalled catalog applications are hidden, focusing the interface strictly on applications installed on the device.
+- Bundle & Patch Suite Synchronization:
+  * Synchronized catalog and patch descriptions with NexFusion 3.6.3, including Instagram HDR brightness boost controls, Facebook suggested group suppression, and streaming core extension refinements.
+
 ## 3.6.2
 
 - Application Catalog & Maintenance:

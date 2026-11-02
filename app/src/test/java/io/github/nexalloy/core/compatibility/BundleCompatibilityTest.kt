@@ -1,11 +1,12 @@
 package io.github.nexalloy.core.compatibility
 
 import io.github.nexalloy.core.BundleManifest
-import io.github.nexalloy.core.IncompatibleBundleException
 import io.github.nexalloy.core.InstalledBundle
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class BundleCompatibilityTest {
 
@@ -30,56 +31,55 @@ class BundleCompatibilityTest {
     )
 
     @Test
-    fun compatibleSeriesMatches() {
+    fun compatibleSeriesMatchesWithoutWarning() {
         val manifest = createManifest(series = "3.2", minManager = "3.2.0")
-        // Should succeed without throwing
-        manifest.validateCompatibility("3.2.0")
-        manifest.validateCompatibility("3.2.1")
-        manifest.validateCompatibility("3.2.9")
+        assertNull(manifest.checkCompatibilityWarning("3.2.0"))
+        assertNull(manifest.checkCompatibilityWarning("3.2.1"))
+        assertNull(manifest.checkCompatibilityWarning("3.2.9"))
     }
 
     @Test
-    fun incompatibleNewerSeriesThrows() {
+    fun incompatibleNewerSeriesReturnsAdvisoryWarning() {
         val manifest = createManifest(version = "3.3.0", series = "3.3", minManager = "3.3.0")
-        val ex = assertFailsWith<IncompatibleBundleException> {
-            manifest.validateCompatibility("3.2.0")
-        }
-        assert(ex.message?.contains("requires NexAlloyNext series 3.3") == true)
+        val warning = manifest.checkCompatibilityWarning("3.2.0")
+        assertNotNull(warning)
+        assertTrue(warning.contains("NexAlloyNext series 3.3"))
     }
 
     @Test
     fun olderSeriesPassesWhenApiCompatible() {
         val manifest = createManifest(version = "3.4.10", series = "3.4", minManager = "3.4.0")
-        manifest.validateCompatibility("3.5.0")
+        assertNull(manifest.checkCompatibilityWarning("3.5.0"))
     }
 
     @Test
-    fun minManagerVersionEnforced() {
+    fun minManagerVersionReturnsAdvisoryWarning() {
         val manifest = createManifest(minManager = "3.2.5")
-        assertFailsWith<IncompatibleBundleException> {
-            manifest.validateCompatibility("3.2.0")
-        }
-        // Exactly at or above minManager passes
-        manifest.validateCompatibility("3.2.5")
-        manifest.validateCompatibility("3.2.6")
+        val warning = manifest.checkCompatibilityWarning("3.2.0")
+        assertNotNull(warning)
+        assertTrue(warning.contains("3.2.5 or newer"))
+
+        // Exactly at or above minManager passes without warning
+        assertNull(manifest.checkCompatibilityWarning("3.2.5"))
+        assertNull(manifest.checkCompatibilityWarning("3.2.6"))
     }
 
     @Test
-    fun maxManagerVersionEnforced() {
+    fun maxManagerVersionReturnsAdvisoryWarning() {
         val manifest = createManifest(maxManager = "3.2.5")
-        manifest.validateCompatibility("3.2.0")
-        manifest.validateCompatibility("3.2.5")
-        assertFailsWith<IncompatibleBundleException> {
-            manifest.validateCompatibility("3.2.6")
-        }
+        assertNull(manifest.checkCompatibilityWarning("3.2.0"))
+        assertNull(manifest.checkCompatibilityWarning("3.2.5"))
+        val warning = manifest.checkCompatibilityWarning("3.2.6")
+        assertNotNull(warning)
+        assertTrue(warning.contains("3.2.5 or older"))
     }
 
     @Test
     fun emptyCompatibilityMetadataAlwaysPasses() {
         val legacyManifest = createManifest(series = "", minManager = "", maxManager = "")
-        legacyManifest.validateCompatibility("3.2.0")
-        legacyManifest.validateCompatibility("1.0.0")
-        legacyManifest.validateCompatibility("4.0.0")
+        assertNull(legacyManifest.checkCompatibilityWarning("3.2.0"))
+        assertNull(legacyManifest.checkCompatibilityWarning("1.0.0"))
+        assertNull(legacyManifest.checkCompatibilityWarning("4.0.0"))
     }
 
     @Test
@@ -99,6 +99,7 @@ class BundleCompatibilityTest {
             compatibilitySeries = "3.2",
             minManagerVersion = "3.2.0",
             maxManagerVersion = "",
+            compatibilityWarning = "Update recommended",
         )
 
         val json = bundle.toJson()
@@ -107,6 +108,7 @@ class BundleCompatibilityTest {
         assertEquals("3.2", restored.compatibilitySeries)
         assertEquals("3.2.0", restored.minManagerVersion)
         assertEquals("", restored.maxManagerVersion)
+        assertEquals("Update recommended", restored.compatibilityWarning)
     }
 }
 

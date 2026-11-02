@@ -82,6 +82,8 @@ data class ManagerState(
     val floatingNavigation: Boolean = AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION,
     /** Miuix-only: translucent liquid glass blur on floating navigation bar. */
     val floatingBarTranslucent: Boolean = true,
+    /** Whether to hide uninstalled applications from the Home screen. */
+    val hideUninstalledApps: Boolean = false,
     val searchQuery: String = "",
 ) {
     val isActive get() = service != null
@@ -96,6 +98,13 @@ data class ManagerState(
         val release = releases[source.id]?.getOrNull() ?: return false
         val installed = source.installedVersion ?: return false
         return VersionComparator.compare(release.version, installed) > 0
+    }
+
+    fun isDowngrade(source: PatchSource): Boolean {
+        if (!source.enabled) return false
+        val release = releases[source.id]?.getOrNull() ?: return false
+        val installed = source.installedVersion ?: return false
+        return VersionComparator.compare(release.version, installed) < 0
     }
 
     val sourcesWithUpdates get() = sources.filter { it.enabled }.filter(::hasUpdate)
@@ -125,6 +134,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             currentColorScheme = settings.colorScheme,
             floatingNavigation = settings.miuixFloatingNavigation,
             floatingBarTranslucent = settings.miuixFloatingBarTranslucent,
+            hideUninstalledApps = settings.hideUninstalledApps,
             releases = loadInitialReleases(),
         )
     )
@@ -217,6 +227,11 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     fun setFloatingBarTranslucent(enabled: Boolean) {
         settings.miuixFloatingBarTranslucent = enabled
         _state.update { it.copy(floatingBarTranslucent = enabled) }
+    }
+
+    fun setHideUninstalledApps(hide: Boolean) {
+        settings.hideUninstalledApps = hide
+        _state.update { it.copy(hideUninstalledApps = hide) }
     }
 
     /** Re-reads bundles, sources, scope, and reconstructs the app catalog. */

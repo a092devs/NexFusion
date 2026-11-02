@@ -177,6 +177,12 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             checked = iconHidden,
                             onCheckedChange = { iconHidden = it; viewModel.launcherIconHidden = it },
                         )
+                        SwitchPreference(
+                            title = stringResource(R.string.hide_uninstalled_apps_title),
+                            summary = stringResource(R.string.hide_uninstalled_apps_summary),
+                            checked = state.hideUninstalledApps,
+                            onCheckedChange = { viewModel.setHideUninstalledApps(it) },
+                        )
                         ArrowPreference(
                             title = stringResource(R.string.action_clear_cache),
                             summary = stringResource(R.string.action_clear_cache_summary),
@@ -302,6 +308,14 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         headlineContent = { Text(stringResource(R.string.hide_icon_title)) },
                         supportingContent = { Text(stringResource(R.string.hide_icon_summary)) },
                         trailingContent = { Switch(iconHidden, { iconHidden = it; viewModel.launcherIconHidden = it }) },
+                        colors = transparent,
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.hide_uninstalled_apps_title)) },
+                        supportingContent = { Text(stringResource(R.string.hide_uninstalled_apps_summary)) },
+                        trailingContent = { Switch(state.hideUninstalledApps, { viewModel.setHideUninstalledApps(it) }) },
                         colors = transparent,
                     )
                 }

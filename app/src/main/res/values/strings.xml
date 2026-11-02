@@ -53,12 +53,14 @@
     <string name="source_error">Error: %s</string>
     <string name="source_available">Not installed · latest %s</string>
     <string name="source_update_available">Installed %1$s · update to %2$s</string>
+    <string name="source_downgrade_available">Installed %1$s · downgrade to %2$s</string>
     <string name="source_up_to_date">Installed %s · up to date</string>
     <string name="bundles_installed">Installed %s. Force stop the patched apps to apply.</string>
     <string name="install_failed">Install failed: %s</string>
     <string name="remove_title">Remove %s?</string>
     <string name="action_install">Install</string>
     <string name="action_update">Update</string>
+    <string name="action_downgrade">Downgrade</string>
     <string name="action_reinstall">Reinstall</string>
     <string name="action_changelog">Changelog</string>
     <string name="action_add">Add</string>
@@ -84,6 +86,12 @@
     <string name="settings_appearance">Appearance</string>
     <string name="hide_icon_title">Hide launcher icon</string>
     <string name="hide_icon_summary">Open NexAlloyNext from LSPosed instead</string>
+    <string name="hide_uninstalled_apps_title">Hide uninstalled applications</string>
+    <string name="hide_uninstalled_apps_summary">Only display applications installed on this device on the Home screen</string>
+    <string name="action_hide_uninstalled">Hide uninstalled apps</string>
+    <string name="action_show_all_apps">Show all supported apps</string>
+    <string name="bundle_warning_app_update_title">App update recommended</string>
+    <string name="bundle_warning_app_update_desc">This bundle was built for NexAlloyNext %s or newer.</string>
     <string name="settings_about">About</string>
     <string name="source_code">Source code</string>
     <string name="open_source_license">Open-source licenses</string>

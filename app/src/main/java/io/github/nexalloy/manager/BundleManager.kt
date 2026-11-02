@@ -100,7 +100,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
             val hash = digest.digest().joinToString("") { "%02x".format(it) }.take(16)
 
             val manifest = BundleManifest.read(context.packageManager, tmp)
-            manifest.validateCompatibility()
+            val compatibilityWarning = manifest.checkCompatibilityWarning()
 
             var clash = installed.find {
                 it.id != manifest.id && manifest.resourcePackageId != 0 && it.resourcePackageId == manifest.resourcePackageId
@@ -153,6 +153,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
                 compatibilitySeries = manifest.compatibilitySeries,
                 minManagerVersion = manifest.minManagerVersion,
                 maxManagerVersion = manifest.maxManagerVersion,
+                compatibilityWarning = compatibilityWarning,
                 targets = apps.filter { it.targets.isNotEmpty() }.associate { it.packageName to it.targets },
                 appIconColors = apps.mapNotNull { app -> app.appIconColor?.let { app.packageName to it } }.toMap(),
             )

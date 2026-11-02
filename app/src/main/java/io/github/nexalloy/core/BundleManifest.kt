@@ -36,12 +36,11 @@ class BundleManifest(
     val maxManagerVersion: String = "",
 ) {
     /**
-     * Validates whether this bundle is compatible with the running or specified manager version.
-     * Uses semantic version comparison.
-     *
-     * @throws IncompatibleBundleException if the bundle is incompatible with [managerVersion].
+     * Checks whether this bundle recommends a newer manager version.
+     * Returns an advisory warning message if an update is recommended, or null if fully aligned.
+     * Never aborts installation or blocks cross-version usage.
      */
-    fun validateCompatibility(managerVersion: String = BuildConfig.VERSION_NAME) {
+    fun checkCompatibilityWarning(managerVersion: String = BuildConfig.VERSION_NAME): String? {
         val cleanManager = managerVersion.trim().removePrefix("v").removePrefix("V").trim()
         val managerSeries = cleanManager.split('.').take(2).joinToString(".")
 
@@ -50,28 +49,32 @@ class BundleManifest(
             if (cleanSeries != managerSeries) {
                 val seriesComparison = VersionComparator.compare(cleanSeries, managerSeries)
                 if (seriesComparison > 0) {
-                    throw IncompatibleBundleException(
-                        "Bundle '$name' $version requires NexAlloyNext series $compatibilitySeries (current: $managerVersion). Please update NexAlloyNext."
-                    )
+                    return "Bundle '$name' $version was built for NexAlloyNext series $compatibilitySeries (current: $managerVersion). An app update is recommended."
                 } 
             }
         }
 
         if (minManagerVersion.isNotBlank()) {
             if (VersionComparator.compare(cleanManager, minManagerVersion) < 0) {
-                throw IncompatibleBundleException(
-                    "Bundle '$name' $version requires NexAlloyNext $minManagerVersion or newer (current: $managerVersion). Please update NexAlloyNext."
-                )
+                return "Bundle '$name' $version recommends NexAlloyNext $minManagerVersion or newer (current: $managerVersion). An app update is recommended."
             }
         }
 
         if (maxManagerVersion.isNotBlank()) {
             if (VersionComparator.compare(cleanManager, maxManagerVersion) > 0) {
-                throw IncompatibleBundleException(
-                    "Bundle '$name' $version requires NexAlloyNext $maxManagerVersion or older (current: $managerVersion)."
-                )
+                return "Bundle '$name' $version recommends NexAlloyNext $maxManagerVersion or older (current: $managerVersion)."
             }
         }
+
+        return null
+    }
+
+    /**
+     * Non-blocking compatibility validation. Returns an advisory warning message if the bundle
+     * targets a different manager version, or null if fully aligned.
+     */
+    fun validateCompatibility(managerVersion: String = BuildConfig.VERSION_NAME): String? {
+        return checkCompatibilityWarning(managerVersion)
     }
 
     companion object {
