@@ -1,0 +1,73 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "io.github.nexfusion.build",
+    "module": "build-logic",
+    "version": "1.0.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.5.0"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "files": [
+        {
+          "name": "build-logic-1.0.0.jar",
+          "url": "build-logic-1.0.0.jar",
+          "size": 481631,
+          "sha512": "c9b9557d26cf2cedff45c33fab30273b68534b9541f8b7355af2ee3d5e8f245001d8f799f47d4d03341c7e6498ccc2c50a68c392b53379aec656c1a6eb8fbac7",
+          "sha256": "58a917de5a32757689b8d5fa056f08149511496430e9c7bfd0dd9f5905cf2356",
+          "sha1": "359b41be7c9f912e27351a2321f49adf800d3ad9",
+          "md5": "86614d1081bdbc0289c773ceb7c7affe"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.environment": "standard-jvm",
+        "org.gradle.jvm.version": 17,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "com.android.tools.build",
+          "module": "gradle",
+          "version": {
+            "requires": "9.2.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "build-logic-1.0.0.jar",
+          "url": "build-logic-1.0.0.jar",
+          "size": 481631,
+          "sha512": "c9b9557d26cf2cedff45c33fab30273b68534b9541f8b7355af2ee3d5e8f245001d8f799f47d4d03341c7e6498ccc2c50a68c392b53379aec656c1a6eb8fbac7",
+          "sha256": "58a917de5a32757689b8d5fa056f08149511496430e9c7bfd0dd9f5905cf2356",
+          "sha1": "359b41be7c9f912e27351a2321f49adf800d3ad9",
+          "md5": "86614d1081bdbc0289c773ceb7c7affe"
+        }
+      ]
+    }
+  ]
+}
