@@ -2,7 +2,7 @@
 # the patcher API and everything it exposes. Keep all of it intact, including the Kotlin stdlib.
 -dontobfuscate
 -dontoptimize
--keep class io.github.nexalloy.** { *; }
+-keep class io.github.nexfusion.** { *; }
 -keep class kotlin.** { *; }
 -keep class org.luckypray.dexkit.** { *; }
 -keep class com.google.flatbuffers.** { *; }

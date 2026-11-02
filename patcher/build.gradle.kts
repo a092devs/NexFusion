@@ -5,11 +5,11 @@ plugins {
     `maven-publish`
 }
 
-group = "io.github.nexalloy"
+group = "io.github.nexfusion"
 version = providers.gradleProperty("patcherVersion").get()
 
 android {
-    namespace = "io.github.nexalloy.patcher"
+    namespace = "io.github.nexfusion.patcher"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -36,7 +36,7 @@ kotlin {
 
 dependencies {
     // DexKit fork with instruction operand introspection, published alongside the patcher as `dexkit`.
-    // https://github.com/NexAlloy/DexKit/commit/59d5d332a1ac1bc543d1588b9c9f0377ea3c6ea5
+    // https://github.com/NexFusion/DexKit/commit/59d5d332a1ac1bc543d1588b9c9f0377ea3c6ea5
     api(":dexkit-android@aar")
     api(libs.flatbuffers) // dexkit dependency
     api(libs.annotation)
@@ -61,7 +61,7 @@ val flatbuffersVersion = libs.versions.flatbuffers.get()
 publishing {
     repositories {
         // Published by the release workflow to the `maven` branch, served as
-        // https://raw.githubusercontent.com/a092devs/NexAlloyNext/maven
+        // https://raw.githubusercontent.com/a092devs/NexFusion/maven
         maven {
             name = "release"
             url = uri(rootProject.layout.buildDirectory.dir("maven"))

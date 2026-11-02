@@ -1,5 +1,5 @@
 <resources>
-    <!-- Bundle name shown in NexAlloy. -->
+    <!-- Bundle name shown in NexFusion. -->
     <string name="app_name">Example Patches</string>
-    <string name="bundle_description">Example patch bundle for NexAlloy.</string>
+    <string name="bundle_description">Example patch bundle for NexFusion.</string>
 </resources>

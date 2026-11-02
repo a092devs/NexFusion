@@ -2,67 +2,67 @@
 
 ## Architecture
 
-NexAlloy is split into a module and patch bundles, like Morphe Manager and Morphe patch sources. This repository
-holds the module; the bundles NexAlloy presets live in [NexAlloyNext-Patches](https://github.com/a092devs/NexAlloyNext-Patches).
+NexFusion is split into a module and patch bundles, like Morphe Manager and Morphe patch sources. This repository
+holds the module; the bundles NexFusion presets live in [Nexfusion-Patches](https://github.com/a092devs/Nexfusion-Patches).
 
 ```text
-📦 NexAlloyNext
+📦 NexFusion
  ├ app/            The LSPosed module: loads bundles into apps, manages patch sources (the "manager")
  ├ patcher/        The patcher API bundles compile against: patch(), fingerprints, hook helpers
- ├ build-logic/    The nexalloy.bundle Gradle plugin that builds a bundle
+ ├ build-logic/    The nexfusion.bundle Gradle plugin that builds a bundle
  └ template/       Standalone template for patch bundles in other repositories
 ```
 
 ### Patch bundles
 
-A bundle is an APK with the extension `.nxb`, built by the `nexalloy.bundle` plugin. Its manifest declares:
+A bundle is an APK with the extension `.nxb`, built by the `nexfusion.bundle` plugin. Its manifest declares:
 
 | `<meta-data>` | |
 | --- | --- |
-| `nexalloy.bundle.entry` | Class implementing [`PatchBundle`](patcher/src/main/java/io/github/nexalloy/PatchBundle.kt), a Kotlin `object` or a class with a no-arg constructor |
-| `nexalloy.bundle.apiVersion` | `PATCHER_API_VERSION` the bundle was compiled against |
-| `nexalloy.bundle.author`, `nexalloy.bundle.description` | Shown in the manager |
+| `nexfusion.bundle.entry` | Class implementing [`PatchBundle`](patcher/src/main/java/io/github/nexfusion/PatchBundle.kt), a Kotlin `object` or a class with a no-arg constructor |
+| `nexfusion.bundle.apiVersion` | `PATCHER_API_VERSION` the bundle was compiled against |
+| `nexfusion.bundle.author`, `nexfusion.bundle.description` | Shown in the manager |
 
 The package name is the bundle id, the application label its name and `versionName` its version.
 
 ### How a bundle gets into an app
 
-1. The manager downloads the `.nxb` from a [patch source](app/src/main/java/io/github/nexalloy/manager/PatchSource.kt),
+1. The manager downloads the `.nxb` from a [patch source](app/src/main/java/io/github/nexfusion/manager/PatchSource.kt),
    loads it once to list its apps and patches, and stores it as a *remote file* of the Xposed service
-   ([BundleManager.kt](app/src/main/java/io/github/nexalloy/manager/BundleManager.kt)). The list of installed bundles
+   ([BundleManager.kt](app/src/main/java/io/github/nexfusion/manager/BundleManager.kt)). The list of installed bundles
    and the apps they patch is kept in the `bundles` remote preferences, and LSPosed is asked to add the apps to the
    module scope.
-2. When a scoped app starts, [MainHook.kt](app/src/main/java/io/github/nexalloy/MainHook.kt) reads that list, copies
+2. When a scoped app starts, [MainHook.kt](app/src/main/java/io/github/nexfusion/MainHook.kt) reads that list, copies
    the bundles for the app from the remote files into the app's code cache, and loads them with a `DexClassLoader`
    whose parent is the module's class loader.
-   Frameworks like LSPosed and Vector rename the Xposed API packages and rewrite only the module's own code. NexAlloy
+   Frameworks like LSPosed and Vector rename the Xposed API packages and rewrite only the module's own code. NexFusion
    detects the renaming from its own classes and rewrites the bundle classes that use the API into a separate dex
-   ([XposedDexRemapper.kt](app/src/main/java/io/github/nexalloy/core/XposedDexRemapper.kt)), cached per renaming.
+   ([XposedDexRemapper.kt](app/src/main/java/io/github/nexfusion/core/XposedDexRemapper.kt)), cached per renaming.
    The bundle's class loader only sees the module's shared packages (patcher API, DexKit, Kotlin stdlib, Xposed APIs).
 3. Each bundle's resources are registered with `BundleResources`, then
-   [PatchSession](patcher/src/main/java/io/github/nexalloy/PatchSession.kt) runs the enabled patches of each bundle
+   [PatchSession](patcher/src/main/java/io/github/nexfusion/PatchSession.kt) runs the enabled patches of each bundle
    with its own DexKit cache.
 
 Because the module's class loader is the parent, **classes the module ships always win over a bundle's copy**.
 The module therefore keeps the whole patcher API, DexKit and the Kotlin stdlib (see
 [proguard-rules.pro](app/proguard-rules.pro)), bundles exclude them, and a bundle must not declare classes in the
-module's packages (`io.github.nexalloy`, `io.github.nexalloy.morphe` and the module's own subpackages).
+module's packages (`io.github.nexfusion`, `io.github.nexfusion.morphe` and the module's own subpackages).
 
-The APK's [scope.list](app/src/main/resources/META-INF/xposed/scope.list) only requests NexAlloy itself. The apps a
+The APK's [scope.list](app/src/main/resources/META-INF/xposed/scope.list) only requests NexFusion itself. The apps a
 bundle patches are requested when the bundle is installed (installed apps only, see `BundleManager.missingScope`).
 
 Patch toggles are stored in the per-app remote preferences under `<bundle id>/<patch name>`.
 
 ## Writing a patch bundle
 
-Copy the [template](template) into a new repository. [NexAlloyNext-Patches](https://github.com/a092devs/NexAlloyNext-Patches)
+Copy the [template](template) into a new repository. [Nexfusion-Patches](https://github.com/a092devs/Nexfusion-Patches)
 is a larger example with several bundles, shared extension code and fingerprint tests.
 
 ### Bundle module
 
 ```kotlin
 plugins {
-    id("nexalloy.bundle")
+    id("nexfusion.bundle")
 }
 
 android {
@@ -74,7 +74,7 @@ android {
     }
 }
 
-nexalloyBundle {
+nexfusionBundle {
     entry = "com.example.patches.ExamplePatches"
     author = "Your name"
     descriptionResource = "bundle_description"
@@ -82,20 +82,20 @@ nexalloyBundle {
 }
 
 dependencies {
-    compileOnly("io.github.nexalloy:patcher:1.0.0")
+    compileOnly("io.github.nexfusion:patcher:1.0.0")
 }
 ```
 
 `./gradlew :bundle:assembleBundle` writes `build/outputs/bundle/<module>-<version>.nxb`. Publish it as a release
 asset, and users can add the repository as a patch source.
 
-The patcher API is published to the Maven repository `https://raw.githubusercontent.com/a092devs/NexAlloyNext/maven`
+The patcher API is published to the Maven repository `https://raw.githubusercontent.com/a092devs/NexFusion/maven`
 by the release workflow. Add it and `https://api.xposed.info` to your repositories.
 
 Rules for bundles:
 
-- Depend on the patcher with `compileOnly`; NexAlloy provides it, DexKit, the Xposed APIs and the Kotlin stdlib at runtime.
-  Compile with a Kotlin version not newer than NexAlloy's.
+- Depend on the patcher with `compileOnly`; NexFusion provides it, DexKit, the Xposed APIs and the Kotlin stdlib at runtime.
+  Compile with a Kotlin version not newer than NexFusion's.
 - Keep the bundle's resources in its own package id (`resourcePackageId`). Patches make them available to the app
   with `appContext.addModuleAssets()`. `R` belongs to the bundle's namespace.
 - Layouts inflated by the app that reference bundle classes need the bundle's class loader in the app's chain:
@@ -115,7 +115,7 @@ object ExamplePatches : PatchBundle {
 ### Recommended app versions
 
 Like Morphe's `compatibleWith`, a bundle can tell which app versions its patches were tested with, newest first.
-NexAlloyNext recommends the newest version that is not experimental and shows how the installed version compares.
+NexFusion recommends the newest version that is not experimental and shows how the installed version compares.
 Leave `targets` empty if the patches find everything by fingerprints and work with any version.
 
 ```kotlin
@@ -139,7 +139,7 @@ Patches follow this structure:
 ```kotlin
 package com.example.patches.contoso.misc.unlock.plus
 
-import io.github.nexalloy.morphe.Fingerprint
+import io.github.nexfusion.morphe.Fingerprint
 
 object IsPlusUnlockedFingerprint : Fingerprint(
     returnType = "Z",
@@ -152,7 +152,7 @@ object IsPlusUnlockedFingerprint : Fingerprint(
 package com.example.patches.contoso.misc.unlock.plus
 
 import de.robv.android.xposed.XC_MethodReplacement.returnConstant
-import io.github.nexalloy.patch
+import io.github.nexfusion.patch
 
 val UnlockPlus = patch(name = "Unlock Plus") {
     IsPlusUnlockedFingerprint.hookMethod(returnConstant(true))
@@ -163,7 +163,7 @@ Patches named `""` or starting with `<` are internal: they always run and are hi
 
 ### Porting Upstream Patches
 
-The [FingerprintCompat.kt](patcher/src/main/java/io/github/nexalloy/morphe/FingerprintCompat.kt) utility assists in translating ReVanced Patcher API calls to DexKit Matchers. While simple fingerprints can often be directly copied, consider the following translation patterns for complex cases:
+The [FingerprintCompat.kt](patcher/src/main/java/io/github/nexfusion/morphe/FingerprintCompat.kt) utility assists in translating ReVanced Patcher API calls to DexKit Matchers. While simple fingerprints can often be directly copied, consider the following translation patterns for complex cases:
 
 1.  **Literal Mapping:**
     If an upstream patch defines a literal within the patch file (e.g., `aLiteral = resourceMappings["id", "aLiteral"]`) for use in a fingerprint, convert it to a getter property in the corresponding `Fingerprints.kt` file.

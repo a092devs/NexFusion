@@ -23,7 +23,7 @@ jobs:
       - name: Build bundle
         run: ./gradlew :bundle:assembleBundle
 
-      # NexAlloy installs every .nxb asset of the latest release of a source repository.
+      # NexFusion installs every .nxb asset of the latest release of a source repository.
       - name: Create release
         run: gh release create "${{ github.ref_name }}" bundle/build/outputs/bundle/*.nxb --title "${{ github.ref_name }}" --generate-notes
         env:

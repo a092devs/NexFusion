@@ -4,18 +4,18 @@
     <application
         android:hasCode="true"
         android:label="@string/app_name">
-        <!-- Filled in by the nexalloy.bundle plugin. -->
+        <!-- Filled in by the nexfusion.bundle plugin. -->
         <meta-data
-            android:name="nexalloy.bundle.entry"
-            android:value="${nexalloyBundleEntry}" />
+            android:name="nexfusion.bundle.entry"
+            android:value="${nexfusionBundleEntry}" />
         <meta-data
-            android:name="nexalloy.bundle.apiVersion"
-            android:value="${nexalloyPatcherApiVersion}" />
+            android:name="nexfusion.bundle.apiVersion"
+            android:value="${nexfusionPatcherApiVersion}" />
         <meta-data
-            android:name="nexalloy.bundle.author"
-            android:value="${nexalloyBundleAuthor}" />
+            android:name="nexfusion.bundle.author"
+            android:value="${nexfusionBundleAuthor}" />
         <meta-data
-            android:name="nexalloy.bundle.description"
-            android:value="${nexalloyBundleDescription}" />
+            android:name="nexfusion.bundle.description"
+            android:value="${nexfusionBundleDescription}" />
     </application>
 </manifest>

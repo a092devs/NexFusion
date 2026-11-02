@@ -12,10 +12,10 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven(url = "https://api.xposed.info")
-        // The NexAlloy patcher API.
-        maven(url = providers.gradleProperty("nexalloyMaven").get())
+        // The NexFusion patcher API.
+        maven(url = providers.gradleProperty("nexfusionMaven").get())
     }
 }
 
-rootProject.name = "my-nexalloy-patches"
+rootProject.name = "my-nexfusion-patches"
 include(":bundle")

@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">NexAlloyNext</string>
+    <string name="app_name">NexFusion</string>
     <string name="app_description">LSPosed module that applies patch bundles from patch sources.</string>
-    <string name="slogan_summary">NexAlloyNext applies patch bundles from patch sources. Only add sources you trust.</string>
+    <string name="slogan_summary">NexFusion applies patch bundles from patch sources. Only add sources you trust.</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -10,10 +10,10 @@
 
     <!-- Home -->
     <string name="module_active_title">Module is active</string>
-    <string name="module_active_summary">NexAlloyNext %s</string>
+    <string name="module_active_summary">NexFusion %s</string>
     <string name="module_inactive_title">Module is not active</string>
-    <string name="module_inactive_summary">Enable NexAlloyNext in LSPosed and restart the app.</string>
-    <string name="app_update_title">NexAlloyNext %s is available</string>
+    <string name="module_inactive_summary">Enable NexFusion in LSPosed and restart the app.</string>
+    <string name="app_update_title">NexFusion %s is available</string>
     <string name="app_update_text">A new version of the app is available.</string>
     <string name="patch_updates_title">Patch updates available</string>
     <string name="scope_missing_title">Apps missing from module scope</string>
@@ -34,7 +34,7 @@
     <string name="action_request">Request</string>
     <string name="up_to_date">Everything is up to date</string>
     <string name="update_check_failed">Update check failed: %s</string>
-    <string name="app_update_available">A new NexAlloy version is available: %s</string>
+    <string name="app_update_available">A new NexFusion version is available: %s</string>
     <string name="patch_updates_available">Patch source updates are available</string>
 
     <!-- Patches -->
@@ -78,20 +78,20 @@
     <!-- Settings -->
     <string name="settings_updates">Updates</string>
     <string name="setting_notify_app">App update notifications</string>
-    <string name="setting_notify_app_summary">Notify when a new version of NexAlloyNext is released</string>
+    <string name="setting_notify_app_summary">Notify when a new version of NexFusion is released</string>
     <string name="setting_notify_patches">Patch update notifications</string>
     <string name="setting_notify_patches_summary">Notify when an installed patch source releases new bundles</string>
     <string name="check_for_update_title">Check for updates</string>
     <string name="settings_general">General</string>
     <string name="settings_appearance">Appearance</string>
     <string name="hide_icon_title">Hide launcher icon</string>
-    <string name="hide_icon_summary">Open NexAlloyNext from LSPosed instead</string>
+    <string name="hide_icon_summary">Open NexFusion from LSPosed instead</string>
     <string name="hide_uninstalled_apps_title">Hide uninstalled applications</string>
     <string name="hide_uninstalled_apps_summary">Only display applications installed on this device on the Home screen</string>
     <string name="action_hide_uninstalled">Hide uninstalled apps</string>
     <string name="action_show_all_apps">Show all supported apps</string>
     <string name="bundle_warning_app_update_title">App update recommended</string>
-    <string name="bundle_warning_app_update_desc">This bundle was built for NexAlloyNext %s or newer.</string>
+    <string name="bundle_warning_app_update_desc">This bundle was built for NexFusion %s or newer.</string>
     <string name="settings_about">About</string>
     <string name="source_code">Source code</string>
     <string name="open_source_license">Open-source licenses</string>
@@ -99,7 +99,7 @@
     <!-- Notifications -->
     <string name="channel_app_updates">App updates</string>
     <string name="channel_patch_updates">Patch updates</string>
-    <string name="notification_app_update_title">NexAlloyNext %s is available</string>
+    <string name="notification_app_update_title">NexFusion %s is available</string>
     <string name="notification_app_update_text">Tap to update the app.</string>
     <string name="notification_patch_update_title">Patch updates available</string>
 
@@ -152,7 +152,7 @@
     <string name="filter_uninstalled">Not Installed</string>
     <string name="provenance_official">Official</string>
     <string name="provenance_community">Community</string>
-    <string name="provenance_nexalloy">NexAlloy</string>
+    <string name="provenance_nexfusion">NexFusion</string>
     <string name="provenance_custom">Custom</string>
     <string name="preset_sources_title">Quick-add curated source:</string>
     <string name="source_enabled">Enabled</string>

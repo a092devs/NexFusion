@@ -1,5 +1,5 @@
 plugins {
-    id("nexalloy.bundle")
+    id("nexfusion.bundle")
 }
 
 android {
@@ -15,15 +15,15 @@ android {
     }
 }
 
-nexalloyBundle {
+nexfusionBundle {
     entry = "com.example.patches.ExamplePatches"
     author = "Your name"
     descriptionResource = "bundle_description"
-    // Unique among the bundles users install together; NexAlloy's own bundles use 0x4b and 0x4c.
+    // Unique among the bundles users install together; NexFusion's own bundles use 0x4b and 0x4c.
     resourcePackageId = 0x60
 }
 
 dependencies {
-    // Provided by NexAlloy at runtime: never `implementation`.
-    compileOnly("io.github.nexalloy:patcher:${providers.gradleProperty("patcherVersion").get()}")
+    // Provided by NexFusion at runtime: never `implementation`.
+    compileOnly("io.github.nexfusion:patcher:${providers.gradleProperty("patcherVersion").get()}")
 }

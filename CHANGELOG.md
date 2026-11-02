@@ -1,11 +1,28 @@
 # Changelog
 
-All notable changes to NexAlloyNext are documented here. Releases are dispatched automatically on
+All notable changes to NexFusion are documented here. Releases are dispatched automatically on
 every push to `main` for the version in `app/build.gradle.kts` (`versionName` with `versionCode`
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.0.0
+
+- Inaugural NexFusion Rebranding & Package Migration:
+  * Renamed the project to NexFusion across the manager application, patcher engine, build logic, and automation workflows.
+  * Migrated all internal packages and components directly to `io.github.nexfusion.*` with application package ID `io.github.nexfusion`.
+  * Updated bundle plugin to `nexfusion.bundle` and Maven coordinates to `io.github.nexfusion`.
+  * Refined visual identity with fluid Material design and modern theme token architecture.
+- Release Artifact Distribution:
+  * Prioritized production release builds (`NexFusion-<tag>.apk`) over standalone debug builds in update resolution.
+  * Cleaned up issue templates, aligned YouTube debugging instructions to Morphe settings, and corrected example references.
+- Unified Runtime & Compatibility Architecture:
+  * Full integration with the universal cross-compatibility engine, allowing seamless inter-version bundle installations, updates, and rollbacks.
+  * Preserved full user preference state, patch provenance tracking, and dynamic bytecode remapping.
+- Zero-Trace Architecture & Cleanup:
+  * Completely eliminated all legacy project identifiers, outdated branch tracking, and temporary build metadata across the codebase.
+
 ## 3.6.3
+
 
 - Universal Cross-Compatibility System:
   * Removed rigid bundle version and series installation locks. Any version of the manager can install, update, or downgrade patch bundles across versions directly without artificial blockage.
@@ -67,7 +84,7 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 3.5.8
 
-- Dual Artifact Distribution: Release workflow now automatically compiles and attaches both optimized release APKs (`NexAlloyNext-<tag>.apk`) and standalone debug APKs (`NexAlloyNext-<tag>-debug.apk`) for immediate diagnostic logging and testing.
+- Dual Artifact Distribution: Release workflow now automatically compiles and attaches both optimized release APKs (`NexFusion-<tag>.apk`) and standalone debug APKs (`NexFusion-<tag>-debug.apk`) for immediate diagnostic logging and testing.
 - Patcher Diagnostic Visibility & Trace Reporting:
   * Enhanced `PatchExecutor` hook failure handlers to log complete exception stack traces directly into LSPosed logs (`XposedBridge.log`) and Android Logcat (`PatcherLog.error`).
   * Instrumented bundle initialization in `PatchSession` with detailed exception capture for missing or broken patch dependencies.
@@ -117,7 +134,7 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 3.5.0
 
-- App Icon & Visual Identity: Replaced legacy branding with modern Prism Alloy geometric emblem and Material You monochrome adaptive icons.
+- App Icon & Visual Identity: Replaced legacy branding with modern Prism Fusion geometric emblem and Material You monochrome adaptive icons.
 - Backwards-Compatible Bundle Series Validation: Relaxed BundleManifest series check so manager 3.5 seamlessly loads and installs bundles from earlier series without version mismatch errors.
 ## 3.4.5
 
@@ -147,7 +164,7 @@ the release notes, falling back to generated commit notes when no section exists
 
 - Honest Process Lifecycle & Force-Stop Control: Distinguishes genuine root `am force-stop` execution from background process termination (`killBackgroundProcesses`), providing truthful status feedback without false success claims.
 - 1-Tap App Info Navigation: Added direct "App info" button and menu action on each app's patch screen to quickly navigate to Android system settings for manual force-stops on unrooted devices.
-- Curated Catalog & Upstream Attribution: Updated catalog entries with the Facebook media downloader (photos, videos, Reels, audio, stories) and consolidated Reddit patches, adding upstream attribution for `SysAdminDoc/Hushfacebook` and `gnadgnaoh/NexAlloy-XES`.
+- Curated Catalog & Upstream Attribution: Updated catalog entries with the Facebook media downloader (photos, videos, Reels, audio, stories) and consolidated Reddit patches, adding upstream attribution for `SysAdminDoc/Hushfacebook` and `gnadgnaoh/NexFusion-XES`.
 - Repository Maintenance: Removed dead links to internal audit files and aligned release metadata.
 
 ## 3.3.0
@@ -170,7 +187,7 @@ the release notes, falling back to generated commit notes when no section exists
 
 - Coordinated Versioning Architecture: introduced coordinated release series `3.2`, establishing the manager version as the major compatibility series while enabling independent patch-only updates (`3.2.0`, `3.2.1`...) without requiring a new manager build.
 - Bundle Compatibility Validation: `BundleManifest` now validates bundle compatibility metadata (`compatibilitySeries`, `minManagerVersion`, `maxManagerVersion`) using semantic version comparison, cleanly rejecting incompatible bundles with explicit user feedback while preserving full backwards compatibility for legacy and third-party bundles.
-- Seamless Bundle Migration: added automated migration when updating from the legacy `a092devs` bundle to `NexFusion Patches` (`io.github.nexalloy.patches.nexfusion`), automatically replacing previous installations without resource package ID conflicts while preserving user toggle states and source tracking.
+- Seamless Bundle Migration: added automated migration when updating from the legacy `a092devs` bundle to `NexFusion Patches` (`io.github.nexfusion.patches`), automatically replacing previous installations without resource package ID conflicts while preserving user toggle states and source tracking.
 - Smart Release Discovery: `SourceClient` now discovers and prioritizes releases compatible with the running manager's compatibility series, preventing accidental installation of breaking future series releases during patch-only update checks.
 - Supported App Catalog: updated default bundle associations across all community-ported applications (Instagram, Spotify, Reddit, Discord, X, Gboard, LinkedIn, Proton VPN, MiXplorer) to `NexFusion Patches`.
 
@@ -202,27 +219,27 @@ the release notes, falling back to generated commit notes when no section exists
 ## 3.1.23
 
 - Settings Cleanup: the Diagnostics entry and its copyable system/bundle dump were removed from Settings, and Clear DexKit cache moved under General. The framework name and version are no longer surfaced anywhere in the UI.
-- Shorter Tagline: the description at the bottom of Settings now reads "NexAlloyNext applies patch bundles from patch sources. Only add sources you trust."
+- Shorter Tagline: the description at the bottom of Settings now reads "NexFusion applies patch bundles from patch sources. Only add sources you trust."
 
 ## 3.1.22
 
-- Status Card App Version: the home screen's "Module is active" card now shows the running NexAlloyNext version instead of the Xposed framework name and version (like "Vector 1.9.4"), so screenshots and bug reports name the module build that is actually in use; the framework is still listed in Diagnostics.
+- Status Card App Version: the home screen's "Module is active" card now shows the running NexFusion version instead of the Xposed framework name and version (like "Vector 1.9.4"), so screenshots and bug reports name the module build that is actually in use; the framework is still listed in Diagnostics.
 
 ## 3.1.21
 
-- Installed-Only App List: the home catalog now lists only applications that are actually installed on the device, so bundle-supported apps that are not installed — for example YouTube Music while the nexalloy bundle is imported — no longer appear under "Supported Apps (Not Installed)". The Not Installed filter chip and the unused catalog helpers behind it were removed as well; the app catalog itself is unchanged for per-app screens and diagnostics.
+- Installed-Only App List: the home catalog now lists only applications that are actually installed on the device, so bundle-supported apps that are not installed — for example YouTube Music while the nexfusion bundle is imported — no longer appear under "Supported Apps (Not Installed)". The Not Installed filter chip and the unused catalog helpers behind it were removed as well; the app catalog itself is unchanged for per-app screens and diagnostics.
 
 ## 3.1.20
 
 - Patcher Resilience: a patch or bundle that throws while applying no longer aborts the rest of the session, and the fingerprint cache is now persisted even then; previously an escaping exception skipped the cache write, so every following start of the affected app re-ran every fingerprint match and showed the initialization popup again.
 - Readable Patch Failures: a failed patch is now logged with its bundle and patch name plus its exception on release builds, and the "Error while applying the following patches" toast is only shown when the set of failing patches changes instead of on every start of the affected app (which previously tripped the system toast quota and got the message discarded entirely).
 - Missing-Anchors Reporting: a fingerprint that finds no anchor now raises a named FingerprintNotFoundException instead of surfacing as an anonymous NullPointerException from DexKit's cache layer.
-- Check for Updates Feedback: tapping Check for updates now shows an inline "Checking for updates…" state right away and always reports the outcome in a snackbar — including "a new NexAlloy version is available" and "patch updates are available" — where the Settings screen previously stayed silent whenever something was found.
+- Check for Updates Feedback: tapping Check for updates now shows an inline "Checking for updates…" state right away and always reports the outcome in a snackbar — including "a new NexFusion version is available" and "patch updates are available" — where the Settings screen previously stayed silent whenever something was found.
 - Release Diagnostics: the per-bundle cache decision ("using cache: true/false"), the applied summary and failures are logged on release builds too, so a device can be audited with logcat alone.
 
 ## 3.1.19
 
-- Patcher Cache: fingerprint caches are now reused by debug builds as well, so the companion module stops re-running every fingerprint match each time a patched app starts; the cache key already covers the app, the NexAlloy build and the bundle versions, and Clear patcher cache stays as the manual escape hatch.
+- Patcher Cache: fingerprint caches are now reused by debug builds as well, so the companion module stops re-running every fingerprint match each time a patched app starts; the cache key already covers the app, the NexFusion build and the bundle versions, and Clear patcher cache stays as the manual escape hatch.
 - Miuix Update Feedback: the Miuix presentation now surfaces one-off messages, like the result of Check for updates, source refreshes and install failures, in a swipe-dismissible Miuix snackbar anchored above the navigation bar; previously only the Material presentation had a message surface, which made Check for updates look like it did nothing.
 
 ## 3.1.18
@@ -243,7 +260,7 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 3.1.16
 
-- In-App Updater: Directly download and launch package installation for NexAlloyNext releases inside the app without external browser redirection, using `FileProvider` and background progress reporting.
+- In-App Updater: Directly download and launch package installation for NexFusion releases inside the app without external browser redirection, using `FileProvider` and background progress reporting.
 - Supported Uninstalled Apps Catalog: Ensure all applications supported across patch bundles (such as YouTube Music, Proton VPN, Spotify, etc.) are discovered and displayed in the app catalog with verified recommendations even before installation.
 - Miuix & HyperOS Theme Consistency: Replace hardcoded page backgrounds with `MiuixTheme.colorScheme.background`, replace Bootstrap badge colors with adaptive translucent squircle chips in dark/light themes, wrap patch toggle preferences in rounded `MiuixCard` groups, and distinguish primary vs secondary buttons.
 

@@ -4,8 +4,19 @@ plugins {
     `maven-publish`
 }
 
-group = "io.github.nexalloy.build"
-version = providers.gradleProperty("nexalloyBuildLogicVersion").orElse("1.0.0").get()
+group = "io.github.nexfusion.build"
+version = providers.gradleProperty("nexfusionBuildLogicVersion").orElse("1.0.0").get()
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
 
 dependencies {
     implementation("com.android.tools.build:gradle:${libs.versions.agp.get()}")

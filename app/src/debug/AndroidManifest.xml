@@ -4,10 +4,10 @@
     <application>
         <!-- Debug builds only: headless bundle install over adb, see DebugBundleInstallReceiver. -->
         <receiver
-            android:name="io.github.nexalloy.DebugBundleInstallReceiver"
+            android:name="io.github.nexfusion.DebugBundleInstallReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="io.github.nexalloy.next.DEBUG_INSTALL_BUNDLE" />
+                <action android:name="io.github.nexfusion.DEBUG_INSTALL_BUNDLE" />
             </intent-filter>
         </receiver>
     </application>

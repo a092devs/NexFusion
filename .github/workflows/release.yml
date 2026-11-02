@@ -210,11 +210,11 @@ jobs:
                     exit 1
                   fi
 
-                  cp "$APK_RELEASE" "release/NexAlloyNext-${RELEASE_TAG}.apk"
-                  RELEASE_ASSETS=("release/NexAlloyNext-${RELEASE_TAG}.apk")
+                  cp "$APK_RELEASE" "release/NexFusion-${RELEASE_TAG}.apk"
+                  RELEASE_ASSETS=("release/NexFusion-${RELEASE_TAG}.apk")
                   if [[ -f "$APK_DEBUG" ]]; then
-                    cp "$APK_DEBUG" "release/NexAlloyNext-${RELEASE_TAG}-debug.apk"
-                    RELEASE_ASSETS+=("release/NexAlloyNext-${RELEASE_TAG}-debug.apk")
+                    cp "$APK_DEBUG" "release/NexFusion-${RELEASE_TAG}-debug.apk"
+                    RELEASE_ASSETS+=("release/NexFusion-${RELEASE_TAG}-debug.apk")
                   fi
 
                   if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then

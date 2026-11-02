@@ -246,3 +246,5 @@ eval "set -- $(
     )" '"$@"'
 
 exec "$JAVACMD" "$@"
+
+# NexFusion Gradle wrapper

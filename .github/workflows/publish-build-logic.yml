@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   publish:
-    name: Publish nexalloy.bundle plugin
+    name: Publish nexfusion.bundle plugin
     runs-on: ubuntu-latest
     steps:
       - name: Check out source

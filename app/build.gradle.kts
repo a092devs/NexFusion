@@ -16,17 +16,17 @@ val gitCommitHashProvider = gitOutput("rev-parse", "--short", "HEAD").map { it.i
 val gitCommitDateProvider = gitOutput("log", "-1", "--format=%ct").map { it.ifEmpty { "0" } }
 
 android {
-    namespace = "io.github.nexalloy.core"
+    namespace = "io.github.nexfusion.core"
 
     defaultConfig {
-        applicationId = "io.github.nexalloy.next"
-        versionCode = 59
-        versionName = "3.6.3"
+        applicationId = "io.github.nexfusion"
+        versionCode = 61
+        versionName = "4.0.0"
         buildConfigField("String", "COMMIT_HASH", "\"${gitCommitHashProvider.get()}\"")
         buildConfigField("long", "COMMIT_DATE", "${gitCommitDateProvider.get()}L")
         // GitHub repository checked for updates and used as the default patch source.
         // Builds by GitHub Actions of a fork use the fork's releases.
-        val updateRepository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("a092devs/NexAlloyNext")
+        val updateRepository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("a092devs/NexFusion")
         buildConfigField("String", "UPDATE_REPOSITORY", "\"$updateRepository\"")
     }
     val ksFile = rootProject.file("signing.properties")
