@@ -51,31 +51,82 @@ object AppDiscovery {
      */
     fun queryPackage(context: Context, packageName: String): PackageLiveInfo {
         val pm = context.packageManager
-        return try {
-            val info = pm.getPackageInfo(packageName, 0)
+
+        val info = runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getPackageInfo(packageName, 0)
+            }
+        }.onFailure {
+            android.util.Log.w("NexAlloyDiscovery", "pm.getPackageInfo(0) failed for $packageName: ${it.javaClass.simpleName} - ${it.message}")
+        }.recoverCatching {
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                PackageManager.MATCH_UNINSTALLED_PACKAGES or 0x00020000
+            } else 0
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(flags.toLong()))
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getPackageInfo(packageName, flags)
+            }
+        }.onFailure {
+            android.util.Log.w("NexAlloyDiscovery", "pm.getPackageInfo(MATCH_ALL) failed for $packageName: ${it.javaClass.simpleName} - ${it.message}")
+        }.recoverCatching {
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            pm.getPackageArchiveInfo(appInfo.sourceDir, 0)?.apply {
+                this.applicationInfo = appInfo
+            } ?: throw it
+        }.onFailure {
+            android.util.Log.w("NexAlloyDiscovery", "pm.getApplicationInfo failed for $packageName: ${it.javaClass.simpleName} - ${it.message}")
+        }.getOrNull()
+
+        if (info != null) {
             val appInfo = info.applicationInfo
-            val label = appInfo?.loadLabel(pm)?.toString() ?: packageName
+            val label = appInfo?.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: packageName
             val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 info.longVersionCode
             } else {
                 @Suppress("DEPRECATION") info.versionCode.toLong()
             }
-            PackageLiveInfo(
+            android.util.Log.i("NexAlloyDiscovery", "Successfully resolved $packageName: version=${info.versionName}")
+            return PackageLiveInfo(
                 packageName = packageName,
                 appLabel = label,
                 versionName = info.versionName,
                 versionCode = versionCode,
                 isInstalled = true,
             )
-        } catch (_: PackageManager.NameNotFoundException) {
-            PackageLiveInfo(
+        }
+
+        val hasIntent = runCatching { pm.getLaunchIntentForPackage(packageName) }.getOrNull() != null ||
+            runCatching {
+                val intent = android.content.Intent(android.content.Intent.ACTION_MAIN).setPackage(packageName)
+                pm.queryIntentActivities(intent, 0).isNotEmpty()
+            }.getOrDefault(false)
+
+        if (hasIntent) {
+            val appInfo = runCatching { pm.getApplicationInfo(packageName, 0) }.getOrNull()
+            val label = appInfo?.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: packageName
+            android.util.Log.i("NexAlloyDiscovery", "Intent fallback resolved $packageName: label=$label")
+            return PackageLiveInfo(
                 packageName = packageName,
-                appLabel = packageName,
-                versionName = null,
+                appLabel = label,
+                versionName = "installed",
                 versionCode = 0L,
-                isInstalled = false,
+                isInstalled = true,
             )
         }
+
+        android.util.Log.w("NexAlloyDiscovery", "Failed to resolve $packageName - marked Not Installed")
+        return PackageLiveInfo(
+            packageName = packageName,
+            appLabel = packageName,
+            versionName = null,
+            versionCode = 0L,
+            isInstalled = false,
+        )
     }
 
     /**
@@ -172,12 +223,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0A66C2,
         ),
-        KnownSupportedApp(
-            packageName = "com.mixplorer",
-            appName = "MiXplorer",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = null,
-        ),
+
         KnownSupportedApp(
             packageName = "com.spotify.music",
             appName = "Spotify",
@@ -207,6 +253,18 @@ object AppDiscovery {
             appName = "Telegram (Web)",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x2AABEE,
+        ),
+        KnownSupportedApp(
+            packageName = "com.kick.mobile",
+            appName = "Kick",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x53FC18,
+        ),
+        KnownSupportedApp(
+            packageName = "tv.twitch.android.app",
+            appName = "Twitch",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x9146FF,
         ),
     )
 

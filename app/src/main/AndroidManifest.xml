@@ -13,6 +13,31 @@
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <queries>
+        <package android:name="com.google.android.youtube" />
+        <package android:name="com.google.android.apps.youtube.music" />
+        <package android:name="com.reddit.frontpage" />
+        <package android:name="com.google.android.apps.photos" />
+        <package android:name="ch.protonvpn.android" />
+        <package android:name="com.google.android.inputmethod.latin" />
+        <package android:name="com.google.android.gm" />
+        <package android:name="com.google.android.googlequicksearchbox" />
+        <package android:name="com.facebook.katana" />
+        <package android:name="com.crunchyroll.crunchyroid" />
+        <package android:name="com.discord" />
+        <package android:name="com.linkedin.android" />
+        <package android:name="com.spotify.music" />
+        <package android:name="com.instagram.android" />
+        <package android:name="com.twitter.android" />
+        <package android:name="org.telegram.messenger" />
+        <package android:name="org.telegram.messenger.web" />
+        <package android:name="com.kick.mobile" />
+        <package android:name="tv.twitch.android.app" />
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+        </intent>
+    </queries>
+
     <application
         android:name="io.github.nexalloy.activity.SettingApplication"
         android:icon="@mipmap/ic_launcher"
