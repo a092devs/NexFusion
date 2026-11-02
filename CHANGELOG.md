@@ -5,6 +5,17 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.6.1
+
+- Application Catalog & Discovery Expansion:
+  * Added full support for Google Maps (`com.google.android.apps.maps`) to the application discovery catalog and manifest queries.
+  * Added Kick (`com.kick.mobile`) and Twitch (`tv.twitch.android.app`) to the catalog and manifest queries.
+  * Decommissioned MiXplorer from default queries and catalog.
+- Package Resolution & Scope Accuracy:
+  * Optimized package presence detection using multi-flag package queries for accurate cross-version scope and installation resolution.
+- Dynamic Compatibility:
+  * Synchronized catalog compatibility resolution for 21 supported applications with NexFusion 3.6.1.
+
 ## 3.6.0
 
 - Universal Dynamic Patch Architecture:

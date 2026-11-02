@@ -196,7 +196,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
     }
 
     private fun isInstalled(packageName: String) =
-        runCatching { context.packageManager.getPackageInfo(packageName, 0) }.isSuccess
+        io.github.nexalloy.core.discovery.AppDiscovery.queryPackage(context, packageName).isInstalled
 
     fun requestScope(packages: List<String>, onResult: (String) -> Unit) {
         val svc = service ?: run {
