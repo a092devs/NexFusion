@@ -86,7 +86,7 @@ Configure via **Settings → Appearance**:
 ## 🚀 Getting Started
 
 1. **📥 Install NexAlloyNext:** Download the signed release APK from [Releases](https://github.com/a092devs/NexAlloyNext/releases).
-2. **🛡️ Configure LSPosed Scope:** Enable the **NexAlloyNext** module in LSPosed and check the scope for your target apps (e.g. YouTube, Spotify, Reddit, Instagram, Facebook, Telegram, X).
+2. **🛡️ Configure LSPosed Scope:** Enable the **NexAlloyNext** module in LSPosed and check the scope for your target apps (e.g. YouTube, Reddit, Instagram, Facebook, Telegram, X, Maps).
 3. **📦 Install Patch Bundles:** Open NexAlloyNext → **Patches** tab. The official companion repository (`a092devs/NexAlloyNext-Patches`) is pre-configured; tap **Install** on `NexFusion Patches`.
 4. **⚙️ Toggle Desired Patches:** Open the **Home** tab, tap any supported application card, and enable your preferred runtime hooks.
 5. **🔄 Apply & Restart:** Tap **Force Stop** or use the 1-tap **App Info** shortcut to restart the target application and let LSPosed attach the updated bytecode hooks.
@@ -100,10 +100,10 @@ The official companion patch repository is maintained at:
 
 ### Included Bundles:
 - **`nexalloy`:** Streaming core patches for YouTube, YouTube Music, and Google Photos cloud spoofing.
-- **`nexfusion` (`NexFusion Patches`):** Unified community runtime distribution covering all **17 supported application targets**:
-  - 🎥 **Video & Audio:** YouTube, YouTube Music, Spotify
+- **`nexfusion` (`NexFusion Patches`):** Unified community runtime distribution covering all **19 supported application targets**:
+  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch
   - 💬 **Social & Communication:** Telegram, Telegram (Web), Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn
-  - 🛠️ **System & Productivity:** Google Photos, Gboard, Gmail, Google App (Discover), MiXplorer, Proton VPN
+  - 🛠️ **System & Productivity:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN
 
 ---
 
@@ -113,7 +113,8 @@ The official companion patch repository is maintained at:
 |---|---|---|
 | **YouTube** | `com.google.android.youtube` | Ad-free playback, SponsorBlock, background audio, DeArrow replacement, custom speed/quality dialogs, swipe volume/brightness, miniplayer, ambient mode, Litho node bypass, channel search fix. |
 | **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners. |
-| **Spotify** | `com.spotify.music` | Audio ad muting, hide promotional banners and video interstitial ad views, hide Premium tab, Material You theme, custom rounded corners, tracking link cleaner. |
+| **Kick** | `com.kick.mobile` | Live stream & VOD ad blocking, background playback, custom chat emotes (7TV, BTTV, FFZ), telemetry suppression, AMOLED black theme. |
+| **Twitch** | `tv.twitch.android.app` | Stream and display ad blocking, 7TV / BTTV / FFZ chat emotes, background playback, telemetry suppression, AMOLED black theme. |
 | **Telegram** | `org.telegram.messenger` | Remove channel sponsored messages, bot ads, and video promotions; hide Story bar and avatar story rings; keep deleted messages locally; exact unrounded counts; 512 KB fast multi-connection downloads; block update dialogs; disable telemetry; auto-reveal spoilers; pure black AMOLED dark theme. |
 | **Telegram (Web)** | `org.telegram.messenger.web` | Identical full-suite runtime patches as official Telegram for web-distributed standalone builds. |
 | **Instagram** | `com.instagram.android` | Media downloader for feed posts, Reels, Stories, Highlights, and profile pictures; remove sponsored feed posts, Reels, and Story ads; anonymous Story and Live viewing; strip tracking parameters; ghost mode. |
@@ -124,10 +125,10 @@ The official companion patch repository is maintained at:
 | **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
 | **LinkedIn** | `com.linkedin.android` | 1-tap media downloader for photos, carousel images, and progressive MP4 videos; sanitize share links; direct URL navigation bypassing `safety/go` redirects; hide suggested posts, promoted jobs, and premium upsells; feed filters; Material You dynamic theme. |
 | **Google Photos** | `com.google.android.apps.photos` | Device spoofing for unlimited original-quality Google Photos cloud storage backups; DCIM folder backup control. |
+| **Google Maps** | `com.google.android.apps.maps` | Sponsored pin and search ad suppression, high refresh rate unlock (90/120 Hz), telemetry blocking, hide AI clutter, AMOLED black theme. |
 | **Gboard** | `com.google.android.inputmethod.latin` | Rounded keycaps; Google Sans Flex typography & GM3 Expressive styling; proactive post-correction undo controls; Quick & Magic Emoji (Emojify); expanded AI writing tools; spellchecker chips UI; scan text OCR; spacebar cursor trackpad. |
 | **Gmail** | `com.google.android.gm` | Suppress sponsored promotional and advertising cards in personal inboxes. |
 | **Google App (Discover)** | `com.google.android.googlequicksearchbox` | Filter sponsored cards, shopping ads, and promotional recommendations in the Discover feed. |
-| **MiXplorer** | `com.mixplorer` | Fix scoped-storage file sharing by masking unreadable `_data` paths on Android 11+ (API 30+). |
 | **Proton VPN** | `ch.protonvpn.android` | Suppress upgrade banners and nag dialogs; unlock NetShield UI toggles; disable telemetry and background observability workers. |
 
 ---

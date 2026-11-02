@@ -18,7 +18,7 @@ sealed class CompatibilityStatus {
         val highestVerified: String?,
     ) : CompatibilityStatus()
 
-    /** Version-agnostic dynamic bytecode matching (e.g. Spotify, Google Photos). */
+    /** Version-agnostic dynamic bytecode matching (e.g. Google Photos, Gboard). */
     data class Dynamic(
         val note: String = "Universal dynamic hook",
     ) : CompatibilityStatus()

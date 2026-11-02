@@ -52,7 +52,7 @@ class CompatibilityEngineTest {
 
     @Test
     fun dynamicHookingStatus() {
-        // Dynamic bytecode hooking when targets list is empty (e.g. Spotify, Google Photos)
+        // Dynamic bytecode hooking when targets list is empty (e.g. Google Photos, Gboard)
         val status = CompatibilityEngine.resolve("8.9.18.512", emptyList())
         assertIs<CompatibilityStatus.Dynamic>(status)
 

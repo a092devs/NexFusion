@@ -132,7 +132,7 @@ data class PatchSource(
 
         val COMMUNITY_2ENO_MORPHE = PatchSource(
             id = "2eno_morphe",
-            name = "2eno Patches (Spotify & Extras)",
+            name = "2eno Patches (Extras)",
             url = "2eno/2eno-patches",
             provenance = SourceProvenance.COMMUNITY,
         )

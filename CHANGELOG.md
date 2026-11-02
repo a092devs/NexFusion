@@ -5,6 +5,15 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.6.2
+
+- Application Catalog & Maintenance:
+  * Decommissioned Spotify from application discovery catalog and manifest queries.
+- Gboard Preference Persistence:
+  * Synchronized catalog and patch preferences with NexFusion 3.6.2, resolving emoji fast access row user toggle persistence.
+- Bundle Synchronization:
+  * Synchronized compatibility engine with NexFusion 3.6.2.
+
 ## 3.6.1
 
 - Application Catalog & Discovery Expansion:
