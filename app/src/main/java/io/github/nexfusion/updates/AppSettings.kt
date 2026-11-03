@@ -15,6 +15,14 @@ class AppSettings(context: Context) {
         set(value) = prefs.edit().putBoolean("notify_patch_updates", value).apply()
 
     /**
+     * Selected update channel: "stable" or "beta".
+     * Controls whether pre-releases and beta bundles are included in update checks.
+     */
+    var updateChannel: String
+        get() = prefs.getString("update_channel", UPDATE_CHANNEL_STABLE) ?: UPDATE_CHANNEL_STABLE
+        set(value) = prefs.edit().putString("update_channel", value).apply()
+
+    /**
      * Selected colour mode: "system", "light", or "dark".
      */
     var theme: String
@@ -86,5 +94,8 @@ class AppSettings(context: Context) {
         const val THEME_STYLE_MIUIX = AppPreferenceNames.THEME_STYLE_MIUIX
 
         const val COLOR_SCHEME_DEFAULT = AppPreferenceNames.COLOR_SCHEME_DEFAULT
+
+        const val UPDATE_CHANNEL_STABLE = "stable"
+        const val UPDATE_CHANNEL_BETA = "beta"
     }
 }

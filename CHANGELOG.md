@@ -5,6 +5,17 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.2.0
+
+- Update Channel Selection (Stable & Beta):
+  * Added dedicated "Update channel" preference setting under the Updates section in Settings.
+  * Allows users to seamlessly switch between Stable (official production releases) and Beta (pre-release preview builds and patch bundles).
+  * Implemented for both Miuix and Material 3 design systems with interactive radio selection dialogs.
+  * Integrated channel-aware release parsing across GitHub API and Atom fallback feeds, enabling automated detection and in-app updating of beta pre-release builds and standalone APK assets.
+- Background Workers & Source Update Hardening:
+  * Wired update channel preferences directly into periodic background update checks and source synchronization routines.
+  * Preserved full inter-version bundle cross-compatibility across stable and beta release channels.
+
 ## 4.1.0
 
 - Liquid Floating Navigation Bar:

@@ -18,9 +18,10 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
     override suspend fun doWork(): Result {
         val context = applicationContext
         val settings = AppSettings(context)
+        val includeBeta = settings.updateChannel == AppSettings.UPDATE_CHANNEL_BETA
 
         if (settings.notifyAppUpdates) {
-            runCatching { AppUpdateChecker.latest() }.getOrNull()
+            runCatching { AppUpdateChecker.latest(includeBeta) }.getOrNull()
                 ?.takeIf { it.isNewer && settings.lastNotified(KEY_APP) != it.tag }
                 ?.let { release ->
                     UpdateNotifications.appUpdate(context, release)
@@ -32,7 +33,7 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
             val updated = SourceStore(context).all()
                 .filter { it.installedVersion != null }
                 .mapNotNull { source ->
-                    val release = runCatching { SourceClient.latestRelease(source) }.getOrNull() ?: return@mapNotNull null
+                    val release = runCatching { SourceClient.latestRelease(source, includePrerelease = includeBeta) }.getOrNull() ?: return@mapNotNull null
                     val key = "source_${source.id}"
                     if (release.version == source.installedVersion || settings.lastNotified(key) == release.version) {
                         return@mapNotNull null

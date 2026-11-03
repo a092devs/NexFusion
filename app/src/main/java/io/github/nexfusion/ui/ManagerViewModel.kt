@@ -76,6 +76,7 @@ data class ManagerState(
     /** Full catalog of supported and installed applications. */
     val appCatalog: List<AppItemState> = emptyList(),
     val currentTheme: String = AppSettings.THEME_SYSTEM,
+    val updateChannel: String = AppSettings.UPDATE_CHANNEL_STABLE,
     val currentThemeStyle: String = AppSettings.THEME_STYLE_MATERIAL3,
     val currentColorScheme: String = AppSettings.COLOR_SCHEME_DEFAULT,
     /** Miuix-only: floating navigation bar preference. Disabled by default. */
@@ -129,6 +130,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     private val _state = MutableStateFlow(
         ManagerState(
             sources = store.all(),
+            updateChannel = settings.updateChannel,
             currentTheme = settings.theme,
             currentThemeStyle = settings.themeStyle,
             currentColorScheme = settings.colorScheme,
@@ -229,6 +231,12 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         _state.update { it.copy(floatingBarTranslucent = enabled) }
     }
 
+    fun setUpdateChannel(channel: String) {
+        settings.updateChannel = channel
+        _state.update { it.copy(updateChannel = channel) }
+        checkUpdates(userInitiated = true)
+    }
+
     fun setHideUninstalledApps(hide: Boolean) {
         settings.hideUninstalledApps = hide
         _state.update { it.copy(hideUninstalledApps = hide) }
@@ -248,6 +256,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     bundles = bundles,
                     missingScope = missing,
                     appCatalog = catalog,
+                    updateChannel = settings.updateChannel,
                     currentTheme = settings.theme,
                     currentThemeStyle = settings.themeStyle,
                     currentColorScheme = settings.colorScheme,
@@ -266,14 +275,15 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             // Small debounce so a quick tap doesn't retrigger immediately.
             delay(200)
             _state.update { it.copy(checkingUpdates = true) }
-            val appUpdate = withContext(Dispatchers.IO) { runCatching { AppUpdateChecker.latest() } }
+            val includeBeta = settings.updateChannel == AppSettings.UPDATE_CHANNEL_BETA
+            val appUpdate = withContext(Dispatchers.IO) { runCatching { AppUpdateChecker.latest(includeBeta) } }
             val sources = store.all()
             val currentReleases = _state.value.releases.toMutableMap()
 
             withContext(Dispatchers.IO) {
                 for (source in sources) {
                     if (!source.enabled) continue
-                    val result = runCatching { SourceClient.latestRelease(source) }
+                    val result = runCatching { SourceClient.latestRelease(source, includePrerelease = includeBeta) }
                     if (result.isSuccess) {
                         val rel = result.getOrThrow()
                         releaseCache.put(source.id, rel)
@@ -354,7 +364,8 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         _state.update { it.copy(busySources = it.busySources + source.id) }
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
-                runCatching { SourceClient.latestRelease(source) }
+                val includeBeta = settings.updateChannel == AppSettings.UPDATE_CHANNEL_BETA
+                runCatching { SourceClient.latestRelease(source, includePrerelease = includeBeta) }
             }
             _state.update { it.copy(busySources = it.busySources - source.id) }
             result.onSuccess { release ->
@@ -407,7 +418,8 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    val release = _state.value.releases[source.id]?.getOrNull() ?: SourceClient.latestRelease(source)
+                    val includeBeta = settings.updateChannel == AppSettings.UPDATE_CHANNEL_BETA
+                    val release = _state.value.releases[source.id]?.getOrNull() ?: SourceClient.latestRelease(source, includePrerelease = includeBeta)
                     val totalBundles = release.bundles.size
                     val bundles = release.bundles.mapIndexed { index, (bundleName, url) ->
                         val connection = SourceClient.open(url)

@@ -66,6 +66,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     var notifyPatches by remember { mutableStateOf(settings.notifyPatchUpdates) }
     var iconHidden by remember { mutableStateOf(viewModel.launcherIconHidden) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showUpdateChannelDialog by remember { mutableStateOf(false) }
     var showThemeStyleDialog by remember { mutableStateOf(false) }
     var showColorSchemeDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
@@ -76,6 +77,11 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
         AppSettings.THEME_LIGHT -> stringResource(R.string.theme_light)
         AppSettings.THEME_DARK -> stringResource(R.string.theme_dark)
         else -> stringResource(R.string.theme_system)
+    }
+
+    val currentUpdateChannelLabel = when (state.updateChannel) {
+        AppSettings.UPDATE_CHANNEL_BETA -> stringResource(R.string.update_channel_beta)
+        else -> stringResource(R.string.update_channel_stable)
     }
 
     val currentThemeStyleLabel = when (state.currentThemeStyle) {
@@ -122,6 +128,11 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             summary = stringResource(R.string.setting_notify_patches_summary),
                             checked = notifyPatches,
                             onCheckedChange = { notifyPatches = it; settings.notifyPatchUpdates = it },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.update_channel_title),
+                            summary = currentUpdateChannelLabel,
+                            onClick = { showUpdateChannelDialog = true },
                         )
                         ArrowPreference(
                             title = stringResource(R.string.check_for_update_title),
@@ -265,6 +276,14 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 }
                 item {
                     ListItem(
+                        headlineContent = { Text(stringResource(R.string.update_channel_title)) },
+                        supportingContent = { Text(currentUpdateChannelLabel) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showUpdateChannelDialog = true },
+                    )
+                }
+                item {
+                    ListItem(
                         headlineContent = { Text(stringResource(R.string.check_for_update_title)) },
                         supportingContent = if (state.checkingUpdates) {
                             { Text(stringResource(R.string.source_checking)) }
@@ -366,6 +385,20 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 }
             }
         }
+    }
+
+    if (showUpdateChannelDialog) {
+        ThemedRadioDialog(
+            show = true,
+            title = stringResource(R.string.update_channel_title),
+            options = listOf(
+                AppSettings.UPDATE_CHANNEL_STABLE to stringResource(R.string.update_channel_stable),
+                AppSettings.UPDATE_CHANNEL_BETA to stringResource(R.string.update_channel_beta),
+            ),
+            selected = state.updateChannel,
+            onSelect = { viewModel.setUpdateChannel(it) },
+            onDismissRequest = { showUpdateChannelDialog = false },
+        )
     }
 
     if (showThemeDialog) {

@@ -96,6 +96,14 @@
     <string name="source_code">Source code</string>
     <string name="open_source_license">Open-source licenses</string>
 
+    <!-- Update Channels -->
+    <string name="update_channel_title">Update channel</string>
+    <string name="update_channel_summary">Choose whether to receive stable releases or pre-release beta builds</string>
+    <string name="update_channel_stable">Stable</string>
+    <string name="update_channel_stable_summary">Official stable releases tested for regular use</string>
+    <string name="update_channel_beta">Beta</string>
+    <string name="update_channel_beta_summary">Preview pre-release builds and patches for early testing</string>
+
     <!-- Notifications -->
     <string name="channel_app_updates">App updates</string>
     <string name="channel_patch_updates">Patch updates</string>

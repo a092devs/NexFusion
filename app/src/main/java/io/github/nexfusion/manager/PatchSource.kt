@@ -289,10 +289,10 @@ class SourceStore(context: Context) {
 object SourceClient {
     const val BUNDLE_EXTENSION = ".nxb"
 
-    fun latestRelease(source: PatchSource): SourceRelease {
+    fun latestRelease(source: PatchSource, includePrerelease: Boolean = false): SourceRelease {
         val repository = source.githubRepository
         return if (repository != null && !source.url.contains("raw.githubusercontent.com")) {
-            latestGitHubRelease(repository, source.prerelease)
+            latestGitHubRelease(repository, source.prerelease || includePrerelease)
         } else {
             jsonRelease(source.url)
         }
@@ -330,7 +330,11 @@ object SourceClient {
                 (0 until assets.length()).any { i -> assets.getJSONObject(i).getString("name").endsWith(BUNDLE_EXTENSION) }
             } }
             .sortedWith { r1, r2 ->
-                VersionComparator.compare(r2.optString("tag_name", ""), r1.optString("tag_name", ""))
+                val tag1 = r1.optString("tag_name", "")
+                val tag2 = r2.optString("tag_name", "")
+                if (tag2.equals("beta", ignoreCase = true) && !tag1.equals("beta", ignoreCase = true)) -1
+                else if (tag1.equals("beta", ignoreCase = true) && !tag2.equals("beta", ignoreCase = true)) 1
+                else VersionComparator.compare(tag2, tag1)
             }
         // Without a stable release, fall back to pre-releases, e.g. for projects still in alpha.
         val allowPrerelease = prerelease || candidates.none { !it.optBoolean("prerelease") }
@@ -369,12 +373,14 @@ object SourceClient {
             val link = linkRegex.find(block)?.groupValues?.get(1).orEmpty()
             val tag = link.substringAfterLast("/releases/tag/", "").takeIf { it.isNotEmpty() }
                 ?: titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
-            if (tag.isEmpty() || VersionComparator.compare(tag, "0.0.0") <= 0) return@mapNotNull null
+            if (tag.isEmpty() || (!tag.equals("beta", ignoreCase = true) && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
             val content = contentRegex.find(block)?.groupValues?.get(1).orEmpty()
-            val isPre = tag.contains('-') || tag == "autobuild"
+            val isPre = tag.contains('-') || tag.equals("autobuild", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
             AtomCandidate(tag, content, link, isPre)
         }.sortedWith { a, b ->
-            VersionComparator.compare(b.tag, a.tag)
+            if (a.tag.equals("beta", ignoreCase = true) && !b.tag.equals("beta", ignoreCase = true)) -1
+            else if (b.tag.equals("beta", ignoreCase = true) && !a.tag.equals("beta", ignoreCase = true)) 1
+            else VersionComparator.compare(b.tag, a.tag)
         }.toList()
 
         val allowPrerelease = prerelease || candidates.none { !it.isPrerelease }
