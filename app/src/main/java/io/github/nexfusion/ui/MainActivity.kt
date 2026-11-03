@@ -35,6 +35,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -249,6 +252,7 @@ private fun ManagerApp(
             navController = navController,
             viewModel = viewModel,
             route = route,
+            floatingNavigation = floatingNavigation,
         )
     }
 }
@@ -261,7 +265,9 @@ private fun Material3ManagerApp(
     navController: NavHostController,
     viewModel: ManagerViewModel,
     route: String?,
+    floatingNavigation: Boolean,
 ) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val isTopLevel = topLevel.any { it.route == route }
     val snackbar = remember { SnackbarHostState() }
 
@@ -269,54 +275,161 @@ private fun Material3ManagerApp(
         viewModel.messages.collect { snackbar.showSnackbar(it) }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbar) },
-        bottomBar = {
-            if (isTopLevel) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+    val systemDark = isSystemInDarkTheme()
+    val isDark = when (state.currentTheme) {
+        AppSettings.THEME_LIGHT -> false
+        AppSettings.THEME_DARK -> true
+        else -> systemDark
+    }
+
+    val blurSupported = isRuntimeShaderSupported()
+    val canvasBg = MaterialTheme.colorScheme.background
+    val backdrop = if (blurSupported) {
+        rememberLayerBackdrop {
+            drawRect(canvasBg)
+            drawContent()
+        }
+    } else null
+
+    if (floatingNavigation) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(canvasBg),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
+            ) {
+                val bottomPadding = if (isTopLevel) 100.dp else 16.dp
+                NavHost(
+                    navController,
+                    startDestination = MainActivity.DESTINATION_HOME,
+                    enterTransition = navEnterTransition,
+                    exitTransition = navExitTransition,
+                    popEnterTransition = navPopEnterTransition,
+                    popExitTransition = navPopExitTransition,
                 ) {
-                    topLevel.forEach { item ->
-                        val selected = route == item.route
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = { navController.navigateTopLevel(item.route) },
-                            icon = {
-                                Icon(
-                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = null,
-                                )
-                            },
-                            label = { Text(stringResource(item.label)) },
+                    composable(MainActivity.DESTINATION_HOME) {
+                        HomeScreen(viewModel, navController, PaddingValues(bottom = bottomPadding))
+                    }
+                    composable(MainActivity.DESTINATION_PATCHES) {
+                        PatchesScreen(viewModel, PaddingValues(bottom = bottomPadding))
+                    }
+                    composable(MainActivity.DESTINATION_SETTINGS) {
+                        SettingsScreen(viewModel, PaddingValues(bottom = bottomPadding))
+                    }
+                    composable(
+                        "${MainActivity.DESTINATION_APP}/{packageName}",
+                        arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+                    ) { entry ->
+                        AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
+                    }
+                }
+                SnackbarHost(
+                    hostState = snackbar,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = bottomPadding),
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isTopLevel,
+                enter = slideInVertically(
+                    animationSpec = tween(320, easing = FastOutSlowInEasing),
+                    initialOffsetY = { it },
+                ) + fadeIn(animationSpec = tween(220)),
+                exit = slideOutVertically(
+                    animationSpec = tween(220),
+                    targetOffsetY = { it / 2 },
+                ) + fadeOut(animationSpec = tween(160)),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                    .padding(bottom = 12.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
+            ) {
+                val fluidTabs = remember(state.sourcesWithUpdates.size, state.appUpdate) {
+                    topLevel.map { item ->
+                        val badge = when (item.route) {
+                            MainActivity.DESTINATION_PATCHES -> state.sourcesWithUpdates.size
+                            MainActivity.DESTINATION_SETTINGS -> if (state.appUpdate != null) 1 else 0
+                            else -> 0
+                        }
+                        FluidTabItem(
+                            route = item.route,
+                            label = item.label,
+                            selectedIcon = item.selectedIcon,
+                            unselectedIcon = item.unselectedIcon,
+                            badgeCount = badge,
                         )
                     }
                 }
+                val selectedIndex = topLevel.indexOfFirst { it.route == route }.coerceAtLeast(0)
+                FluidFloatingBottomBar(
+                    selectedIndex = selectedIndex,
+                    onSelected = { index ->
+                        val target = topLevel.getOrNull(index) ?: topLevel[0]
+                        navController.navigateTopLevel(target.route)
+                    },
+                    tabs = fluidTabs,
+                    isTranslucent = state.floatingBarTranslucent,
+                    isDark = isDark,
+                    backdrop = backdrop,
+                )
             }
-        },
-    ) { padding ->
-        NavHost(
-            navController,
-            startDestination = MainActivity.DESTINATION_HOME,
-            enterTransition = navEnterTransition,
-            exitTransition = navExitTransition,
-            popEnterTransition = navPopEnterTransition,
-            popExitTransition = navPopExitTransition,
-        ) {
-            composable(MainActivity.DESTINATION_HOME) {
-                HomeScreen(viewModel, navController, padding)
-            }
-            composable(MainActivity.DESTINATION_PATCHES) {
-                PatchesScreen(viewModel, padding)
-            }
-            composable(MainActivity.DESTINATION_SETTINGS) {
-                SettingsScreen(viewModel, padding)
-            }
-            composable(
-                "${MainActivity.DESTINATION_APP}/{packageName}",
-                arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-            ) { entry ->
-                AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
+        }
+    } else {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            snackbarHost = { SnackbarHost(snackbar) },
+            bottomBar = {
+                if (isTopLevel) {
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ) {
+                        topLevel.forEach { item ->
+                            val selected = route == item.route
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { navController.navigateTopLevel(item.route) },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                        contentDescription = null,
+                                    )
+                                },
+                                label = { Text(stringResource(item.label)) },
+                            )
+                        }
+                    }
+                }
+            },
+        ) { padding ->
+            NavHost(
+                navController,
+                startDestination = MainActivity.DESTINATION_HOME,
+                enterTransition = navEnterTransition,
+                exitTransition = navExitTransition,
+                popEnterTransition = navPopEnterTransition,
+                popExitTransition = navPopExitTransition,
+            ) {
+                composable(MainActivity.DESTINATION_HOME) {
+                    HomeScreen(viewModel, navController, padding)
+                }
+                composable(MainActivity.DESTINATION_PATCHES) {
+                    PatchesScreen(viewModel, padding)
+                }
+                composable(MainActivity.DESTINATION_SETTINGS) {
+                    SettingsScreen(viewModel, padding)
+                }
+                composable(
+                    "${MainActivity.DESTINATION_APP}/{packageName}",
+                    arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+                ) { entry ->
+                    AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
+                }
             }
         }
     }
@@ -475,7 +588,7 @@ private fun MiuixFloatingNavigationApp(
                 .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
         ) {
             // Give 96dp bottom clearance on top-level screens so the floating bar never covers content
-            val bottomPadding = if (isTopLevel) 96.dp else 16.dp
+            val bottomPadding = if (isTopLevel) 100.dp else 16.dp
             MiuixNavHost(
                 navController = navController,
                 viewModel = viewModel,
@@ -489,9 +602,8 @@ private fun MiuixFloatingNavigationApp(
             )
         }
 
-        // Official Miuix FloatingNavigationBar with backdrop blur; the bar reserves the gesture
-        // inset itself, so only a small extra margin is added here. It slides in and out while
-        // the selection pill animates between the items.
+        // Liquid glass floating navigation bar with fluid spring physics, touch drag navigation,
+        // and realtime backdrop blur.
         AnimatedVisibility(
             visible = isTopLevel,
             enter = slideInVertically(
@@ -504,15 +616,22 @@ private fun MiuixFloatingNavigationApp(
             ) + fadeOut(animationSpec = tween(160)),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .navigationBarsPadding(),
+                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                .padding(bottom = 12.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
         ) {
-            val fluidTabs = remember {
-                topLevel.map {
+            val fluidTabs = remember(state.sourcesWithUpdates.size, state.appUpdate) {
+                topLevel.map { item ->
+                    val badge = when (item.route) {
+                        MainActivity.DESTINATION_PATCHES -> state.sourcesWithUpdates.size
+                        MainActivity.DESTINATION_SETTINGS -> if (state.appUpdate != null) 1 else 0
+                        else -> 0
+                    }
                     FluidTabItem(
-                        route = it.route,
-                        label = it.label,
-                        selectedIcon = it.selectedIcon,
-                        unselectedIcon = it.unselectedIcon,
+                        route = item.route,
+                        label = item.label,
+                        selectedIcon = item.selectedIcon,
+                        unselectedIcon = item.unselectedIcon,
+                        badgeCount = badge,
                     )
                 }
             }
@@ -527,7 +646,6 @@ private fun MiuixFloatingNavigationApp(
                 isTranslucent = state.floatingBarTranslucent,
                 isDark = isDark,
                 backdrop = backdrop,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
             )
         }
     }

@@ -17,12 +17,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import io.github.nexfusion.ui.liquid.inspectDragGestures
 
-/**
- * Spring-based damped drag physics controller that emulates iOS liquid glass gestures.
- * Provides real-time position interpolation, touch velocity deformation (scaleX/scaleY stretching),
- * and dynamic settling physics.
- */
 class DampedDragAnimation(
     private val animationScope: CoroutineScope,
     val initialValue: Float,
@@ -36,17 +32,28 @@ class DampedDragAnimation(
     val onDragCancelled: DampedDragAnimation.() -> Unit = onDragStopped,
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
 ) {
-    private val valueAnimationSpec = spring(0.78f, 420f, visibilityThreshold)
-    private val velocityAnimationSpec = spring(0.72f, 320f, visibilityThreshold * 10f)
-    private val pressProgressAnimationSpec = spring(0.8f, 400f, 0.001f)
-    private val scaleXAnimationSpec = spring(0.75f, 350f, 0.001f)
-    private val scaleYAnimationSpec = spring(0.75f, 350f, 0.001f)
 
-    private val valueAnimation = Animatable(initialValue, visibilityThreshold)
-    private val velocityAnimation = Animatable(0f, 5f)
-    private val pressProgressAnimation = Animatable(0f, 0.001f)
-    private val scaleXAnimation = Animatable(initialScale, 0.001f)
-    private val scaleYAnimation = Animatable(initialScale, 0.001f)
+    private val valueAnimationSpec =
+        spring(1f, 1000f, visibilityThreshold)
+    private val velocityAnimationSpec =
+        spring(0.5f, 300f, visibilityThreshold * 10f)
+    private val pressProgressAnimationSpec =
+        spring(1f, 1000f, 0.001f)
+    private val scaleXAnimationSpec =
+        spring(0.6f, 250f, 0.001f)
+    private val scaleYAnimationSpec =
+        spring(0.7f, 250f, 0.001f)
+
+    private val valueAnimation =
+        Animatable(initialValue, visibilityThreshold)
+    private val velocityAnimation =
+        Animatable(0f, 5f)
+    private val pressProgressAnimation =
+        Animatable(0f, 0.001f)
+    private val scaleXAnimation =
+        Animatable(initialScale, 0.001f)
+    private val scaleYAnimation =
+        Animatable(initialScale, 0.001f)
 
     private val mutatorMutex = MutatorMutex()
 
@@ -127,9 +134,7 @@ class DampedDragAnimation(
             mutatorMutex.mutate {
                 press()
                 val targetValue = value.coerceIn(valueRange)
-                launch {
-                    valueAnimation.animateTo(targetValue, valueAnimationSpec) { updateVelocity() }
-                }
+                launch { valueAnimation.animateTo(targetValue, valueAnimationSpec) }
                 if (velocity != 0f) {
                     launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
                 }
@@ -150,4 +155,3 @@ class DampedDragAnimation(
         }
     }
 }
-
