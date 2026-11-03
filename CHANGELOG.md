@@ -5,6 +5,13 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.2.3
+
+- Beta Updates & Lifecycle Fixes:
+  * Fixed beta update detection using commit hashes and timestamps to eliminate false update cards and settings badges.
+  * Normalized bundle semantic version parsing on beta release channels.
+  * Hardened patch session cache key with bundle content hash to guarantee instant cache invalidation upon bundle updates.
+
 ## 4.2.2
 
 - Process Management & Target Lifecycle:
