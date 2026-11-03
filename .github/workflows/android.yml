@@ -72,11 +72,16 @@ jobs:
         if-no-files-found: error
 
     - name: Create AutoBuild Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && hashFiles('signing.properties') != ''
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         GIT_DESCRIBE=$(git rev-parse --short HEAD)
         mkdir autobuild
-        cp app/build/outputs/apk/release/app-release.apk autobuild/NexFusion-${GIT_DESCRIBE}.apk
+        if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+          cp app/build/outputs/apk/release/app-release.apk autobuild/NexFusion-${GIT_DESCRIBE}.apk
+        fi
+        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+          cp app/build/outputs/apk/debug/app-debug.apk autobuild/NexFusion-${GIT_DESCRIBE}-debug.apk
+        fi
         gh release delete autobuild --cleanup-tag --yes || true
         gh release create autobuild autobuild/* \
           --prerelease \
@@ -85,6 +90,13 @@ jobs:
           --notes "Nightly build from commit ${GIT_DESCRIBE}."
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Publish Artifact Notice
+      run: |
+        echo "## 📦 Standalone APK Downloads" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "> **Note:** GitHub Actions packages runtime artifacts in the table above into a `.zip` archive by default." >> $GITHUB_STEP_SUMMARY
+        echo "> To download the direct standalone **`.apk`** files without zip packaging, visit the **[Releases](https://github.com/${{ github.repository }}/releases)** page." >> $GITHUB_STEP_SUMMARY
 
     - name: Create Beta Pre-Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/beta'

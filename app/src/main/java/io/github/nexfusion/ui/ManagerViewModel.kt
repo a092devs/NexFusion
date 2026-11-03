@@ -673,7 +673,8 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                 if (stoppedViaRoot) {
                     message("Force stopped $appLabel")
                 } else {
-                    message("Terminated background processes for $appLabel. True force-stop requires root or App Info.")
+                    openAppInfo(packageName)
+                    message("Opened App Info for $appLabel: tap 'Force stop' to completely restart")
                 }
             }
         }

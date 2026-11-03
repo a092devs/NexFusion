@@ -5,6 +5,17 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.2.2
+
+- Process Management & Target Lifecycle:
+  * Enhanced target app process lifecycle management: when root privileges are absent or unavailable, automatically navigates to the target application's system App Info settings with a guided prompt to perform a complete force-stop restart so updated patches and hooks apply cleanly.
+  * Preserved silent background root termination when root permissions are granted.
+- CI/CD & Distribution Enhancements:
+  * Streamlined standalone APK distribution: automated standalone release APK publishing on push events without packaging in zip archives.
+  * Added direct release download notices in CI workflow step summaries.
+- Visual Architecture & Navigational Solid Fallbacks:
+  * Hardened non-translucent navigation bar container rendering, ensuring 100% solid opacity across themes and preventing any scroll bleed-through.
+
 ## 4.2.1
 
 - Ecosystem Compatibility & Performance:
