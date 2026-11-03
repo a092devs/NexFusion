@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.2.1
+
+- Ecosystem Compatibility & Performance:
+  * Synchronized compatibility bindings and patch bundle definitions for release 4.2.1.
+  * Enhanced update channel routing and release bundle caching.
+
 ## 4.2.0
 
 - Update Channel Selection (Stable & Beta):
