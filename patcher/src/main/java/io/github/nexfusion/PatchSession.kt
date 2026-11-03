@@ -139,7 +139,8 @@ class PatchSession(
     private fun loadCacheIfValid(bundle: BundleInfo) {
         val packageInfo = app.packageManager.getPackageInfo(app.packageName, 0)
         val idKey = "nexfusion:id:${bundle.id}"
-        val id = "${packageInfo.lastUpdateTime}-$coreVersion-${bundle.version}"
+        val bundleHash = java.io.File(bundle.apkPath).nameWithoutExtension
+        val id = "${packageInfo.lastUpdateTime}-$coreVersion-${bundle.version}-$bundleHash"
         val cachedId = cache.getString(idKey, null)
         val isCached = cachedId == id
 

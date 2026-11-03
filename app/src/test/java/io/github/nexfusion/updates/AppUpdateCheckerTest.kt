@@ -63,4 +63,33 @@ class AppUpdateCheckerTest {
         assertEquals(0, release.versionCode)
         assertEquals("https://github.com/a092devs/NexFusion/releases/download/4.0.0/NexFusion-4.0.0.apk", release.apkUrl)
     }
+
+    @Test
+    fun parseApiResponseBetaReleaseIncludesCommitishAndPublishedDate() {
+        val sampleJson = """
+[
+  {
+    "tag_name": "beta",
+    "target_commitish": "49c923b08ab15b4970ec74daef8cbe1fdb57aeae",
+    "draft": false,
+    "prerelease": true,
+    "published_at": "2026-11-03T14:40:00Z",
+    "body": "v4.2.2 beta",
+    "html_url": "https://github.com/a092devs/NexFusion/releases/tag/beta",
+    "assets": [
+      {
+        "name": "NexFusion-4.2.2.apk",
+        "browser_download_url": "https://github.com/a092devs/NexFusion/releases/download/beta/NexFusion-4.2.2.apk"
+      }
+    ]
+  }
+]
+""".trimIndent()
+
+        val release = AppUpdateChecker.parseApiResponse(sampleJson)
+        assertNotNull(release)
+        assertEquals("beta", release.tag)
+        assertEquals("49c923b08ab15b4970ec74daef8cbe1fdb57aeae", release.targetCommitish)
+        assertTrue(release.publishedAt > 0L)
+    }
 }

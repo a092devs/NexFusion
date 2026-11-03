@@ -5,6 +5,15 @@ import io.github.nexfusion.core.compatibility.VersionComparator
 import io.github.nexfusion.manager.SourceClient
 import org.json.JSONArray
 
+private fun parseIsoDate(iso: String): Long = runCatching {
+    if (iso.isBlank()) return@runCatching 0L
+    val clean = iso.trim()
+    val format = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
+        timeZone = java.util.TimeZone.getTimeZone("UTC")
+    }
+    format.parse(clean)?.time ?: 0L
+}.getOrDefault(0L)
+
 /** A release of NexFusion itself. */
 class AppRelease(
     val tag: String,
@@ -14,12 +23,42 @@ class AppRelease(
     /** Download URL of the APK asset, if the release has one. */
     val apkUrl: String?,
     val isPrerelease: Boolean = false,
+    val targetCommitish: String = "",
+    val publishedAt: Long = 0L,
 ) {
-    val isNewer get() = if (tag.equals("beta", ignoreCase = true)) {
-        true
-    } else {
-        VersionComparator.compare(tag, BuildConfig.VERSION_NAME) > 0 || (versionCode > BuildConfig.VERSION_CODE)
-    }
+    val isNewer: Boolean
+        get() {
+            if (tag.equals("beta", ignoreCase = true)) {
+                // If running app is already built from this exact commit, it's not newer
+                if (targetCommitish.isNotBlank() && BuildConfig.COMMIT_HASH.isNotBlank() && BuildConfig.COMMIT_HASH != "unknown") {
+                    if (BuildConfig.COMMIT_HASH.startsWith(targetCommitish, ignoreCase = true) ||
+                        targetCommitish.startsWith(BuildConfig.COMMIT_HASH, ignoreCase = true)
+                    ) {
+                        return false
+                    }
+                }
+                // If published date is at or before this app's commit date, it's not newer
+                val commitDateMs = BuildConfig.COMMIT_DATE * 1000L
+                if (publishedAt > 0L && commitDateMs > 0L) {
+                    if (publishedAt <= commitDateMs) {
+                        return false
+                    }
+                }
+                // Fallback: check if version in notes is newer than running app
+                val versionInBody = Regex("""[vV]?(\d+\.\d+\.\d+)""").find(notes)?.groupValues?.get(1)
+                if (versionInBody != null) {
+                    val cmp = VersionComparator.compare(versionInBody, BuildConfig.VERSION_NAME)
+                    if (cmp < 0) return false
+                    if (cmp == 0 && targetCommitish.isNotBlank() && BuildConfig.COMMIT_HASH.isNotBlank() &&
+                        targetCommitish.startsWith(BuildConfig.COMMIT_HASH.take(7), ignoreCase = true)
+                    ) {
+                        return false
+                    }
+                }
+                return false
+            }
+            return VersionComparator.compare(tag, BuildConfig.VERSION_NAME) > 0 || (versionCode > BuildConfig.VERSION_CODE)
+        }
 }
 
 /** Checks the GitHub releases of NexFusion for updates. Blocking; call off the main thread. */
@@ -75,6 +114,9 @@ object AppUpdateChecker {
             .filter { it.getString("name").endsWith(".apk") }
         val apk = allApks.firstOrNull { !it.getString("name").contains("-debug.apk", ignoreCase = true) }
             ?: allApks.firstOrNull()
+        val targetCommitish = release.optString("target_commitish", "")
+        val publishedStr = release.optString("published_at", "").ifEmpty { release.optString("created_at", "") }
+        val publishedAt = parseIsoDate(publishedStr)
         return AppRelease(
             tag = release.getString("tag_name"),
             versionCode = versionCodeOf(release.getString("tag_name")),
@@ -82,6 +124,8 @@ object AppUpdateChecker {
             pageUrl = release.getString("html_url"),
             apkUrl = apk?.getString("browser_download_url"),
             isPrerelease = release.optBoolean("prerelease") || release.optString("tag_name", "").equals("beta", ignoreCase = true),
+            targetCommitish = targetCommitish,
+            publishedAt = publishedAt,
         )
     }
 
@@ -91,7 +135,7 @@ object AppUpdateChecker {
         val linkRegex = Regex("""<link[^>]*href="([^"]+)"""")
         val contentRegex = Regex("""<content[^>]*>([\s\S]*?)</content>""")
 
-        data class AtomEntry(val tag: String, val pageUrl: String, val content: String, val isPre: Boolean)
+        data class AtomEntry(val tag: String, val pageUrl: String, val content: String, val isPre: Boolean, val publishedAt: Long)
 
         val entries = entryRegex.findAll(atomXml).mapNotNull { match ->
             val block = match.groupValues[1]
@@ -101,7 +145,8 @@ object AppUpdateChecker {
             if (tag.isEmpty() || (!tag.equals("beta", ignoreCase = true) && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
             val content = contentRegex.find(block)?.groupValues?.get(1).orEmpty()
             val isPre = tag.contains('-') || tag.equals("autobuild", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
-            AtomEntry(tag, link, content, isPre)
+            val updatedStr = Regex("""<updated>([^<]+)</updated>""").find(block)?.groupValues?.get(1).orEmpty()
+            AtomEntry(tag, link, content, isPre, parseIsoDate(updatedStr))
         }.toList()
 
         if (entries.isEmpty()) return null
@@ -142,6 +187,8 @@ object AppUpdateChecker {
             notes = chosen.content,
             pageUrl = chosen.pageUrl,
             apkUrl = apkUrl,
+            isPrerelease = chosen.isPre,
+            publishedAt = chosen.publishedAt,
         )
     }
 }

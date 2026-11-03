@@ -30,4 +30,28 @@ class PatchSourceTest {
         assertEquals(7, AppUpdateChecker.versionCodeOf("v3.0.7"))
         assertEquals(0, AppUpdateChecker.versionCodeOf("autobuild"))
     }
+
+    @Test
+    fun parseReleaseVersionExtractsSemverFromBundleAsset() {
+        assertEquals(
+            "4.2.2",
+            SourceClient.parseReleaseVersion("beta", listOf("nexfusion-4.2.2.nxb" to "https://..."))
+        )
+        assertEquals(
+            "4.2.2",
+            SourceClient.parseReleaseVersion("4.2.2", listOf("nexfusion-4.2.2.nxb" to "https://..."))
+        )
+        assertEquals(
+            "1.2.3",
+            SourceClient.parseReleaseVersion("beta", listOf("bundle-1.2.3.nxb" to "https://..."))
+        )
+        assertEquals(
+            "4.2.2-rc.1",
+            SourceClient.parseReleaseVersion("beta", listOf("nexfusion-4.2.2-rc.1.nxb" to "https://..."))
+        )
+        assertEquals(
+            "unknown",
+            SourceClient.parseReleaseVersion("unknown", emptyList())
+        )
+    }
 }

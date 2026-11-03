@@ -98,6 +98,9 @@ data class ManagerState(
         if (!source.enabled) return false
         val release = releases[source.id]?.getOrNull() ?: return false
         val installed = source.installedVersion ?: return false
+        if (release.version.equals("beta", ignoreCase = true) || installed.equals("beta", ignoreCase = true)) {
+            return false
+        }
         return VersionComparator.compare(release.version, installed) > 0
     }
 
@@ -105,6 +108,12 @@ data class ManagerState(
         if (!source.enabled) return false
         val release = releases[source.id]?.getOrNull() ?: return false
         val installed = source.installedVersion ?: return false
+        if (release.version.equals("beta", ignoreCase = true) || installed.equals("beta", ignoreCase = true)) {
+            return false
+        }
+        if (source.prerelease || release.version.contains("beta", ignoreCase = true) || installed.contains("beta", ignoreCase = true)) {
+            return false
+        }
         return VersionComparator.compare(release.version, installed) < 0
     }
 

@@ -289,6 +289,23 @@ class SourceStore(context: Context) {
 object SourceClient {
     const val BUNDLE_EXTENSION = ".nxb"
 
+    fun parseReleaseVersion(tag: String, bundles: List<Pair<String, String>>): String {
+        if (!tag.equals("beta", ignoreCase = true) &&
+            !tag.equals("nightly", ignoreCase = true) &&
+            !tag.equals("autobuild", ignoreCase = true)
+        ) {
+            if (tag.any { it.isDigit() }) return tag
+        }
+        for ((name, _) in bundles) {
+            val match = Regex("""(?:nexfusion|bundle|patches)[-_]v?(\d+\.\d+\.\d+(?:[-_][a-zA-Z0-9.]+)?)\.nxb""", RegexOption.IGNORE_CASE).find(name)
+                ?: Regex("""v?(\d+\.\d+\.\d+(?:[-_][a-zA-Z0-9.]+)?)\.nxb""", RegexOption.IGNORE_CASE).find(name)
+            if (match != null) {
+                return match.groupValues[1]
+            }
+        }
+        return tag
+    }
+
     fun latestRelease(source: PatchSource, includePrerelease: Boolean = false): SourceRelease {
         val repository = source.githubRepository
         return if (repository != null && !source.url.contains("raw.githubusercontent.com")) {
@@ -350,7 +367,7 @@ object SourceClient {
             val bundles = deduplicateBundleAssets(rawBundles)
             if (bundles.isEmpty()) continue
             return SourceRelease(
-                version = release.getString("tag_name"),
+                version = parseReleaseVersion(release.getString("tag_name"), bundles),
                 changelog = release.optString("body"),
                 pageUrl = release.optString("html_url"),
                 bundles = bundles,
@@ -404,7 +421,7 @@ object SourceClient {
             if (bundles.isEmpty()) continue
 
             return SourceRelease(
-                version = candidate.tag,
+                version = parseReleaseVersion(candidate.tag, bundles),
                 changelog = candidate.body,
                 pageUrl = candidate.pageUrl,
                 bundles = bundles,
