@@ -5,6 +5,21 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.1.0
+
+- Liquid Floating Navigation Bar:
+  * Implemented floating pill navigation container with AGSL runtime shaders:
+    - Real-time backdrop blur and rounded-rectangle lens refraction with chromatic aberration and depth effect.
+    - Specular light bloom highlight driven by device physical tilt via sensor gravity tracking.
+    - Interactive touch bloom tracking gesture interactions.
+    - Fluid damped spring drag animation across tabs with velocity squish/stretch and rubber-band boundary physics.
+  * Supported across both official Miuix and standard Material 3 design systems.
+  * Added responsive centering, safe window insets padding, and real-time update badge counts.
+  * Added Settings controls for floating navigation bar and translucent glass effect.
+- Solid Fallback & Non-Translucent Mode:
+  * Enforced 100% solid, fully opaque surface (`alpha = 1.0f`) on the floating bar container and active indicator pill when translucent mode is disabled, eliminating any bleed-through of underlying scrolled content or buttons.
+  * Optimized rendering performance by completely bypassing background shader capture when translucent glass effect is disabled.
+
 ## 4.0.0
 
 - Inaugural NexFusion Rebranding & Package Migration:
