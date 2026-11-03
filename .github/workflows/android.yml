@@ -86,6 +86,25 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Create Beta Pre-Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+      run: |
+        mkdir -p beta-dist
+        if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+          cp app/build/outputs/apk/release/app-release.apk beta-dist/NexFusion-release.apk
+        fi
+        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+          cp app/build/outputs/apk/debug/app-debug.apk beta-dist/NexFusion-debug.apk
+        fi
+        gh release delete beta --cleanup-tag --yes || true
+        gh release create beta beta-dist/* \
+          --prerelease \
+          --target "${{ github.sha }}" \
+          --title "NexFusion Beta" \
+          --notes "Beta test build with liquid floating navigation bar. Standalone APKs attached below."
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   auto-release:
     name: Auto release
     needs: build

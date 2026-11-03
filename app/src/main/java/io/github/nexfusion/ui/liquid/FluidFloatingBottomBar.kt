@@ -243,13 +243,16 @@ fun FluidFloatingBottomBar(
     val accentColor = MaterialTheme.colorScheme.primary
     val tabContentColor = MaterialTheme.colorScheme.onSurface
     val surfaceContainer = MaterialTheme.colorScheme.surfaceContainer
+    val surfaceContainerHigh = MaterialTheme.colorScheme.surfaceContainerHigh
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
+    val onPrimaryContainer = MaterialTheme.colorScheme.onPrimaryContainer
     val shaderSupported = isRuntimeShaderSupported()
     val isBlurEffective = isTranslucent && backdrop != null && shaderSupported
 
     val containerColor = if (isBlurEffective) {
         if (isDark) surfaceContainer.copy(alpha = 0.38f) else surfaceContainer.copy(alpha = 0.52f)
     } else {
-        if (isDark) surfaceContainer.copy(alpha = 0.92f) else surfaceContainer.copy(alpha = 0.95f)
+        surfaceContainerHigh.copy(alpha = 1.0f)
     }
 
     val effectiveBackdrop: Backdrop = backdrop ?: rememberLayerBackdrop()
@@ -443,7 +446,11 @@ fun FluidFloatingBottomBar(
                     val isSelected = index == currentIndex
                     val distance = abs(dampedDragAnimation.value - index)
                     val proximity = (1f - distance).coerceIn(0f, 1f)
-                    val itemTint = lerp(tabContentColor.copy(alpha = 0.65f), accentColor, proximity)
+                    val itemTint = if (isBlurEffective) {
+                        lerp(tabContentColor.copy(alpha = 0.65f), accentColor, proximity)
+                    } else {
+                        tabContentColor.copy(alpha = 0.70f)
+                    }
 
                     FloatingBottomBarItem(
                         selected = isSelected,
@@ -604,6 +611,8 @@ fun FluidFloatingBottomBar(
                         .width(tabWidthDp),
                 )
             } else {
+                val opaquePillBg = primaryContainer.copy(alpha = 1.0f)
+                val opaquePillContent = onPrimaryContainer
                 Box(
                     Modifier
                         .padding(horizontal = 4.dp)
@@ -614,17 +623,12 @@ fun FluidFloatingBottomBar(
                             scaleY = dampedDragAnimation.scaleY
                         }
                         .clip(pillShape)
-                        .background(accentColor.copy(alpha = if (isDark) 0.22f else 0.14f), pillShape)
-                        .border(
-                            width = 1.dp,
-                            color = if (isDark) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.35f),
-                            shape = pillShape,
-                        )
+                        .background(opaquePillBg, pillShape)
                         .height(56.dp)
                         .width(tabWidthDp),
                     contentAlignment = Alignment.CenterStart,
                 ) {
-                    CompositionLocalProvider(LocalContentColor provides accentColor) {
+                    CompositionLocalProvider(LocalContentColor provides opaquePillContent) {
                         Row(
                             Modifier
                                 .clearAndSetSemantics {}
@@ -646,12 +650,12 @@ fun FluidFloatingBottomBar(
                                     Icon(
                                         imageVector = item.selectedIcon,
                                         contentDescription = null,
-                                        tint = accentColor,
+                                        tint = opaquePillContent,
                                         modifier = Modifier.size(24.dp),
                                     )
                                     Text(
                                         text = stringResource(item.label),
-                                        color = accentColor,
+                                        color = opaquePillContent,
                                         fontSize = 11.sp,
                                         lineHeight = 13.sp,
                                         fontWeight = FontWeight.SemiBold,

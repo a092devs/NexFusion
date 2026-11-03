@@ -284,7 +284,8 @@ private fun Material3ManagerApp(
 
     val blurSupported = isRuntimeShaderSupported()
     val canvasBg = MaterialTheme.colorScheme.background
-    val backdrop = if (blurSupported) {
+    val isTranslucent = state.floatingBarTranslucent
+    val backdrop = if (blurSupported && isTranslucent) {
         rememberLayerBackdrop {
             drawRect(canvasBg)
             drawContent()
@@ -571,7 +572,8 @@ private fun MiuixFloatingNavigationApp(
 
     val blurSupported = isRuntimeShaderSupported()
     val canvasBg = MaterialTheme.colorScheme.background
-    val backdrop = if (blurSupported) {
+    val isTranslucent = state.floatingBarTranslucent
+    val backdrop = if (blurSupported && isTranslucent) {
         rememberLayerBackdrop {
             drawRect(canvasBg)
             drawContent()
