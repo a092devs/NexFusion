@@ -111,7 +111,7 @@ data class ManagerState(
         if (release.version.equals("beta", ignoreCase = true) || installed.equals("beta", ignoreCase = true)) {
             return false
         }
-        if (source.prerelease || release.version.contains("beta", ignoreCase = true) || installed.contains("beta", ignoreCase = true)) {
+        if (updateChannel == AppSettings.UPDATE_CHANNEL_BETA || source.prerelease || release.version.contains("beta", ignoreCase = true) || installed.contains("beta", ignoreCase = true)) {
             return false
         }
         return VersionComparator.compare(release.version, installed) < 0

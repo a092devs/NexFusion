@@ -28,7 +28,7 @@ class AppRelease(
 ) {
     val isNewer: Boolean
         get() {
-            if (tag.equals("beta", ignoreCase = true)) {
+            if (tag.equals("beta", ignoreCase = true) || tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || isPrerelease) {
                 // If running app is already built from this exact commit, it's not newer
                 if (targetCommitish.isNotBlank() && BuildConfig.COMMIT_HASH.isNotBlank() && BuildConfig.COMMIT_HASH != "unknown") {
                     if (BuildConfig.COMMIT_HASH.startsWith(targetCommitish, ignoreCase = true) ||
@@ -48,12 +48,8 @@ class AppRelease(
                 val versionInBody = Regex("""[vV]?(\d+\.\d+\.\d+)""").find(notes)?.groupValues?.get(1)
                 if (versionInBody != null) {
                     val cmp = VersionComparator.compare(versionInBody, BuildConfig.VERSION_NAME)
-                    if (cmp < 0) return false
-                    if (cmp == 0 && targetCommitish.isNotBlank() && BuildConfig.COMMIT_HASH.isNotBlank() &&
-                        targetCommitish.startsWith(BuildConfig.COMMIT_HASH.take(7), ignoreCase = true)
-                    ) {
-                        return false
-                    }
+                    if (cmp <= 0) return false
+                    return true
                 }
                 return false
             }
