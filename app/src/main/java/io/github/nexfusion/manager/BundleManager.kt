@@ -35,17 +35,37 @@ class BundleManager(private val context: Context, private val service: XposedSer
     val installed: List<InstalledBundle>
         get() {
             val remote = registryPrefs?.let { runCatching { BundleRegistry.read(it) }.getOrNull() }
-            if (!remote.isNullOrEmpty()) {
+            val baseList = if (!remote.isNullOrEmpty()) {
                 // Sync to local preferences for offline access
                 BundleRegistry.write(localPrefs, remote)
-                return remote
+                remote
+            } else {
+                val local = BundleRegistry.read(localPrefs)
+                if (local.isNotEmpty()) {
+                    registryPrefs?.let { runCatching { BundleRegistry.write(it, local) } }
+                }
+                local
             }
-            val local = BundleRegistry.read(localPrefs)
-            if (local.isNotEmpty()) {
-                // If local has bundles but remote was empty/unpopulated, sync to remote
-                registryPrefs?.let { runCatching { BundleRegistry.write(it, local) } }
+
+            var changed = false
+            val refreshed = baseList.map { bundle ->
+                val localFile = File(localDir, bundle.fileName)
+                if (localFile.exists()) {
+                    val freshDesc = runCatching {
+                        BundleManifest.read(context.packageManager, localFile).description
+                    }.getOrNull()
+                    if (!freshDesc.isNullOrEmpty() && freshDesc != bundle.description) {
+                        changed = true
+                        bundle.copy(description = freshDesc)
+                    } else bundle
+                } else bundle
             }
-            return local
+
+            if (changed) {
+                registryPrefs?.let { runCatching { BundleRegistry.write(it, refreshed) } }
+                BundleRegistry.write(localPrefs, refreshed)
+            }
+            return refreshed
         }
 
     /**

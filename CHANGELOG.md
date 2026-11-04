@@ -5,6 +5,17 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.2.4
+
+- Bundle Card & UI Refinement:
+  * Redesigned bundle cards in the Bundles tab to be compact, professional, and visually refined.
+  * Eliminated redundant app enumeration by prioritizing top flagship applications on a single line.
+  * Added smooth expandable chip flow with an interactive count badge (`+X more` / `Show less`) and animated transitions.
+  * Enhanced BundleManager to automatically sync manifest descriptions from on-disk bundle APKs.
+- Update Detection & Stability:
+  * Resolved beta update loops and suppressed false downgrade warnings for preview and nightly releases.
+  * Hardened patch source synchronization and release parsing across update channels.
+
 ## 4.2.3
 
 - Beta Updates & Lifecycle Fixes:

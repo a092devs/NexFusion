@@ -3,6 +3,7 @@ package io.github.nexfusion.ui.screens
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -700,9 +701,14 @@ private fun BundleCard(
                 ThemedSwitch(checked = bundle.enabled, onCheckedChange = onEnabled)
             }
 
-            if (bundle.description.isNotEmpty()) {
+            val displayDesc = if (bundle.description.startsWith("Unified patch suite for ")) {
+                "Unified patch suite with dynamic bytecode hooks and feature enhancements for supported applications."
+            } else {
+                bundle.description
+            }
+            if (displayDesc.isNotEmpty()) {
                 Text(
-                    bundle.description,
+                    displayDesc,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 8.dp),
                 )
@@ -748,17 +754,47 @@ private fun BundleCard(
                     color = MaterialTheme.colorScheme.outline,
                 )
             } else {
+                var expanded by remember { mutableStateOf(false) }
+                val maxInitial = 4
+                val popularOrder = remember {
+                    listOf("YouTube", "YouTube Music", "Reddit", "X", "Discord", "Instagram", "Telegram", "Google Maps", "Google Photos", "Twitch")
+                }
+                val sortedApps = remember(appNames) {
+                    appNames.sortedWith(
+                        compareBy<String> { name ->
+                            val idx = popularOrder.indexOf(name)
+                            if (idx >= 0) idx else 100
+                        }.thenBy { it.lowercase() }
+                    )
+                }
+                val hasMore = sortedApps.size > maxInitial
+                val displayedApps = if (expanded || !hasMore) sortedApps else sortedApps.take(maxInitial)
+
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.animateContentSize(),
                 ) {
-                    appNames.forEach { appName ->
+                    displayedApps.forEach { appName ->
                         Text(
                             text = appName,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier
                                 .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                        )
+                    }
+                    if (hasMore) {
+                        Text(
+                            text = if (expanded) "Show less ▲" else "+${sortedApps.size - maxInitial} more ▼",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+                                .clickable { expanded = !expanded }
                                 .padding(horizontal = 8.dp, vertical = 3.dp),
                         )
                     }
