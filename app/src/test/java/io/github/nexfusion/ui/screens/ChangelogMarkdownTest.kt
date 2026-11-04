@@ -135,4 +135,52 @@ class ChangelogMarkdownTest {
             changelogBlocks("## 1.0.0\n\n- item"),
         )
     }
+
+    @Test
+    fun htmlEntitiesAndAtomReleaseNotesCleanedToMarkdown() {
+        val atomContent = """
+            &lt;ul&gt;
+            &lt;li&gt;&lt;code&gt;NexFusion&lt;/code&gt; 4.2.3:
+            &lt;ul&gt;
+            &lt;li&gt;Facebook Media Downloader Reliability:
+            &lt;ul&gt;
+            &lt;li&gt;Expanded post context menu anchors (&lt;code&gt;VideoFeedStoryMenuHelper&lt;/code&gt;).&lt;/li&gt;
+            &lt;li&gt;Enhanced Reels more bottom sheet builders to inject top-level &quot;Download reel&quot;.&lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;h3&gt;Compatibility&lt;/h3&gt;
+            &lt;ul&gt;
+            &lt;li&gt;&lt;strong&gt;NexFusion Series:&lt;/strong&gt; &lt;code&gt;3.6&lt;/code&gt; (minimum manager version: &lt;code&gt;&lt;/code&gt;)&lt;/li&gt;
+            &lt;/ul&gt;
+        """.trimIndent()
+
+        val blocks = changelogBlocks(atomContent)
+        val bulletTexts = blocks.filter { it.bullet }.map { it.text }
+        assert(bulletTexts.any { it.contains("`NexFusion` 4.2.3:") })
+        assert(bulletTexts.any { it.contains("Facebook Media Downloader Reliability:") })
+        assert(bulletTexts.any { it.contains("Expanded post context menu anchors (`VideoFeedStoryMenuHelper`).") })
+        assert(bulletTexts.any { it.contains("Enhanced Reels more bottom sheet builders to inject top-level \"Download reel\".") })
+        assert(blocks.any { it.header && it.text == "Compatibility" })
+        assert(bulletTexts.any { it.contains("**NexFusion Series:** `3.6`") && !it.contains("minimum manager version:") })
+        for (b in blocks) {
+            assert(!b.text.contains("&lt;") && !b.text.contains("&gt;") && !b.text.contains("<ul>") && !b.text.contains("<li>"))
+        }
+    }
+
+    @Test
+    fun nestedBulletsHaveHigherLevels() {
+        val notes = """
+            - Root item
+              - Child item
+                - Grandchild item
+        """.trimIndent()
+        val blocks = changelogBlocks(notes)
+        assertEquals(3, blocks.size)
+        assertEquals(0, blocks[0].level)
+        assertEquals(1, blocks[1].level)
+        assertEquals(2, blocks[2].level)
+    }
 }

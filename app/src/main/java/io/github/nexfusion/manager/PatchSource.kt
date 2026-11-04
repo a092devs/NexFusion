@@ -3,6 +3,7 @@ package io.github.nexfusion.manager
 import android.content.Context
 import io.github.nexfusion.core.BuildConfig
 import io.github.nexfusion.core.compatibility.VersionComparator
+import io.github.nexfusion.ui.screens.cleanChangelog
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -391,7 +392,7 @@ object SourceClient {
             val tag = link.substringAfterLast("/releases/tag/", "").takeIf { it.isNotEmpty() }
                 ?: titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
             if (tag.isEmpty() || (!tag.equals("beta", ignoreCase = true) && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
-            val content = contentRegex.find(block)?.groupValues?.get(1).orEmpty()
+            val content = cleanChangelog(contentRegex.find(block)?.groupValues?.get(1).orEmpty())
             val isPre = tag.contains('-') || tag.equals("autobuild", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
             AtomCandidate(tag, content, link, isPre)
         }.sortedWith { a, b ->

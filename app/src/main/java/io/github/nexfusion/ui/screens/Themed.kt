@@ -844,15 +844,21 @@ fun ChangelogText(
                     Spacer(Modifier.height(4.dp))
                 }
                 block.bullet -> {
+                    val bulletMarker = when (block.level) {
+                        0 -> "•"
+                        1 -> "◦"
+                        else -> "▪"
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 3.dp),
+                            .padding(start = (block.level * 14).dp)
+                            .padding(vertical = 2.5.dp),
                         verticalAlignment = Alignment.Top,
                     ) {
                         Text(
-                            text = "•",
-                            fontSize = 15.sp,
+                            text = bulletMarker,
+                            fontSize = if (block.level == 0) 15.sp else 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = accentColor,
                             modifier = Modifier.padding(start = 2.dp, end = 8.dp),

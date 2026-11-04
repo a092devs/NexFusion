@@ -18,6 +18,7 @@ internal data class ChangelogBlock(
     val text: String,
     val header: Boolean = false,
     val bullet: Boolean = false,
+    val level: Int = 0,
 )
 
 /**
@@ -37,15 +38,130 @@ private val INLINE_MARKDOWN = Regex(
         "|https?://[^\\s<>\\[\\]()]+",
 )
 
+private val NUMERIC_ENTITY_REGEX = Regex("""&#([xX][0-9a-fA-F]+|[0-9]+);""")
+private val HTML_TAG_REGEX = Regex("""<[^>]+>""")
+private val HTML_COMMENT_REGEX = Regex("""<!--[\s\S]*?-->""")
+private val HEADING_REGEX = Regex("""<h[1-6][^>]*>([\s\S]*?)</h[1-6]>""", RegexOption.IGNORE_CASE)
+private val CODE_REGEX = Regex("""<code[^>]*>([\s\S]*?)</code>""", RegexOption.IGNORE_CASE)
+private val BOLD_REGEX = Regex("""<(?:strong|b)[^>]*>([\s\S]*?)</(?:strong|b)>""", RegexOption.IGNORE_CASE)
+private val ITALIC_REGEX = Regex("""<(?:em|i)[^>]*>([\s\S]*?)</(?:em|i)>""", RegexOption.IGNORE_CASE)
+private val LINK_REGEX = Regex("""<a\s+[^>]*href="([^"]*)"[^>]*>([\s\S]*?)</a>""", RegexOption.IGNORE_CASE)
+private val LIST_TOKEN_REGEX = Regex("""(</?(?:ul|ol|li)[^>]*>)""", RegexOption.IGNORE_CASE)
+private val EMPTY_MIN_MGR_REGEX = Regex("""\s*\(minimum manager version:\s*(?:`{0,2}|<code[^>]*>\s*</code>)\s*\)""", RegexOption.IGNORE_CASE)
+private val PARAGRAPH_REGEX = Regex("""</?p[^>]*>""", RegexOption.IGNORE_CASE)
+private val BR_REGEX = Regex("""<br\s*/?>""", RegexOption.IGNORE_CASE)
+
+/**
+ * Decodes XML/HTML character entities. Handles named entities, numeric entities, and double-escaping.
+ */
+internal fun unescapeHtml(text: String): String {
+    if (!text.contains('&')) return text
+    var res = text
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+        .replace("&#39;", "'")
+        .replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+    if (res.contains("&#")) {
+        res = NUMERIC_ENTITY_REGEX.replace(res) { match ->
+            val value = match.groupValues[1]
+            val codePoint = if (value.startsWith("x", ignoreCase = true)) {
+                value.substring(1).toIntOrNull(16)
+            } else {
+                value.toIntOrNull()
+            }
+            if (codePoint != null && Character.isValidCodePoint(codePoint)) {
+                String(Character.toChars(codePoint))
+            } else {
+                match.value
+            }
+        }
+    }
+    return res
+}
+
+/**
+ * Cleans release notes that may contain raw HTML or HTML entities (e.g. from GitHub's releases.atom feed
+ * or unauthenticated fallback) and converts them into standard GitHub-flavored Markdown.
+ */
+fun cleanChangelog(notes: String): String {
+    if (notes.isBlank()) return ""
+    var s = unescapeHtml(notes)
+    if (s.contains("&lt;") || s.contains("&amp;")) {
+        s = unescapeHtml(s)
+    }
+
+    if (!s.contains('<') && !s.contains("<!--")) {
+        return s.trim()
+    }
+
+    s = HTML_COMMENT_REGEX.replace(s, "")
+    s = EMPTY_MIN_MGR_REGEX.replace(s, "")
+    s = HEADING_REGEX.replace(s) { "\n\n### ${it.groupValues[1]}\n\n" }
+    s = CODE_REGEX.replace(s) { "`${it.groupValues[1]}`" }
+    s = BOLD_REGEX.replace(s) { "**${it.groupValues[1]}**" }
+    s = ITALIC_REGEX.replace(s) { "*${it.groupValues[1]}*" }
+    s = LINK_REGEX.replace(s) { "[${it.groupValues[2]}](${it.groupValues[1]})" }
+
+    // Preserve hierarchical list nesting with indentation
+    val tokens = LIST_TOKEN_REGEX.split(s)
+    val matches = LIST_TOKEN_REGEX.findAll(s).map { it.value }.toList()
+    val sb = StringBuilder()
+    var listLevel = 0
+    for (i in tokens.indices) {
+        sb.append(tokens[i])
+        if (i < matches.size) {
+            val tag = matches[i].lowercase()
+            when {
+                tag.startsWith("<ul") || tag.startsWith("<ol") -> {
+                    listLevel++
+                    sb.append("\n")
+                }
+                tag.startsWith("</ul") || tag.startsWith("</ol") -> {
+                    listLevel = (listLevel - 1).coerceAtLeast(0)
+                    sb.append("\n")
+                }
+                tag.startsWith("<li") -> {
+                    val indent = "  ".repeat((listLevel - 1).coerceAtLeast(0))
+                    sb.append("\n$indent- ")
+                }
+                tag.startsWith("</li") -> {
+                    sb.append("\n")
+                }
+            }
+        }
+    }
+    s = sb.toString()
+
+    s = PARAGRAPH_REGEX.replace(s, "\n\n")
+    s = BR_REGEX.replace(s, "\n")
+    s = HTML_TAG_REGEX.replace(s, "")
+    s = unescapeHtml(s)
+
+    val cleanLines = mutableListOf<String>()
+    for (line in s.lines()) {
+        val trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed == "-") continue
+        cleanLines += line.trimEnd()
+    }
+    return cleanLines.joinToString("\n")
+}
+
 /**
  * Groups the changelog into logical blocks: consecutive source lines in the same paragraph or
  * bullet item are joined with a space the way GitHub soft-wraps them, blank lines stay as block
- * separators, and headers are never merged with the line below.
+ * separators, and headers are never merged with the line below. Automatically sanitizes HTML
+ * and entities if present.
  */
 internal fun changelogBlocks(notes: String): List<ChangelogBlock> {
+    val clean = cleanChangelog(notes)
     val blocks = mutableListOf<ChangelogBlock>()
-    for (rawLine in notes.lines()) {
+    for (rawLine in clean.lines()) {
         val trimmed = rawLine.trim()
+        val indent = (rawLine.length - rawLine.trimStart().length) / 2
+        val level = indent.coerceIn(0, 3)
         when {
             trimmed.isEmpty() -> blocks += ChangelogBlock("")
             trimmed.startsWith("### ") || trimmed.startsWith("## ") || trimmed.startsWith("# ") -> {
@@ -53,13 +169,13 @@ internal fun changelogBlocks(notes: String): List<ChangelogBlock> {
                 blocks += ChangelogBlock(headerText, header = true)
             }
             trimmed.startsWith("- ") || trimmed.startsWith("* ") ->
-                blocks += ChangelogBlock(trimmed.substring(2).trim(), bullet = true)
+                blocks += ChangelogBlock(trimmed.substring(2).trim(), bullet = true, level = level)
             else -> {
                 val previous = blocks.lastOrNull()
                 if (previous != null && !previous.header && previous.text.isNotEmpty()) {
                     blocks[blocks.lastIndex] = previous.copy(text = "${previous.text} $trimmed")
                 } else {
-                    blocks += ChangelogBlock(trimmed)
+                    blocks += ChangelogBlock(trimmed, level = level)
                 }
             }
         }
