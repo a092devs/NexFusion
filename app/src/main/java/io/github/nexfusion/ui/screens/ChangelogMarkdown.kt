@@ -47,7 +47,7 @@ private val BOLD_REGEX = Regex("""<(?:strong|b)[^>]*>([\s\S]*?)</(?:strong|b)>""
 private val ITALIC_REGEX = Regex("""<(?:em|i)[^>]*>([\s\S]*?)</(?:em|i)>""", RegexOption.IGNORE_CASE)
 private val LINK_REGEX = Regex("""<a\s+[^>]*href="([^"]*)"[^>]*>([\s\S]*?)</a>""", RegexOption.IGNORE_CASE)
 private val LIST_TOKEN_REGEX = Regex("""(</?(?:ul|ol|li)[^>]*>)""", RegexOption.IGNORE_CASE)
-private val EMPTY_MIN_MGR_REGEX = Regex("""\s*\(minimum manager version:\s*(?:`{0,2}|<code[^>]*>\s*</code>)\s*\)""", RegexOption.IGNORE_CASE)
+private val MIN_MGR_REGEX = Regex("""\s*\(minimum manager version:[^)]*\)""", RegexOption.IGNORE_CASE)
 private val PARAGRAPH_REGEX = Regex("""</?p[^>]*>""", RegexOption.IGNORE_CASE)
 private val BR_REGEX = Regex("""<br\s*/?>""", RegexOption.IGNORE_CASE)
 
@@ -98,7 +98,7 @@ fun cleanChangelog(notes: String): String {
     }
 
     s = HTML_COMMENT_REGEX.replace(s, "")
-    s = EMPTY_MIN_MGR_REGEX.replace(s, "")
+    s = MIN_MGR_REGEX.replace(s, "")
     s = HEADING_REGEX.replace(s) { "\n\n### ${it.groupValues[1]}\n\n" }
     s = CODE_REGEX.replace(s) { "`${it.groupValues[1]}`" }
     s = BOLD_REGEX.replace(s) { "**${it.groupValues[1]}**" }
