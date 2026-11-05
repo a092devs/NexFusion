@@ -5,11 +5,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlin.coroutines.cancellation.CancellationException
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -200,6 +203,8 @@ fun NavHostController.navigateTopLevel(route: String) = navigate(route) {
     restoreState = true
 }
 
+internal var lastBackSwipeEdge = BackEventCompat.EDGE_LEFT
+
 private fun isDetailRoute(route: String?): Boolean =
     route?.startsWith(MainActivity.DESTINATION_APP) == true
 
@@ -220,9 +225,10 @@ private fun destinationIndex(route: String?): Int {
 }
 
 /**
- * Fluid, directional transitions synchronized with bottom bar selections and master-detail flow:
+ * Fluid, directional transitions synchronized with bottom bar selections and gesture edges:
  * - Entering App detail: slides in 100% from the right edge over the calling screen.
- * - Leaving App detail (BACK): slides 100% completely off-screen to the right without mid-screen fade.
+ * - Leaving App detail (BACK): slides 100% off-screen in the exact direction of the user's swipe
+ *   (swiping from right edge slides out to left; swiping from left edge or tapping back icon slides out to right).
  * - Peer tabs (Home <-> Patches <-> Settings): slide subtly in sync with navigation bar direction.
  */
 private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
@@ -238,10 +244,11 @@ private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry
             )
         }
         // Popping back from a detail screen to top-level (App detail -> Home):
-        // Top-level screen glides in smoothly from a subtle left offset
+        // Follows the direction of the back swipe
         isDetailRoute(initialRoute) -> {
+            val slideFactor = if (lastBackSwipeEdge == BackEventCompat.EDGE_RIGHT) 0.25f else -0.25f
             slideInHorizontally(
-                initialOffsetX = { (-it * 0.25f).toInt() },
+                initialOffsetX = { (it * slideFactor).toInt() },
                 animationSpec = tween(300, easing = FastOutSlowInEasing),
             ) + fadeIn(animationSpec = tween(240, easing = LinearOutSlowInEasing))
         }
@@ -279,11 +286,14 @@ private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>
             ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
         }
         // Popping back from a detail screen to top-level (App detail -> Home):
-        // The detail screen slides COMPLETELY off the screen to the right (100% width)!
-        // Kept fully opaque with no mid-screen fade so it never freezes or looks stuck like a screenshot.
+        // Detail screen slides 100% completely off-screen in the gesture direction:
+        // swiped from right edge -> slides out to the LEFT (-100%);
+        // swiped from left edge or back button -> slides out to the RIGHT (+100%).
+        // Kept fully opaque so it never freezes or looks stuck.
         isDetailRoute(initialRoute) -> {
+            val slideDirection = if (lastBackSwipeEdge == BackEventCompat.EDGE_RIGHT) -1 else 1
             slideOutHorizontally(
-                targetOffsetX = { it },
+                targetOffsetX = { it * slideDirection },
                 animationSpec = tween(300, easing = FastOutSlowInEasing),
             )
         }
@@ -327,6 +337,18 @@ private fun ManagerApp(
         }
     }
     NotificationPermission()
+
+    PredictiveBackHandler(enabled = isDetailRoute(route)) { progressFlow ->
+        lastBackSwipeEdge = BackEventCompat.EDGE_LEFT
+        try {
+            progressFlow.collect { backEvent ->
+                lastBackSwipeEdge = backEvent.swipeEdge
+            }
+            navController.popBackStack()
+        } catch (_: CancellationException) {
+            // User cancelled back gesture
+        }
+    }
 
     if (isMiuix) {
         MiuixManagerApp(
