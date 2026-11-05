@@ -51,6 +51,10 @@ class AppRelease(
                     if (cmp <= 0) return false
                     return true
                 }
+                // If no version string in notes, but published timestamp is strictly newer than build commit date
+                if (publishedAt > 0L && commitDateMs > 0L && publishedAt > commitDateMs) {
+                    return true
+                }
                 return false
             }
             return VersionComparator.compare(tag, BuildConfig.VERSION_NAME) > 0 || (versionCode > BuildConfig.VERSION_CODE)

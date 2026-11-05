@@ -1,6 +1,7 @@
 package io.github.nexfusion.core.discovery
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -93,8 +94,12 @@ object AppDiscovery {
 
             val label = appInfo?.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: packageName
 
-            if (!isEnabled) {
-                android.util.Log.i("NexFusionDiscovery", "$packageName is disabled - treating as uninstalled")
+            val isInstalledForUser = if (appInfo != null) {
+                (appInfo.flags and ApplicationInfo.FLAG_INSTALLED) != 0
+            } else true
+
+            if (!isEnabled || !isInstalledForUser) {
+                android.util.Log.i("NexFusionDiscovery", "$packageName is disabled or uninstalled for user - treating as uninstalled")
                 return PackageLiveInfo(
                     packageName = packageName,
                     appLabel = label,
@@ -136,7 +141,11 @@ object AppDiscovery {
 
             val label = appInfo?.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: packageName
 
-            if (!isEnabled) {
+            val isInstalledForUser = if (appInfo != null) {
+                (appInfo.flags and ApplicationInfo.FLAG_INSTALLED) != 0
+            } else true
+
+            if (!isEnabled || !isInstalledForUser) {
                 return PackageLiveInfo(
                     packageName = packageName,
                     appLabel = label,
