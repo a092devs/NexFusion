@@ -200,6 +200,9 @@ fun NavHostController.navigateTopLevel(route: String) = navigate(route) {
     restoreState = true
 }
 
+private fun isDetailRoute(route: String?): Boolean =
+    route?.startsWith(MainActivity.DESTINATION_APP) == true
+
 /**
  * Resolves the horizontal index of top-level destinations so screen transitions move in sync
  * with the navigation bar: clicking a tab to the right slides content right-to-left,
@@ -217,43 +220,91 @@ private fun destinationIndex(route: String?): Int {
 }
 
 /**
- * Fluid, directional transitions synchronized with bottom bar selections:
- * entering screens slide in towards the navigation direction with a gentle fade,
- * while exiting screens glide away smoothly without harsh cuts.
+ * Fluid, directional transitions synchronized with bottom bar selections and master-detail flow:
+ * - Entering App detail: slides in 100% from the right edge over the calling screen.
+ * - Leaving App detail (BACK): slides 100% completely off-screen to the right without mid-screen fade.
+ * - Peer tabs (Home <-> Patches <-> Settings): slide subtly in sync with navigation bar direction.
  */
 private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-    val initialIdx = destinationIndex(initialState.destination.route)
-    val targetIdx = destinationIndex(targetState.destination.route)
-    val direction = when {
-        targetIdx > initialIdx -> 1
-        targetIdx < initialIdx -> -1
-        else -> 0
-    }
-    if (direction == 0) {
-        fadeIn(animationSpec = tween(220))
-    } else {
-        slideInHorizontally(
-            initialOffsetX = { (it * 0.28f * direction).toInt() },
-            animationSpec = tween(300, easing = FastOutSlowInEasing),
-        ) + fadeIn(animationSpec = tween(240, easing = LinearOutSlowInEasing))
+    val initialRoute = initialState.destination.route
+    val targetRoute = targetState.destination.route
+
+    when {
+        // Pushing a detail screen (Home -> App detail): slide in 100% from the right
+        isDetailRoute(targetRoute) -> {
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(320, easing = FastOutSlowInEasing),
+            )
+        }
+        // Popping back from a detail screen to top-level (App detail -> Home):
+        // Top-level screen glides in smoothly from a subtle left offset
+        isDetailRoute(initialRoute) -> {
+            slideInHorizontally(
+                initialOffsetX = { (-it * 0.25f).toInt() },
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+            ) + fadeIn(animationSpec = tween(240, easing = LinearOutSlowInEasing))
+        }
+        // Between peer top-level tabs:
+        else -> {
+            val initialIdx = destinationIndex(initialRoute)
+            val targetIdx = destinationIndex(targetRoute)
+            val direction = when {
+                targetIdx > initialIdx -> 1
+                targetIdx < initialIdx -> -1
+                else -> 0
+            }
+            if (direction == 0) {
+                fadeIn(animationSpec = tween(220))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { (it * 0.25f * direction).toInt() },
+                    animationSpec = tween(300, easing = FastOutSlowInEasing),
+                ) + fadeIn(animationSpec = tween(240, easing = LinearOutSlowInEasing))
+            }
+        }
     }
 }
 
 private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-    val initialIdx = destinationIndex(initialState.destination.route)
-    val targetIdx = destinationIndex(targetState.destination.route)
-    val direction = when {
-        targetIdx > initialIdx -> -1
-        targetIdx < initialIdx -> 1
-        else -> 0
-    }
-    if (direction == 0) {
-        fadeOut(animationSpec = tween(180))
-    } else {
-        slideOutHorizontally(
-            targetOffsetX = { (it * 0.18f * direction).toInt() },
-            animationSpec = tween(260, easing = FastOutSlowInEasing),
-        ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+    val initialRoute = initialState.destination.route
+    val targetRoute = targetState.destination.route
+
+    when {
+        // Pushing a detail screen (Home -> App detail): top-level screen gently recedes left
+        isDetailRoute(targetRoute) -> {
+            slideOutHorizontally(
+                targetOffsetX = { (-it * 0.25f).toInt() },
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+            ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+        }
+        // Popping back from a detail screen to top-level (App detail -> Home):
+        // The detail screen slides COMPLETELY off the screen to the right (100% width)!
+        // Kept fully opaque with no mid-screen fade so it never freezes or looks stuck like a screenshot.
+        isDetailRoute(initialRoute) -> {
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+            )
+        }
+        // Between peer top-level tabs:
+        else -> {
+            val initialIdx = destinationIndex(initialRoute)
+            val targetIdx = destinationIndex(targetRoute)
+            val direction = when {
+                targetIdx > initialIdx -> -1
+                targetIdx < initialIdx -> 1
+                else -> 0
+            }
+            if (direction == 0) {
+                fadeOut(animationSpec = tween(180))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { (it * 0.15f * direction).toInt() },
+                    animationSpec = tween(260, easing = FastOutSlowInEasing),
+                ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+            }
+        }
     }
 }
 
@@ -313,7 +364,11 @@ private fun Material3ManagerApp(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
-            if (isTopLevel) {
+            AnimatedVisibility(
+                visible = isTopLevel,
+                enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
+                exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
+            ) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
@@ -467,7 +522,11 @@ private fun MiuixStandardNavigationApp(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-        if (isTopLevel) {
+        AnimatedVisibility(
+            visible = isTopLevel,
+            enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
+            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
+        ) {
             MiuixNavigationBar {
                 topLevel.forEach { item ->
                     val selected = route == item.route
