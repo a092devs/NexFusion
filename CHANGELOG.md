@@ -7,13 +7,16 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 4.2.5
 
-- Scope & Disabled App Optimization:
-  * Automatically inspects application enabled state on the device; disabled applications (such as disabled YouTube Music) are treated as uninstalled and will not trigger false "missing from module scope" warnings or scope prompts.
+- Application Exclusion & Debloated App Optimization:
+  * Introduced universal App Exclusion controls: users can exclude any supported application from patching directly from the Home screen or app detail settings.
+  * Excluded applications will never trigger scope approval prompts or notifications, and hooks are bypassed at process startup with zero overhead.
+  * Automatically inspects application enabled state on the device; disabled or debloated applications are treated as uninstalled and will not trigger false "missing from module scope" warnings or scope prompts.
+  * Added a dedicated "Excluded" filter chip with live counts and an organized "Excluded Applications" section on the Home screen.
 - Scope Approval Notification Refinement:
   * Streamlined the LSPosed scope approval snackbar from a multi-line raw package identifier list to a clean, formatted confirmation ("Added YouTube to module scope" or "Added 14 apps to module scope"), eliminating notification bar clutter.
-- Fluid Transitions & HyperOS Performance:
-  * Re-engineered page navigation with fluid, physics-eased slide and fade transitions (`enterTransition`, `exitTransition`, `popEnterTransition`, `popExitTransition`).
-  * Added transition support to `MiuixNavHost` for native HyperOS / MIUI smoothness.
+- Fluid Depth Transitions & HyperOS Performance:
+  * Re-engineered screen navigation with native depth elevation and scale transitions (`scaleIn` / `scaleOut` + `fadeIn` / `fadeOut`), delivering smooth, tear-free navigation across gesture swipes (left or right edge), 3-button navigation, and top back icons.
+  * Directional tab sliding synchronized with navigation bar selection for peer tabs.
   * Disabled floating navigation and translucent blur by default to eliminate navigation frame drops on Xiaomi HyperOS.
   * Restricted floating navigation exclusively to Miuix mode; Material 3 mode now strictly renders standard Material 3 Scaffold navigation without floating bar overhead.
 - Anti-Detection & Stealth Hiding:
