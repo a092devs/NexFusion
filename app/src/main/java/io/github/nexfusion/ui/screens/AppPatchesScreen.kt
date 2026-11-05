@@ -3,8 +3,6 @@ package io.github.nexfusion.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.activity.BackEventCompat
-import io.github.nexfusion.ui.lastBackSwipeEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -447,10 +445,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 subtitle = packageName,
                 color = MaterialTheme.colorScheme.background,
                 navigationIcon = {
-                    ThemedIconButton(onClick = {
-                        lastBackSwipeEdge = BackEventCompat.EDGE_LEFT
-                        navController.popBackStack()
-                    }) {
+                    ThemedIconButton(onClick = { navController.popBackStack() }) {
                         Icon(icons.back, contentDescription = null)
                     }
                 },
@@ -494,10 +489,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
                     navigationIcon = {
-                        ThemedIconButton(onClick = {
-                            lastBackSwipeEdge = BackEventCompat.EDGE_LEFT
-                            navController.popBackStack()
-                        }) {
+                        ThemedIconButton(onClick = { navController.popBackStack() }) {
                             Icon(icons.back, contentDescription = null)
                         }
                     },

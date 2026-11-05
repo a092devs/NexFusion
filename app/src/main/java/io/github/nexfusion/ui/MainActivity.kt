@@ -5,14 +5,11 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.PredictiveBackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import kotlin.coroutines.cancellation.CancellationException
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -203,8 +200,6 @@ fun NavHostController.navigateTopLevel(route: String) = navigate(route) {
     restoreState = true
 }
 
-internal var lastBackSwipeEdge = BackEventCompat.EDGE_LEFT
-
 private fun isDetailRoute(route: String?): Boolean =
     route?.startsWith(MainActivity.DESTINATION_APP) == true
 
@@ -225,10 +220,10 @@ private fun destinationIndex(route: String?): Int {
 }
 
 /**
- * Fluid, directional transitions synchronized with bottom bar selections and gesture edges:
- * - Entering App detail: slides in 100% from the right edge over the calling screen.
- * - Leaving App detail (BACK): slides 100% off-screen in the exact direction of the user's swipe
- *   (swiping from right edge slides out to left; swiping from left edge or tapping back icon slides out to right).
+ * Fluid, directional transitions synchronized with bottom bar selections and Android navigation standards:
+ * - Entering App detail: slides in from the right edge over the calling screen with smooth fade.
+ * - Leaving App detail (BACK): slides cleanly off-screen to the right with gentle fade-out,
+ *   completely eliminating any frozen-frame or screenshot appearance.
  * - Peer tabs (Home <-> Patches <-> Settings): slide subtly in sync with navigation bar direction.
  */
 private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
@@ -236,21 +231,20 @@ private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry
     val targetRoute = targetState.destination.route
 
     when {
-        // Pushing a detail screen (Home -> App detail): slide in 100% from the right
+        // Pushing a detail screen (Home -> App detail): slide in from the right
         isDetailRoute(targetRoute) -> {
             slideInHorizontally(
-                initialOffsetX = { it },
-                animationSpec = tween(320, easing = FastOutSlowInEasing),
-            )
+                initialOffsetX = { (it * 0.95f).toInt() },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
+            ) + fadeIn(animationSpec = tween(200, easing = LinearOutSlowInEasing))
         }
         // Popping back from a detail screen to top-level (App detail -> Home):
-        // Follows the direction of the back swipe
+        // Top-level screen glides in smoothly from a gentle left offset
         isDetailRoute(initialRoute) -> {
-            val slideFactor = if (lastBackSwipeEdge == BackEventCompat.EDGE_RIGHT) 0.25f else -0.25f
             slideInHorizontally(
-                initialOffsetX = { (it * slideFactor).toInt() },
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
-            ) + fadeIn(animationSpec = tween(240, easing = LinearOutSlowInEasing))
+                initialOffsetX = { (-it * 0.20f).toInt() },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
+            ) + fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing))
         }
         // Between peer top-level tabs:
         else -> {
@@ -262,12 +256,12 @@ private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry
                 else -> 0
             }
             if (direction == 0) {
-                fadeIn(animationSpec = tween(220))
+                fadeIn(animationSpec = tween(200))
             } else {
                 slideInHorizontally(
-                    initialOffsetX = { (it * 0.25f * direction).toInt() },
-                    animationSpec = tween(300, easing = FastOutSlowInEasing),
-                ) + fadeIn(animationSpec = tween(240, easing = LinearOutSlowInEasing))
+                    initialOffsetX = { (it * 0.20f * direction).toInt() },
+                    animationSpec = tween(280, easing = FastOutSlowInEasing),
+                ) + fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing))
             }
         }
     }
@@ -281,21 +275,17 @@ private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>
         // Pushing a detail screen (Home -> App detail): top-level screen gently recedes left
         isDetailRoute(targetRoute) -> {
             slideOutHorizontally(
-                targetOffsetX = { (-it * 0.25f).toInt() },
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
+                targetOffsetX = { (-it * 0.20f).toInt() },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
             ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
         }
         // Popping back from a detail screen to top-level (App detail -> Home):
-        // Detail screen slides 100% completely off-screen in the gesture direction:
-        // swiped from right edge -> slides out to the LEFT (-100%);
-        // swiped from left edge or back button -> slides out to the RIGHT (+100%).
-        // Kept fully opaque so it never freezes or looks stuck.
+        // Detail screen slides smoothly to the right and gently fades so it never leaves an edge
         isDetailRoute(initialRoute) -> {
-            val slideDirection = if (lastBackSwipeEdge == BackEventCompat.EDGE_RIGHT) -1 else 1
             slideOutHorizontally(
-                targetOffsetX = { it * slideDirection },
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
-            )
+                targetOffsetX = { it },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
+            ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
         }
         // Between peer top-level tabs:
         else -> {
@@ -310,8 +300,8 @@ private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>
                 fadeOut(animationSpec = tween(180))
             } else {
                 slideOutHorizontally(
-                    targetOffsetX = { (it * 0.15f * direction).toInt() },
-                    animationSpec = tween(260, easing = FastOutSlowInEasing),
+                    targetOffsetX = { (it * 0.20f * direction).toInt() },
+                    animationSpec = tween(280, easing = FastOutSlowInEasing),
                 ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
             }
         }
@@ -337,18 +327,6 @@ private fun ManagerApp(
         }
     }
     NotificationPermission()
-
-    PredictiveBackHandler(enabled = isDetailRoute(route)) { progressFlow ->
-        lastBackSwipeEdge = BackEventCompat.EDGE_LEFT
-        try {
-            progressFlow.collect { backEvent ->
-                lastBackSwipeEdge = backEvent.swipeEdge
-            }
-            navController.popBackStack()
-        } catch (_: CancellationException) {
-            // User cancelled back gesture
-        }
-    }
 
     if (isMiuix) {
         MiuixManagerApp(
@@ -528,26 +506,24 @@ private fun MiuixStandardNavigationApp(
     isTopLevel: Boolean,
     snackbar: MiuixSnackbarHostState,
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Box(
+    val navBarHeight = 84.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    Box(modifier = Modifier.fillMaxSize()) {
+        MiuixNavHost(
+            navController = navController,
+            viewModel = viewModel,
+            contentPadding = PaddingValues(bottom = if (isTopLevel) navBarHeight else 16.dp),
+        )
+        MiuixSnackbarHost(
+            state = snackbar,
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-        ) {
-            MiuixNavHost(
-                navController = navController,
-                viewModel = viewModel,
-                contentPadding = PaddingValues(bottom = 16.dp),
-            )
-            MiuixSnackbarHost(
-                state = snackbar,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+                .fillMaxSize()
+                .padding(bottom = if (isTopLevel) navBarHeight else 16.dp),
+        )
         AnimatedVisibility(
             visible = isTopLevel,
             enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
             exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
+            modifier = Modifier.align(Alignment.BottomCenter),
         ) {
             MiuixNavigationBar {
                 topLevel.forEach { item ->

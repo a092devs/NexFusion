@@ -1,8 +1,5 @@
 package io.github.nexfusion.ui.screens
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -59,21 +55,6 @@ import io.github.nexfusion.ui.theme.nexFusionCardBorder
 import io.github.nexfusion.ui.theme.nexFusionCardShape
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 
-/** Backward-compatible version comparison function delegating to VersionComparator. */
-fun compareVersions(a: String, b: String): Int = VersionComparator.compare(a, b)
-
-/** Legacy app look model. */
-class AppLook(val icon: ImageBitmap?, val versionName: String?)
-
-fun appLook(context: Context, packageName: String): AppLook = runCatching {
-    val pm = context.packageManager
-    val info = pm.getPackageInfo(packageName, 0)
-    val drawable = pm.getApplicationIcon(packageName)
-    val bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888)
-    drawable.setBounds(0, 0, 192, 192)
-    drawable.draw(Canvas(bitmap))
-    AppLook(bitmap.asImageBitmap(), info.versionName)
-}.getOrDefault(AppLook(null, null))
 
 /**
  * Modern Material 3 & Miuix application card.
@@ -231,43 +212,6 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
     }
 }
 
-/** Legacy AppCard overload to support unmigrated callers. */
-@Composable
-fun AppCard(
-    appName: String,
-    packageName: String,
-    appIconColor: Int?,
-    recommendedVersion: String?,
-    inScope: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    look: AppLook = run {
-        val context = LocalContext.current
-        remember(packageName) { appLook(context, packageName) }
-    },
-) {
-    val state = remember(appName, packageName, look.versionName, recommendedVersion, inScope) {
-        AppItemState(
-            packageName = packageName,
-            appName = appName,
-            isInstalled = look.versionName != null,
-            installedVersionName = look.versionName,
-            installedVersionCode = 0L,
-            recommendedVersion = recommendedVersion,
-            appIconColor = appIconColor,
-            compatibility = if (look.versionName == null) {
-                CompatibilityStatus.NotInstalled(recommendedVersion)
-            } else if (recommendedVersion != null && VersionComparator.compare(look.versionName, recommendedVersion) > 0) {
-                CompatibilityStatus.CompatibleUntested(look.versionName, recommendedVersion)
-            } else {
-                CompatibilityStatus.Compatible(recommendedVersion ?: look.versionName)
-            },
-            inScope = inScope,
-            bundles = emptyList(),
-        )
-    }
-    AppCard(app = state, onClick = onClick, modifier = modifier)
-}
 
 @Composable
 private fun AppIconBadge(

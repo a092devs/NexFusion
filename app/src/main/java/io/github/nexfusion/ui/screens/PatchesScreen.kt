@@ -746,7 +746,9 @@ private fun BundleCard(
             // Targeted apps chips: only the apps present on this device, so a bundle stops
             // naming apps the user has uninstalled.
             val context = LocalContext.current
-            val appNames = AppDiscovery.installedAppNames(bundle.apps) { isInstalled(context, it) }
+            val appNames = AppDiscovery.installedAppNames(bundle.apps) {
+                AppDiscovery.queryPackage(context, it).isInstalled
+            }
             if (appNames.isEmpty()) {
                 Text(
                     stringResource(R.string.bundle_no_installed_apps),
