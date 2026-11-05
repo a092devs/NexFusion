@@ -65,10 +65,10 @@ class AppSettings(context: Context) {
 
     /**
      * Miuix-only: enable translucent liquid glass blur effect on the floating navigation bar.
-     * Enabled by default when floating navigation is on.
+     * Disabled by default for maximum frame rate and fluidity across devices.
      */
     var miuixFloatingBarTranslucent: Boolean
-        get() = prefs.getBoolean("miuix_floating_bar_translucent", true)
+        get() = prefs.getBoolean("miuix_floating_bar_translucent", AppPreferenceNames.DEFAULT_FLOATING_BAR_TRANSLUCENT)
         set(value) = prefs.edit().putBoolean("miuix_floating_bar_translucent", value).apply()
 
     /**

@@ -55,9 +55,10 @@ class AppPreferenceNamesTest {
     }
 
     @Test
-    fun floatingNavigationDefaultsToEnabled() {
+    fun floatingNavigationDefaultsToDisabled() {
         // The floating navigation bar is opt-in: the default must stay false.
-        assertTrue(AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION)
+        assertFalse(AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION)
+        assertFalse(AppPreferenceNames.DEFAULT_FLOATING_BAR_TRANSLUCENT)
     }
 
     @Test

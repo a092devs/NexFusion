@@ -84,7 +84,26 @@ object AppDiscovery {
 
         if (info != null) {
             val appInfo = info.applicationInfo
+            val enabledSetting = runCatching { pm.getApplicationEnabledSetting(packageName) }
+                .getOrDefault(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
+            val isEnabled = (appInfo?.enabled ?: true) &&
+                enabledSetting != PackageManager.COMPONENT_ENABLED_STATE_DISABLED &&
+                enabledSetting != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER &&
+                enabledSetting != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED
+
             val label = appInfo?.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: packageName
+
+            if (!isEnabled) {
+                android.util.Log.i("NexFusionDiscovery", "$packageName is disabled - treating as uninstalled")
+                return PackageLiveInfo(
+                    packageName = packageName,
+                    appLabel = label,
+                    versionName = info.versionName,
+                    versionCode = 0L,
+                    isInstalled = false,
+                )
+            }
+
             val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 info.longVersionCode
             } else {
@@ -108,7 +127,25 @@ object AppDiscovery {
 
         if (hasIntent) {
             val appInfo = runCatching { pm.getApplicationInfo(packageName, 0) }.getOrNull()
+            val enabledSetting = runCatching { pm.getApplicationEnabledSetting(packageName) }
+                .getOrDefault(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
+            val isEnabled = (appInfo?.enabled ?: true) &&
+                enabledSetting != PackageManager.COMPONENT_ENABLED_STATE_DISABLED &&
+                enabledSetting != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER &&
+                enabledSetting != PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED
+
             val label = appInfo?.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: packageName
+
+            if (!isEnabled) {
+                return PackageLiveInfo(
+                    packageName = packageName,
+                    appLabel = label,
+                    versionName = null,
+                    versionCode = 0L,
+                    isInstalled = false,
+                )
+            }
+
             android.util.Log.i("NexFusionDiscovery", "Intent fallback resolved $packageName: label=$label")
             return PackageLiveInfo(
                 packageName = packageName,

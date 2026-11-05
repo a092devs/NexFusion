@@ -20,8 +20,8 @@ android {
 
     defaultConfig {
         applicationId = "io.github.nexfusion"
-        versionCode = 67
-        versionName = "4.2.4"
+        versionCode = 68
+        versionName = "4.2.5"
         buildConfigField("String", "COMMIT_HASH", "\"${gitCommitHashProvider.get()}\"")
         buildConfigField("long", "COMMIT_DATE", "${gitCommitDateProvider.get()}L")
         // GitHub repository checked for updates and used as the default patch source.

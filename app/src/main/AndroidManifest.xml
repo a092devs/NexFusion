@@ -72,11 +72,17 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:showForAllUsers="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Dedicated Xposed settings category alias, can be disabled in stealth mode -->
+        <activity-alias
+            android:name="io.github.nexfusion.ui.ModuleSettingsAlias"
+            android:exported="true"
+            android:targetActivity="io.github.nexfusion.ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
             </intent-filter>
-        </activity>
+        </activity-alias>
     </application>
 </manifest>

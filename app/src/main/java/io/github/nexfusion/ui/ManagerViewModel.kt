@@ -81,8 +81,8 @@ data class ManagerState(
     val currentColorScheme: String = AppSettings.COLOR_SCHEME_DEFAULT,
     /** Miuix-only: floating navigation bar preference. Disabled by default. */
     val floatingNavigation: Boolean = AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION,
-    /** Miuix-only: translucent liquid glass blur on floating navigation bar. */
-    val floatingBarTranslucent: Boolean = true,
+    /** Miuix-only: translucent liquid glass blur on floating navigation bar. Disabled by default. */
+    val floatingBarTranslucent: Boolean = AppPreferenceNames.DEFAULT_FLOATING_BAR_TRANSLUCENT,
     /** Whether to hide uninstalled applications from the Home screen. */
     val hideUninstalledApps: Boolean = false,
     val searchQuery: String = "",
@@ -716,18 +716,19 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     // endregion
 
-    // region Launcher icon
+    // region Launcher icon & Stealth
 
     private val launcherAlias get() = ComponentName(context, "io.github.nexfusion.ui.MainActivityAlias")
+    private val moduleSettingsAlias get() = ComponentName(context, "io.github.nexfusion.ui.ModuleSettingsAlias")
 
     var launcherIconHidden: Boolean
         get() = context.packageManager.getComponentEnabledSetting(launcherAlias) ==
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-        set(hidden) = context.packageManager.setComponentEnabledSetting(
-            launcherAlias,
-            if (hidden) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            PackageManager.DONT_KILL_APP,
-        )
+        set(hidden) {
+            val state = if (hidden) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            context.packageManager.setComponentEnabledSetting(launcherAlias, state, PackageManager.DONT_KILL_APP)
+            runCatching { context.packageManager.setComponentEnabledSetting(moduleSettingsAlias, state, PackageManager.DONT_KILL_APP) }
+        }
 
     // endregion
 }

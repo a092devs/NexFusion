@@ -199,25 +199,36 @@ fun NavHostController.navigateTopLevel(route: String) = navigate(route) {
 }
 
 /**
- * Screen transitions shared by both design systems: a short fade with a slight horizontal
- * slide keeps switching between screens fluid without feeling heavy.
+ * Fluid, spring-eased transitions shared by both design systems:
+ * entering screens slide in smoothly with a gentle fade, while exiting screens
+ * slide away subtly without harsh popping cuts.
  */
 private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-    fadeIn(animationSpec = tween(220)) +
-        slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { it / 14 }
+    slideInHorizontally(
+        initialOffsetX = { (it * 0.25f).toInt() },
+        animationSpec = tween(320, easing = FastOutSlowInEasing),
+    ) + fadeIn(animationSpec = tween(240))
 }
 
 private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-    fadeOut(animationSpec = tween(160))
+    slideOutHorizontally(
+        targetOffsetX = { (-it * 0.15f).toInt() },
+        animationSpec = tween(280, easing = FastOutSlowInEasing),
+    ) + fadeOut(animationSpec = tween(180))
 }
 
 private val navPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-    fadeIn(animationSpec = tween(220)) +
-        slideInHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -it / 14 }
+    slideInHorizontally(
+        initialOffsetX = { (-it * 0.15f).toInt() },
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+    ) + fadeIn(animationSpec = tween(240))
 }
 
 private val navPopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-    fadeOut(animationSpec = tween(160))
+    slideOutHorizontally(
+        targetOffsetX = { (it * 0.25f).toInt() },
+        animationSpec = tween(280, easing = FastOutSlowInEasing),
+    ) + fadeOut(animationSpec = tween(180))
 }
 
 @Composable
@@ -252,7 +263,6 @@ private fun ManagerApp(
             navController = navController,
             viewModel = viewModel,
             route = route,
-            floatingNavigation = floatingNavigation,
         )
     }
 }
@@ -265,9 +275,7 @@ private fun Material3ManagerApp(
     navController: NavHostController,
     viewModel: ManagerViewModel,
     route: String?,
-    floatingNavigation: Boolean,
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
     val isTopLevel = topLevel.any { it.route == route }
     val snackbar = remember { SnackbarHostState() }
 
@@ -275,162 +283,54 @@ private fun Material3ManagerApp(
         viewModel.messages.collect { snackbar.showSnackbar(it) }
     }
 
-    val systemDark = isSystemInDarkTheme()
-    val isDark = when (state.currentTheme) {
-        AppSettings.THEME_LIGHT -> false
-        AppSettings.THEME_DARK -> true
-        else -> systemDark
-    }
-
-    val blurSupported = isRuntimeShaderSupported()
-    val canvasBg = MaterialTheme.colorScheme.background
-    val isTranslucent = state.floatingBarTranslucent
-    val backdrop = if (blurSupported && isTranslucent) {
-        rememberLayerBackdrop {
-            drawRect(canvasBg)
-            drawContent()
-        }
-    } else null
-
-    if (floatingNavigation) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(canvasBg),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
-            ) {
-                val bottomPadding = if (isTopLevel) 100.dp else 16.dp
-                NavHost(
-                    navController,
-                    startDestination = MainActivity.DESTINATION_HOME,
-                    enterTransition = navEnterTransition,
-                    exitTransition = navExitTransition,
-                    popEnterTransition = navPopEnterTransition,
-                    popExitTransition = navPopExitTransition,
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbar) },
+        bottomBar = {
+            if (isTopLevel) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
-                    composable(MainActivity.DESTINATION_HOME) {
-                        HomeScreen(viewModel, navController, PaddingValues(bottom = bottomPadding))
-                    }
-                    composable(MainActivity.DESTINATION_PATCHES) {
-                        PatchesScreen(viewModel, PaddingValues(bottom = bottomPadding))
-                    }
-                    composable(MainActivity.DESTINATION_SETTINGS) {
-                        SettingsScreen(viewModel, PaddingValues(bottom = bottomPadding))
-                    }
-                    composable(
-                        "${MainActivity.DESTINATION_APP}/{packageName}",
-                        arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-                    ) { entry ->
-                        AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
-                    }
-                }
-                SnackbarHost(
-                    hostState = snackbar,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = bottomPadding),
-                )
-            }
-
-            AnimatedVisibility(
-                visible = isTopLevel,
-                enter = slideInVertically(
-                    animationSpec = tween(320, easing = FastOutSlowInEasing),
-                    initialOffsetY = { it },
-                ) + fadeIn(animationSpec = tween(220)),
-                exit = slideOutVertically(
-                    animationSpec = tween(220),
-                    targetOffsetY = { it / 2 },
-                ) + fadeOut(animationSpec = tween(160)),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
-                    .padding(bottom = 12.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
-            ) {
-                val fluidTabs = remember(state.sourcesWithUpdates.size, state.appUpdate) {
-                    topLevel.map { item ->
-                        val badge = when (item.route) {
-                            MainActivity.DESTINATION_PATCHES -> state.sourcesWithUpdates.size
-                            MainActivity.DESTINATION_SETTINGS -> if (state.appUpdate != null) 1 else 0
-                            else -> 0
-                        }
-                        FluidTabItem(
-                            route = item.route,
-                            label = item.label,
-                            selectedIcon = item.selectedIcon,
-                            unselectedIcon = item.unselectedIcon,
-                            badgeCount = badge,
+                    topLevel.forEach { item ->
+                        val selected = route == item.route
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = { navController.navigateTopLevel(item.route) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = null,
+                                )
+                            },
+                            label = { Text(stringResource(item.label)) },
                         )
                     }
                 }
-                val selectedIndex = topLevel.indexOfFirst { it.route == route }.coerceAtLeast(0)
-                FluidFloatingBottomBar(
-                    selectedIndex = selectedIndex,
-                    onSelected = { index ->
-                        val target = topLevel.getOrNull(index) ?: topLevel[0]
-                        navController.navigateTopLevel(target.route)
-                    },
-                    tabs = fluidTabs,
-                    isTranslucent = state.floatingBarTranslucent,
-                    isDark = isDark,
-                    backdrop = backdrop,
-                )
             }
-        }
-    } else {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            snackbarHost = { SnackbarHost(snackbar) },
-            bottomBar = {
-                if (isTopLevel) {
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ) {
-                        topLevel.forEach { item ->
-                            val selected = route == item.route
-                            NavigationBarItem(
-                                selected = selected,
-                                onClick = { navController.navigateTopLevel(item.route) },
-                                icon = {
-                                    Icon(
-                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                        contentDescription = null,
-                                    )
-                                },
-                                label = { Text(stringResource(item.label)) },
-                            )
-                        }
-                    }
-                }
-            },
-        ) { padding ->
-            NavHost(
-                navController,
-                startDestination = MainActivity.DESTINATION_HOME,
-                enterTransition = navEnterTransition,
-                exitTransition = navExitTransition,
-                popEnterTransition = navPopEnterTransition,
-                popExitTransition = navPopExitTransition,
-            ) {
-                composable(MainActivity.DESTINATION_HOME) {
-                    HomeScreen(viewModel, navController, padding)
-                }
-                composable(MainActivity.DESTINATION_PATCHES) {
-                    PatchesScreen(viewModel, padding)
-                }
-                composable(MainActivity.DESTINATION_SETTINGS) {
-                    SettingsScreen(viewModel, padding)
-                }
-                composable(
-                    "${MainActivity.DESTINATION_APP}/{packageName}",
-                    arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-                ) { entry ->
-                    AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
-                }
+        },
+    ) { padding ->
+        NavHost(
+            navController,
+            startDestination = MainActivity.DESTINATION_HOME,
+            enterTransition = navEnterTransition,
+            exitTransition = navExitTransition,
+            popEnterTransition = navPopEnterTransition,
+            popExitTransition = navPopExitTransition,
+        ) {
+            composable(MainActivity.DESTINATION_HOME) {
+                HomeScreen(viewModel, navController, padding)
+            }
+            composable(MainActivity.DESTINATION_PATCHES) {
+                PatchesScreen(viewModel, padding)
+            }
+            composable(MainActivity.DESTINATION_SETTINGS) {
+                SettingsScreen(viewModel, padding)
+            }
+            composable(
+                "${MainActivity.DESTINATION_APP}/{packageName}",
+                arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+            ) { entry ->
+                AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
             }
         }
     }
@@ -487,7 +387,14 @@ private fun MiuixNavHost(
     viewModel: ManagerViewModel,
     contentPadding: PaddingValues,
 ) {
-    NavHost(navController, startDestination = MainActivity.DESTINATION_HOME) {
+    NavHost(
+        navController = navController,
+        startDestination = MainActivity.DESTINATION_HOME,
+        enterTransition = navEnterTransition,
+        exitTransition = navExitTransition,
+        popEnterTransition = navPopEnterTransition,
+        popExitTransition = navPopExitTransition,
+    ) {
         composable(MainActivity.DESTINATION_HOME) {
             HomeScreen(viewModel, navController, contentPadding)
         }

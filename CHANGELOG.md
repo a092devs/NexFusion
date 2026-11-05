@@ -5,7 +5,20 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
-## 4.2.4
+## 4.2.5
+
+- Scope & Disabled App Optimization:
+  * Automatically inspects application enabled state on the device; disabled applications (such as disabled YouTube Music) are treated as uninstalled and will not trigger false "missing from module scope" warnings or scope prompts.
+- Scope Approval Notification Refinement:
+  * Streamlined the LSPosed scope approval snackbar from a multi-line raw package identifier list to a clean, formatted confirmation ("Added YouTube to module scope" or "Added 14 apps to module scope"), eliminating notification bar clutter.
+- Fluid Transitions & HyperOS Performance:
+  * Re-engineered page navigation with fluid, physics-eased slide and fade transitions (`enterTransition`, `exitTransition`, `popEnterTransition`, `popExitTransition`).
+  * Added transition support to `MiuixNavHost` for native HyperOS / MIUI smoothness.
+  * Disabled floating navigation and translucent blur by default to eliminate navigation frame drops on Xiaomi HyperOS.
+  * Restricted floating navigation exclusively to Miuix mode; Material 3 mode now strictly renders standard Material 3 Scaffold navigation without floating bar overhead.
+- Anti-Detection & Stealth Hiding:
+  * Introduced `StealthCloak`: automatically intercepts `ApplicationPackageManager` in all hooked target processes to mask `io.github.nexfusion` from package queries (`getPackageInfo`, `getApplicationInfo`, `getInstalledPackages`, `getInstalledApplications`, `queryIntentActivities`, and `getPackagesForUid`), completely shielding the module from in-app Google Play Services and security scanners.
+  * Decoupled `de.robv.android.xposed.category.MODULE_SETTINGS` into a dedicated `<activity-alias>` (`ModuleSettingsAlias`) so it can be disabled when hiding the launcher icon, preventing package scanners searching for Xposed categories from detecting NexFusion.
 
 - Bundle Card & UI Refinement:
   * Redesigned bundle cards in the Bundles tab to be compact, professional, and visually refined.

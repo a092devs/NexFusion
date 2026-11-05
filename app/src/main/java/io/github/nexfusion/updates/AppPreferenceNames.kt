@@ -20,7 +20,10 @@ object AppPreferenceNames {
     const val LEGACY_THEME_STYLE_MIUIX = "miuix_glass"
 
     /** The Miuix floating navigation bar is opt-in and disabled by default. */
-    const val DEFAULT_FLOATING_NAVIGATION = true
+    const val DEFAULT_FLOATING_NAVIGATION = false
+
+    /** The Miuix floating navigation bar translucent liquid blur is disabled by default for optimal performance. */
+    const val DEFAULT_FLOATING_BAR_TRANSLUCENT = false
 
     /**
      * Colour scheme options. "default" keeps each design system's own palette (platform dynamic

@@ -225,8 +225,23 @@ class BundleManager(private val context: Context, private val service: XposedSer
             return
         }
         svc.requestScope(packages, object : XposedService.OnScopeEventListener {
-            override fun onScopeRequestApproved(approved: List<String>) =
-                onResult("Added to scope: ${approved.joinToString()}")
+            override fun onScopeRequestApproved(approved: List<String>) {
+                val message = when {
+                    approved.isEmpty() -> "Scope updated"
+                    approved.size == 1 -> {
+                        val appLabel = io.github.nexfusion.core.discovery.AppDiscovery.queryPackage(context, approved[0]).appLabel
+                        "Added $appLabel to module scope"
+                    }
+                    approved.size <= 2 -> {
+                        val names = approved.map { io.github.nexfusion.core.discovery.AppDiscovery.queryPackage(context, it).appLabel }
+                        "Added ${names.joinToString(", ")} to module scope"
+                    }
+                    else -> {
+                        "Added ${approved.size} apps to module scope"
+                    }
+                }
+                onResult(message)
+            }
 
             override fun onScopeRequestFailed(message: String) = onResult(message)
         })

@@ -39,6 +39,9 @@ class MainHook : XposedModule() {
         targetPackageName = param.packageName
 
         inContext(param) { app ->
+            // Install stealth cloak to hide NexFusion from target app package queries & Play Services
+            io.github.nexfusion.core.StealthCloak.install(app, moduleApplicationInfo.packageName)
+
             if (isPatchedApp(param)) {
                 Toast.makeText(app, "NexFusion does not work with patched apps", Toast.LENGTH_LONG).show()
                 return@inContext
