@@ -40,21 +40,42 @@ Unlike traditional ahead-of-time (AOT) patchers that decompile, modify, re-sign,
 
 ---
 
+## 🚀 Getting Started
+
+1. **📥 Install NexFusion:** Download the signed release APK from [Releases](https://github.com/a092devs/NexFusion/releases).
+2. **🛡️ Configure LSPosed Scope:** Enable the **NexFusion** module in LSPosed and check the scope for your target apps (e.g. YouTube, Reddit, Instagram, Facebook, Telegram, X, Maps).
+3. **📦 Install Patch Bundles:** Open NexFusion → **Patches** tab. The official companion repository (`a092devs/Nexfusion-Patches`) is pre-configured; tap **Install** on `NexFusion Patches`.
+4. **⚙️ Toggle Desired Patches:** Open the **Home** tab, tap any supported application card, and enable your preferred runtime hooks.
+5. **🔄 Apply & Restart:** Tap **Force Stop** or use the 1-tap **App Info** shortcut to restart the target application and let LSPosed attach the updated bytecode hooks.
+
+---
+
 ## ⚡ Key Features
 
-### 1. 🌐 Multi-Source Patch Aggregation & Provenance
+<details>
+<summary><b>1. 🌐 Multi-Source Patch Aggregation & Provenance</b></summary>
+<br>
+
 - Add, update, and manage multiple independent patch repositories simultaneously.
 - **Source Provenance Classification:** Clearly badges sources as **Official**, **NexFusion**, **Community**, or **Custom**.
 - **Conflict Detection:** Proactively flags applications whose patches are declared by more than one bundle before enabling.
 - **Offline Caching:** Instant application startup using local metadata caching with pull-to-refresh synchronization.
+</details>
 
-### 2. 🎨 Dual Design Systems: Official Miuix & Material 3
+<details>
+<summary><b>2. 🎨 Dual Design Systems: Official Miuix & Material 3</b></summary>
+<br>
+
 - **Official Miuix Integration:** Built directly with the official [compose-miuix-ui](https://github.com/compose-miuix-ui/miuix) library (`miuix-ui`, `miuix-blur`, `miuix-preference`, `miuix-icons`), delivering the authentic MIUI / HyperOS aesthetic.
 - **Material 3 Mode:** Native AndroidX Material 3 design with dynamic Monet color theming on Android 12+.
 - **Cohesive Surface Switching:** Changing the design system instantly transforms every screen, dialog, card, and navigation bar in unison.
 - **Optional Floating Navigation Bar:** An opt-in Miuix arrangement featuring `FloatingNavigationBar` with real-time blur shaders on Android 13+ and safe fallbacks on older versions.
+</details>
 
-### 3. 🎯 Truthful Dynamic Compatibility Engine
+<details>
+<summary><b>3. 🎯 Truthful Dynamic Compatibility Engine</b></summary>
+<br>
+
 - Version recommendations and compatibility badges are derived directly from the targets declared by active patch bundles at runtime:
   ```kotlin
   val allTargets: List<AppTarget> = if (matchingBundles.isNotEmpty()) {
@@ -64,14 +85,23 @@ Unlike traditional ahead-of-time (AOT) patchers that decompile, modify, re-sign,
   }
   ```
 - Uses semantic version evaluation with trailing zero normalization (`2026.42.0` vs `2026.42`).
+</details>
 
-### 4. 🔄 Honest Process Lifecycle & Force-Stop Control
+<details>
+<summary><b>4. 🔄 Honest Process Lifecycle & Force-Stop Control</b></summary>
+<br>
+
 - Distinguishes genuine root `am force-stop` termination from background process killing (`killBackgroundProcesses`), providing truthful feedback.
 - Integrated 1-tap **App Info navigation** directly from the patch screen for manual force-stop on unrooted configurations.
+</details>
 
 ---
 
 ## 🎨 Appearance & Theming
+
+<details>
+<summary><b>View Display & Customization Settings</b></summary>
+<br>
 
 Configure via **Settings → Appearance**:
 
@@ -81,15 +111,7 @@ Configure via **Settings → Appearance**:
 | **Design System** | 📱 Material 3 / 💎 Miuix | Seamlessly switches the visual design language across all screens |
 | **Floating Navigation Bar** | 🟢 On / ⚪ Off | *(Miuix only)* Detaches bottom bar with real-time blur shader (Android 13+) |
 
----
-
-## 🚀 Getting Started
-
-1. **📥 Install NexFusion:** Download the signed release APK from [Releases](https://github.com/a092devs/NexFusion/releases).
-2. **🛡️ Configure LSPosed Scope:** Enable the **NexFusion** module in LSPosed and check the scope for your target apps (e.g. YouTube, Reddit, Instagram, Facebook, Telegram, X, Maps).
-3. **📦 Install Patch Bundles:** Open NexFusion → **Patches** tab. The official companion repository (`a092devs/Nexfusion-Patches`) is pre-configured; tap **Install** on `NexFusion Patches`.
-4. **⚙️ Toggle Desired Patches:** Open the **Home** tab, tap any supported application card, and enable your preferred runtime hooks.
-5. **🔄 Apply & Restart:** Tap **Force Stop** or use the 1-tap **App Info** shortcut to restart the target application and let LSPosed attach the updated bytecode hooks.
+</details>
 
 ---
 
@@ -108,12 +130,26 @@ The official companion patch repository is maintained at:
 
 ## 📱 Supported Applications Matrix
 
+<details>
+<summary><b>🎥 Video, Audio & Streaming (5 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll</i></summary>
+<br>
+
 | Application | Package Identifier | Key Patch Capabilities |
 |---|---|---|
 | **YouTube** | `com.google.android.youtube` | Ad-free playback, SponsorBlock, background audio, DeArrow replacement, custom speed/quality dialogs, swipe volume/brightness, miniplayer, ambient mode, Litho node bypass, channel search fix. |
 | **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners. |
 | **Kick** | `com.kick.mobile` | Live stream & VOD ad blocking, background playback, custom chat emotes (7TV, BTTV, FFZ), telemetry suppression, AMOLED black theme. |
 | **Twitch** | `tv.twitch.android.app` | Stream and display ad blocking, 7TV / BTTV / FFZ chat emotes, background playback, telemetry suppression, AMOLED black theme. |
+| **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
+
+</details>
+
+<details>
+<summary><b>💬 Social Networks & Messaging (8 Targets)</b> — <i>Telegram, Telegram (Web), Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn</i></summary>
+<br>
+
+| Application | Package Identifier | Key Patch Capabilities |
+|---|---|---|
 | **Telegram** | `org.telegram.messenger` | Remove channel sponsored messages, bot ads, and video promotions; hide Story bar and avatar story rings; keep deleted messages locally; exact unrounded counts; 512 KB fast multi-connection downloads; block update dialogs; disable telemetry; auto-reveal spoilers; pure black AMOLED dark theme. |
 | **Telegram (Web)** | `org.telegram.messenger.web` | Identical full-suite runtime patches as official Telegram for web-distributed standalone builds. |
 | **Instagram** | `com.instagram.android` | Media downloader for feed posts, Reels, Stories, Highlights, and profile pictures; remove sponsored feed posts, Reels, and Story ads; anonymous Story and Live viewing; strip tracking parameters; ghost mode. |
@@ -121,8 +157,16 @@ The official companion patch repository is maintained at:
 | **X (Twitter)** | `com.twitter.android` | Promoted post and ad removal; video and GIF media downloader; bypass Compose sensitive media blur interstitials without tap-to-reveal; block forced updates; telemetry blackholing. |
 | **Reddit** | `com.reddit.frontpage` | Feed and comment ad removal; guest browsing mode; sanitize shared URLs; suppress screenshot sharing bottom sheet; unmute Redgifs streams; custom feed sorting. |
 | **Discord** | `com.discord` | Suppress crash telemetry, analytics, touch logging, and advertising identifiers; native system font typography support across chat and UI surfaces. |
-| **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
 | **LinkedIn** | `com.linkedin.android` | 1-tap media downloader for photos, carousel images, and progressive MP4 videos; sanitize share links; direct URL navigation bypassing `safety/go` redirects; hide suggested posts, promoted jobs, and premium upsells; feed filters; Material You dynamic theme. |
+
+</details>
+
+<details>
+<summary><b>🛠️ System, Productivity & Utilities (6 Targets)</b> — <i>Google Photos, Google Maps, Gboard, Gmail, Google App (Discover), Proton VPN</i></summary>
+<br>
+
+| Application | Package Identifier | Key Patch Capabilities |
+|---|---|---|
 | **Google Photos** | `com.google.android.apps.photos` | Device spoofing for unlimited original-quality Google Photos cloud storage backups; DCIM folder backup control. |
 | **Google Maps** | `com.google.android.apps.maps` | Sponsored pin and search ad suppression, high refresh rate unlock (90/120 Hz), telemetry blocking, hide AI clutter, AMOLED black theme. |
 | **Gboard** | `com.google.android.inputmethod.latin` | Rounded keycaps; Google Sans Flex typography & GM3 Expressive styling; proactive post-correction undo controls; Quick & Magic Emoji (Emojify); expanded AI writing tools; spellchecker chips UI; scan text OCR; spacebar cursor trackpad. |
@@ -130,9 +174,15 @@ The official companion patch repository is maintained at:
 | **Google App (Discover)** | `com.google.android.googlequicksearchbox` | Filter sponsored cards, shopping ads, and promotional recommendations in the Discover feed. |
 | **Proton VPN** | `ch.protonvpn.android` | Suppress upgrade banners and nag dialogs; unlock NetShield UI toggles; disable telemetry and background observability workers. |
 
+</details>
+
 ---
 
 ## 🛠️ Building from Source
+
+<details>
+<summary><b>View Build Instructions & Developer Guide</b></summary>
+<br>
 
 ### Prerequisites
 - JDK 21 (Temurin or OpenJDK)
@@ -150,9 +200,15 @@ cd NexFusion
 ./gradlew assembleDebug
 ```
 
+</details>
+
 ---
 
 ## 🔍 Troubleshooting
+
+<details>
+<summary><b>View Troubleshooting & Diagnostics Matrix</b></summary>
+<br>
 
 | Issue | Likely Cause | Solution |
 |---|---|---|
@@ -161,6 +217,8 @@ cd NexFusion
 | **Compatibility Warning** | Installed app differs from target | Inspect the target app card in Home to check verified versions; hooks may still resolve dynamically. |
 | **Blur missing on Floating Bar** | Android version limitation | Runtime shader blur requires Android 13+ (API 33+); older versions render an opaque surface. |
 | **Need Support / Diagnostics** | Reporting an issue | Go to **Settings → Copy diagnostics** and attach the report when submitting a GitHub issue. |
+
+</details>
 
 ---
 
@@ -174,6 +232,10 @@ Contributions, bug reports, and pull requests are welcome!
 ---
 
 ## 📜 Credits & Acknowledgments
+
+<details>
+<summary><b>View Upstream & Open-Source Acknowledgments</b></summary>
+<br>
 
 NexFusion is developed and maintained by **a092devs**. We gratefully acknowledge the open-source projects, reverse engineers, and library authors whose research and tools empower our ecosystem:
 
@@ -191,6 +253,8 @@ NexFusion is developed and maintained by **a092devs**. We gratefully acknowledge
 | **[ak800i](https://github.com/ak800i/mixplorer-patches-for-morphe)** | Scoped-storage file sharing fix for Android 11+ |
 | **[jkennethcarino](https://github.com/jkennethcarino/adobo)** | Screenshot-banner suppression, link sanitization, and UI hooks |
 | **[gnadgnaoh](https://github.com/gnadgnaoh/NexFusion-XES)** | Inbox promotion and Discover feed ad filtering |
+
+</details>
 
 ---
 
