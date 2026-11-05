@@ -14,7 +14,9 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -199,36 +201,60 @@ fun NavHostController.navigateTopLevel(route: String) = navigate(route) {
 }
 
 /**
- * Fluid, spring-eased transitions shared by both design systems:
- * entering screens slide in smoothly with a gentle fade, while exiting screens
- * slide away subtly without harsh popping cuts.
+ * Resolves the horizontal index of top-level destinations so screen transitions move in sync
+ * with the navigation bar: clicking a tab to the right slides content right-to-left,
+ * while clicking a tab to the left slides content left-to-right.
+ */
+private fun destinationIndex(route: String?): Int {
+    val clean = route?.substringBefore('/')
+    return when (clean) {
+        MainActivity.DESTINATION_HOME -> 0
+        MainActivity.DESTINATION_PATCHES -> 1
+        MainActivity.DESTINATION_SETTINGS -> 2
+        MainActivity.DESTINATION_APP -> 3
+        else -> 0
+    }
+}
+
+/**
+ * Fluid, directional transitions synchronized with bottom bar selections:
+ * entering screens slide in towards the navigation direction with a gentle fade,
+ * while exiting screens glide away smoothly without harsh cuts.
  */
 private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-    slideInHorizontally(
-        initialOffsetX = { (it * 0.25f).toInt() },
-        animationSpec = tween(320, easing = FastOutSlowInEasing),
-    ) + fadeIn(animationSpec = tween(240))
+    val initialIdx = destinationIndex(initialState.destination.route)
+    val targetIdx = destinationIndex(targetState.destination.route)
+    val direction = when {
+        targetIdx > initialIdx -> 1
+        targetIdx < initialIdx -> -1
+        else -> 0
+    }
+    if (direction == 0) {
+        fadeIn(animationSpec = tween(220))
+    } else {
+        slideInHorizontally(
+            initialOffsetX = { (it * 0.28f * direction).toInt() },
+            animationSpec = tween(300, easing = FastOutSlowInEasing),
+        ) + fadeIn(animationSpec = tween(240, easing = LinearOutSlowInEasing))
+    }
 }
 
 private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-    slideOutHorizontally(
-        targetOffsetX = { (-it * 0.15f).toInt() },
-        animationSpec = tween(280, easing = FastOutSlowInEasing),
-    ) + fadeOut(animationSpec = tween(180))
-}
-
-private val navPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-    slideInHorizontally(
-        initialOffsetX = { (-it * 0.15f).toInt() },
-        animationSpec = tween(300, easing = FastOutSlowInEasing),
-    ) + fadeIn(animationSpec = tween(240))
-}
-
-private val navPopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-    slideOutHorizontally(
-        targetOffsetX = { (it * 0.25f).toInt() },
-        animationSpec = tween(280, easing = FastOutSlowInEasing),
-    ) + fadeOut(animationSpec = tween(180))
+    val initialIdx = destinationIndex(initialState.destination.route)
+    val targetIdx = destinationIndex(targetState.destination.route)
+    val direction = when {
+        targetIdx > initialIdx -> -1
+        targetIdx < initialIdx -> 1
+        else -> 0
+    }
+    if (direction == 0) {
+        fadeOut(animationSpec = tween(180))
+    } else {
+        slideOutHorizontally(
+            targetOffsetX = { (it * 0.18f * direction).toInt() },
+            animationSpec = tween(260, easing = FastOutSlowInEasing),
+        ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+    }
 }
 
 @Composable
@@ -314,8 +340,8 @@ private fun Material3ManagerApp(
             startDestination = MainActivity.DESTINATION_HOME,
             enterTransition = navEnterTransition,
             exitTransition = navExitTransition,
-            popEnterTransition = navPopEnterTransition,
-            popExitTransition = navPopExitTransition,
+            popEnterTransition = navEnterTransition,
+            popExitTransition = navExitTransition,
         ) {
             composable(MainActivity.DESTINATION_HOME) {
                 HomeScreen(viewModel, navController, padding)
@@ -392,8 +418,8 @@ private fun MiuixNavHost(
         startDestination = MainActivity.DESTINATION_HOME,
         enterTransition = navEnterTransition,
         exitTransition = navExitTransition,
-        popEnterTransition = navPopEnterTransition,
-        popExitTransition = navPopExitTransition,
+        popEnterTransition = navEnterTransition,
+        popExitTransition = navExitTransition,
     ) {
         composable(MainActivity.DESTINATION_HOME) {
             HomeScreen(viewModel, navController, contentPadding)
