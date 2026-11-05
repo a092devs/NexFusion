@@ -30,12 +30,15 @@ class MainHook : XposedModule() {
             reportActive(param.classLoader)
             return
         }
+        val remotePrefs = runCatching { getRemotePreferences(BundleRegistry.PREFS_GROUP) }.getOrNull()
+        val ignored = remotePrefs?.let { runCatching { it.getStringSet("ignored_packages", null) }.getOrNull() } ?: emptySet()
+        if (param.packageName in ignored) return
         if (targetPackageName != null && targetPackageName != param.packageName) return
 
-        val bundles = runCatching {
-            BundleRegistry.read(getRemotePreferences(BundleRegistry.PREFS_GROUP))
-        }.getOrDefault(emptyList()).filter { it.enabled && param.packageName in it.apps }
-        if (bundles.isEmpty()) return
+        val bundles = remotePrefs?.let { runCatching { BundleRegistry.read(it) }.getOrNull() }
+            ?: runCatching { BundleRegistry.read(getRemotePreferences(BundleRegistry.PREFS_GROUP)) }.getOrDefault(emptyList())
+        val matchingBundles = bundles.filter { it.enabled && param.packageName in it.apps }
+        if (matchingBundles.isEmpty()) return
         targetPackageName = param.packageName
 
         inContext(param) { app ->

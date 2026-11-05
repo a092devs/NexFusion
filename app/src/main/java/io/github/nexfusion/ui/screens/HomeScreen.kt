@@ -84,6 +84,7 @@ private enum class AppFilter {
     ALL,
     UPDATES,
     SCOPE,
+    EXCLUDED,
     CONFLICTS,
 }
 
@@ -97,6 +98,7 @@ fun HomeScreen(viewModel: ManagerViewModel, navController: NavHostController, ou
         onCheckUpdates = { viewModel.checkUpdates(userInitiated = true) },
         onUpdateAll = viewModel::updateAll,
         onRequestScope = { viewModel.requestMissingScope() },
+        onSetAppIgnored = viewModel::setAppIgnored,
         onOpenPatches = { navController.navigateTopLevel(MainActivity.DESTINATION_PATCHES) },
         onOpenApp = { navController.navigate("${MainActivity.DESTINATION_APP}/$it") },
         onDownloadUpdate = viewModel::downloadAndInstallUpdate,
@@ -113,6 +115,7 @@ fun HomeContent(
     onCheckUpdates: () -> Unit,
     onUpdateAll: () -> Unit,
     onRequestScope: () -> Unit,
+    onSetAppIgnored: (String, Boolean) -> Unit = { _, _ -> },
     onOpenPatches: () -> Unit,
     onOpenApp: (String) -> Unit,
     onDownloadUpdate: (AppRelease) -> Unit = {},
@@ -121,6 +124,7 @@ fun HomeContent(
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var changelog by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var showExcludeDialog by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf(AppFilter.ALL) }
     val isMiuix = isMiuixStyle
 
@@ -158,6 +162,13 @@ fun HomeContent(
                                 state.missingScope.mapNotNull { state.apps[it] }.joinToString()
                             ),
                             primary = stringResource(R.string.action_request) to onRequestScope,
+                            secondary = (if (state.missingScope.size == 1) "Don't Patch" else "Exclude...") to {
+                                if (state.missingScope.size == 1) {
+                                    onSetAppIgnored(state.missingScope.first(), true)
+                                } else {
+                                    showExcludeDialog = true
+                                }
+                            },
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                         )
                     }
@@ -285,6 +296,13 @@ fun HomeContent(
                         }
                         item {
                             ThemedChip(
+                                label = if (state.ignoredPackages.isEmpty()) "Excluded" else "Excluded (${state.ignoredPackages.size})",
+                                selected = selectedFilter == AppFilter.EXCLUDED,
+                                onClick = { selectedFilter = AppFilter.EXCLUDED },
+                            )
+                        }
+                        item {
+                            ThemedChip(
                                 label = stringResource(R.string.filter_conflicts),
                                 selected = selectedFilter == AppFilter.CONFLICTS,
                                 onClick = { selectedFilter = AppFilter.CONFLICTS },
@@ -301,8 +319,9 @@ fun HomeContent(
                     }
                 }
 
-                val installedApps = state.appCatalog.filter { it.isInstalled && matchesQuery(it) }
-                val supportedApps = state.appCatalog.filter { !it.isInstalled && matchesQuery(it) }
+                val installedApps = state.appCatalog.filter { it.isInstalled && !it.isExcluded && matchesQuery(it) }
+                val supportedApps = state.appCatalog.filter { !it.isInstalled && !it.isExcluded && matchesQuery(it) }
+                val excludedApps = state.appCatalog.filter { it.isExcluded && matchesQuery(it) }
 
                 val filteredApps = when (selectedFilter) {
                     AppFilter.ALL -> installedApps
@@ -312,24 +331,52 @@ fun HomeContent(
                             VersionComparator.compare(app.installedVersionName, app.recommendedVersion) < 0
                     }
                     AppFilter.SCOPE -> installedApps.filter { !it.inScope }
+                    AppFilter.EXCLUDED -> excludedApps
                     AppFilter.CONFLICTS -> installedApps.filter { it.hasConflicts }
                 }
 
-                if (filteredApps.isNotEmpty()) {
-                    item {
-                        SectionTitle(stringResource(R.string.category_installed_apps))
+                if (selectedFilter == AppFilter.EXCLUDED) {
+                    if (excludedApps.isEmpty()) {
+                        item {
+                            ActionCard(
+                                title = "No Excluded Applications",
+                                text = "Applications you exclude from patching will appear here. They won't load hooks or show scope warnings.",
+                            )
+                        }
+                    } else {
+                        item {
+                            SectionTitle("Excluded Applications (${excludedApps.size})")
+                        }
+                        items(excludedApps, key = { it.packageName }) { app ->
+                            AppCard(app = app, onClick = { onOpenApp(app.packageName) })
+                        }
                     }
-                    items(filteredApps, key = { it.packageName }) { app ->
-                        AppCard(app = app, onClick = { onOpenApp(app.packageName) })
+                } else {
+                    if (filteredApps.isNotEmpty()) {
+                        item {
+                            SectionTitle(stringResource(R.string.category_installed_apps))
+                        }
+                        items(filteredApps, key = { it.packageName }) { app ->
+                            AppCard(app = app, onClick = { onOpenApp(app.packageName) })
+                        }
                     }
-                }
 
-                if (selectedFilter == AppFilter.ALL && supportedApps.isNotEmpty() && !state.hideUninstalledApps) {
-                    item {
-                        SectionTitle(stringResource(R.string.category_supported_apps))
+                    if (selectedFilter == AppFilter.ALL && supportedApps.isNotEmpty() && !state.hideUninstalledApps) {
+                        item {
+                            SectionTitle(stringResource(R.string.category_supported_apps))
+                        }
+                        items(supportedApps, key = { it.packageName }) { app ->
+                            AppCard(app = app, onClick = { onOpenApp(app.packageName) })
+                        }
                     }
-                    items(supportedApps, key = { it.packageName }) { app ->
-                        AppCard(app = app, onClick = { onOpenApp(app.packageName) })
+
+                    if (selectedFilter == AppFilter.ALL && excludedApps.isNotEmpty()) {
+                        item {
+                            SectionTitle("Excluded Applications (${excludedApps.size})")
+                        }
+                        items(excludedApps, key = { "excluded_" + it.packageName }) { app ->
+                            AppCard(app = app, onClick = { onOpenApp(app.packageName) })
+                        }
                     }
                 }
             }
@@ -400,6 +447,51 @@ fun HomeContent(
             onConfirm = { changelog = null },
         ) {
             ChangelogText(notes)
+        }
+    }
+
+    if (showExcludeDialog && state.missingScope.isNotEmpty()) {
+        ThemedDialog(
+            show = true,
+            title = "Exclude from Patching",
+            onDismissRequest = { showExcludeDialog = false },
+            confirmText = "Exclude All",
+            onConfirm = {
+                state.missingScope.forEach { pkg -> onSetAppIgnored(pkg, true) }
+                showExcludeDialog = false
+            },
+            dismissText = "Cancel",
+            onDismiss = { showExcludeDialog = false },
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "Excluded apps will not load hooks and will not trigger scope prompts or notifications.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                state.missingScope.forEach { pkg ->
+                    val appName = state.apps[pkg] ?: pkg
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = appName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        ThemedOutlinedButton(
+                            label = "Don't Patch",
+                            onClick = {
+                                onSetAppIgnored(pkg, true)
+                                if (state.missingScope.size <= 1) showExcludeDialog = false
+                            },
+                        )
+                    }
+                }
+            }
         }
     }
 }

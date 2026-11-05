@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,6 +64,7 @@ import io.github.nexfusion.patchPreferenceKey
 import io.github.nexfusion.ui.BundlePatches
 import io.github.nexfusion.ui.ManagerViewModel
 import io.github.nexfusion.ui.theme.isMiuixStyle
+import io.github.nexfusion.ui.screens.ThemedFilledButton
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.preference.SwitchPreference
@@ -105,7 +107,14 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
 
     val isMiuix = isMiuixStyle
     val icons = appIcons()
+    val isExcluded = state.ignoredPackages.contains(packageName)
     val patchMenuItems: List<ThemedMenuItem> = listOf(
+        ThemedMenuItem(
+            label = if (isExcluded) "Include in Patching" else "Exclude from Patching",
+            onClick = {
+                viewModel.setAppIgnored(packageName, !isExcluded)
+            },
+        ),
         ThemedMenuItem(
             label = stringResource(R.string.action_restore_defaults),
             onClick = {
@@ -171,6 +180,54 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
             else -> {
                 val groups = loaded.getOrThrow()
                 LazyColumn(contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 24.dp)) {
+                    // Excluded Status Banner
+                    if (isExcluded) {
+                        item {
+                            ThemedCard(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                            ) {
+                                Column(Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f, fill = false),
+                                        ) {
+                                            Icon(
+                                                Icons.Outlined.Block,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error,
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(
+                                                text = "Patching Disabled",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                            )
+                                        }
+                                        ThemedFilledButton(
+                                            label = "Enable",
+                                            onClick = { viewModel.setAppIgnored(packageName, false) },
+                                        )
+                                    }
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        text = "This application is excluded from patching. NexFusion will not hook into its process or show scope warnings.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // App Summary Card
                     item {
                         ThemedCard(
@@ -393,6 +450,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                                 summary = supportingText,
                                                 checked = checked,
                                                 onCheckedChange = ::toggle,
+                                                enabled = !isExcluded,
                                             )
                                         }
                                     }
@@ -421,9 +479,9 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                             )
                                         },
                                         supportingContent = supportingText?.let { { Text(it) } },
-                                        trailingContent = { Switch(checked = checked, onCheckedChange = ::toggle) },
+                                        trailingContent = { Switch(checked = checked, onCheckedChange = if (isExcluded) null else (::toggle), enabled = !isExcluded) },
                                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                        modifier = Modifier.clickable { toggle(!checked) },
+                                        modifier = if (isExcluded) Modifier else Modifier.clickable { toggle(!checked) },
                                     )
                                 }
                             }

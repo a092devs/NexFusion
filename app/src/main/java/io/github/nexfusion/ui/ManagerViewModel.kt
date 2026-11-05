@@ -85,6 +85,8 @@ data class ManagerState(
     val floatingBarTranslucent: Boolean = AppPreferenceNames.DEFAULT_FLOATING_BAR_TRANSLUCENT,
     /** Whether to hide uninstalled applications from the Home screen. */
     val hideUninstalledApps: Boolean = false,
+    /** Packages explicitly excluded/ignored from patching by the user. */
+    val ignoredPackages: Set<String> = emptySet(),
     val searchQuery: String = "",
 ) {
     val isActive get() = service != null
@@ -258,12 +260,14 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val sources = store.all()
             val bundles = runCatching { mgr.installed }.getOrDefault(emptyList())
             val missing = runCatching { mgr.missingScope() }.getOrDefault(emptyList())
-            val catalog = AppDiscovery.buildCatalog(context, bundles, missing.toSet(), sources)
+            val ignored = runCatching { mgr.ignoredPackages }.getOrDefault(emptySet())
+            val catalog = AppDiscovery.buildCatalog(context, bundles, missing.toSet(), sources, ignored)
             _state.update { state ->
                 state.copy(
                     sources = sources,
                     bundles = bundles,
                     missingScope = missing,
+                    ignoredPackages = ignored,
                     appCatalog = catalog,
                     updateChannel = settings.updateChannel,
                     currentTheme = settings.theme,
@@ -575,6 +579,16 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     // region Scope
 
     /** Hooked apps only load bundles if the app is in the module scope. */
+    fun setAppIgnored(packageName: String, ignored: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            manager.setPackageIgnored(packageName, ignored)
+            val appName = AppDiscovery.queryPackage(context, packageName).appLabel
+            val msg = if (ignored) "Excluded $appName from patching" else "Included $appName in patching"
+            _messages.tryEmit(msg)
+            refresh()
+        }
+    }
+
     fun requestMissingScope(packages: Collection<String> = _state.value.missingScope) {
         val mgr = manager
         val missing = runCatching { mgr.missingScope() }.getOrDefault(emptyList()).filter { it in packages }

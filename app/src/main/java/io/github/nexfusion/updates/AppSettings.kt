@@ -79,6 +79,23 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("hide_uninstalled_apps", false)
         set(value) = prefs.edit().putBoolean("hide_uninstalled_apps", value).apply()
 
+    /**
+     * Package names of supported applications the user chose to exclude/ignore from patching.
+     * Excluded apps are silenced from scope warnings, update notifications, and in-process hooks.
+     */
+    var ignoredPackages: Set<String>
+        get() = prefs.getStringSet("ignored_packages", emptySet()) ?: emptySet()
+        set(value) = prefs.edit().putStringSet("ignored_packages", value).apply()
+
+    fun isPackageIgnored(packageName: String): Boolean =
+        ignoredPackages.contains(packageName)
+
+    fun setPackageIgnored(packageName: String, ignored: Boolean) {
+        val current = ignoredPackages.toMutableSet()
+        if (ignored) current.add(packageName) else current.remove(packageName)
+        ignoredPackages = current
+    }
+
     /** Version last notified about per update key, so every version notifies once. */
     fun lastNotified(key: String): String? = prefs.getString("notified_$key", null)
 

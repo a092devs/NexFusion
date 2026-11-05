@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.AutoFixHigh
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Science
@@ -180,7 +181,16 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
                 .fillMaxWidth()
                 .padding(top = 10.dp),
         ) {
-            CompatibilityChip(app.compatibility)
+            if (app.isExcluded) {
+                StatusChip(
+                    label = "Excluded",
+                    icon = Icons.Outlined.Block,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                CompatibilityChip(app.compatibility)
+            }
 
             if (app.hasConflicts) {
                 StatusChip(

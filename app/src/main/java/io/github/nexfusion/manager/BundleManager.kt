@@ -204,16 +204,31 @@ class BundleManager(private val context: Context, private val service: XposedSer
         BundleRegistry.write(localPrefs, updated)
     }
 
+    val ignoredPackages: Set<String>
+        get() {
+            val remote = registryPrefs?.let { runCatching { it.getStringSet("ignored_packages", null) }.getOrNull() }
+            return remote ?: localPrefs.getStringSet("ignored_packages", null) ?: io.github.nexfusion.updates.AppSettings(context).ignoredPackages
+        }
+
+    fun setPackageIgnored(packageName: String, ignored: Boolean) {
+        val current = ignoredPackages.toMutableSet()
+        if (ignored) current.add(packageName) else current.remove(packageName)
+        localPrefs.edit().putStringSet("ignored_packages", current).apply()
+        registryPrefs?.let { runCatching { it.edit().putStringSet("ignored_packages", current).apply() } }
+        io.github.nexfusion.updates.AppSettings(context).setPackageIgnored(packageName, ignored)
+    }
+
     /**
      * Installed apps patched by enabled bundles that are not yet in the module scope.
      *
-     * Apps that are not installed are left out: the framework asks the user about every requested package.
+     * Apps that are not installed or explicitly excluded/ignored by the user are left out.
      */
     fun missingScope(): List<String> {
         val svc = service ?: return emptyList()
         val scope = runCatching { svc.scope.toSet() }.getOrDefault(emptySet())
+        val ignored = ignoredPackages
         return installed.filter { it.enabled }.flatMap { it.apps.keys }.distinct()
-            .filter { it !in scope && isInstalled(it) }
+            .filter { it !in scope && isInstalled(it) && it !in ignored }
     }
 
     private fun isInstalled(packageName: String) =

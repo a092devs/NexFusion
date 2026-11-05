@@ -43,6 +43,8 @@ data class AppItemState(
     val sourceNames: List<String> = emptyList(),
     /** Indicates whether multiple bundles provide patches for this application, causing potential conflicts. */
     val hasConflicts: Boolean = false,
+    /** Whether this application is explicitly excluded/ignored from patching by the user. */
+    val isExcluded: Boolean = false,
 )
 
 object AppDiscovery {
@@ -330,6 +332,7 @@ object AppDiscovery {
         bundles: List<InstalledBundle>,
         missingScope: Set<String>,
         sources: List<PatchSource> = emptyList(),
+        ignoredPackages: Set<String> = emptySet(),
     ): List<AppItemState> {
         val enabledSourceIds = sources.filter { it.enabled }.map { it.id }.toSet()
         // A bundle is active only if enabled AND its source (if assigned) is enabled
@@ -401,6 +404,7 @@ object AppDiscovery {
                 bundles = matchingBundles,
                 sourceNames = sourceNames,
                 hasConflicts = hasConflicts,
+                isExcluded = packageName in ignoredPackages,
             )
         }.sortedWith(compareBy({ !it.isInstalled }, { it.appName.lowercase() }))
     }
