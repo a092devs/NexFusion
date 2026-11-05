@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.2.6
+
+- MX Player Support & Target Discovery:
+  * Added package queries and discovery metadata for MX Player (`com.mxtech.videoplayer.ad`) and MX Player Pro (`com.mxtech.videoplayer.pro`).
+  * Updated supported applications matrix to 22 targets across video, audio, social, and system utilities.
+
 ## 4.2.5
 
 - Application Exclusion & Debloated App Optimization:

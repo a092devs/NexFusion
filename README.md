@@ -121,8 +121,8 @@ The official companion patch repository is maintained at:
 - 🔗 **[a092devs/Nexfusion-Patches](https://github.com/a092devs/Nexfusion-Patches)**
 
 ### Included Bundles:
-- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **20 supported application targets**:
-  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch
+- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **22 supported application targets**:
+  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch, MX Player, MX Player Pro
   - 💬 **Social & Communication:** Telegram, Telegram (Web), Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn
   - 🛠️ **System & Productivity:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN
 
@@ -131,7 +131,7 @@ The official companion patch repository is maintained at:
 ## 📱 Supported Applications Matrix
 
 <details>
-<summary><b>🎥 Video, Audio & Streaming (5 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll</i></summary>
+<summary><b>🎥 Video, Audio & Streaming (7 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll, MX Player, MX Player Pro</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
@@ -141,6 +141,8 @@ The official companion patch repository is maintained at:
 | **Kick** | `com.kick.mobile` | Live stream & VOD ad blocking, background playback, custom chat emotes (7TV, BTTV, FFZ), telemetry suppression, AMOLED black theme. |
 | **Twitch** | `tv.twitch.android.app` | Stream and display ad blocking, 7TV / BTTV / FFZ chat emotes, background playback, telemetry suppression, AMOLED black theme. |
 | **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
+| **MX Player** | `com.mxtech.videoplayer.ad` | Remove startup splash ads, Google AdMob, InMobi, and banner ad containers; instant splash (bypass UMP consent dialogs and telemetry); clean offline local mode (collapse online streaming bottom navigation bar); clean layout (hide WhatsApp status tile, cloud recycle bin upsells, and promo banners); sidebar clutter cleanup; bypass Smart Enhance intro dialog; suppress 2x SpeedUp HUD overlay. |
+| **MX Player Pro** | `com.mxtech.videoplayer.pro` | Instant splash screen bypass; clean layout & sidebar clutter cleanup; bypass Smart Enhance intro dialog; suppress 2x SpeedUp HUD overlay. |
 
 </details>
 

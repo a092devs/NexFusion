@@ -313,6 +313,18 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x9146FF,
         ),
+        KnownSupportedApp(
+            packageName = "com.mxtech.videoplayer.ad",
+            appName = "MX Player",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x0078D7,
+        ),
+        KnownSupportedApp(
+            packageName = "com.mxtech.videoplayer.pro",
+            appName = "MX Player Pro",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x0078D7,
+        ),
     )
 
     /**

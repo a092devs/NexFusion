@@ -33,6 +33,8 @@
         <package android:name="org.telegram.messenger.web" />
         <package android:name="com.kick.mobile" />
         <package android:name="tv.twitch.android.app" />
+        <package android:name="com.mxtech.videoplayer.ad" />
+        <package android:name="com.mxtech.videoplayer.pro" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>
