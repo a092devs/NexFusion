@@ -5,7 +5,7 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
-## 4.2.6
+## 4.2.7
 
 - Stremio & MX Player Support & Target Discovery:
   * Added package queries and discovery metadata for Stremio (`com.stremio.one`) and MX Player (`com.mxtech.videoplayer.ad`).
