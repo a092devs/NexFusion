@@ -319,6 +319,12 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0078D7,
         ),
+        KnownSupportedApp(
+            packageName = "com.stremio.one",
+            appName = "Stremio",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x5B67F1,
+        ),
     )
 
     /**

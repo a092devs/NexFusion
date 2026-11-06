@@ -121,8 +121,8 @@ The official companion patch repository is maintained at:
 - 🔗 **[a092devs/Nexfusion-Patches](https://github.com/a092devs/Nexfusion-Patches)**
 
 ### Included Bundles:
-- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **21 supported application targets**:
-  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch, MX Player
+- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **22 supported application targets**:
+  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch, MX Player, Stremio
   - 💬 **Social & Communication:** Telegram, Telegram (Web), Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn
   - 🛠️ **System & Productivity:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN
 
@@ -131,7 +131,7 @@ The official companion patch repository is maintained at:
 ## 📱 Supported Applications Matrix
 
 <details>
-<summary><b>🎥 Video, Audio & Streaming (6 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll, MX Player</i></summary>
+<summary><b>🎥 Video, Audio & Streaming (7 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll, MX Player, Stremio</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
@@ -142,6 +142,7 @@ The official companion patch repository is maintained at:
 | **Twitch** | `tv.twitch.android.app` | Stream and display ad blocking, 7TV / BTTV / FFZ chat emotes, background playback, telemetry suppression, AMOLED black theme. |
 | **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
 | **MX Player** | `com.mxtech.videoplayer.ad` | Remove startup splash ads, Monetize-v2 ad engine, Google AdMob, InMobi, and banner ad containers; instant splash (bypass UMP consent dialogs and telemetry); clean offline local mode (collapse online streaming bottom navigation bar); clean layout (hide WhatsApp status tile, cloud recycle bin upsells, and promo banners); sidebar clutter cleanup; bypass Smart Enhance intro dialog; suppress 2x SpeedUp HUD overlay. |
+| **Stremio** | `com.stremio.one` | Auto & manual intro/credits skipping using embedded chapters and stream metadata; auto-pick best stream (resolves 4K/cached stream on tap); hide episode spoilers (synopses & thumbnails); avoid SDH subtitles; audio & subtitle track language memory; smoother playback buffer expansion (120s); seamless binge watching. |
 
 </details>
 
