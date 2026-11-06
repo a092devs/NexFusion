@@ -115,7 +115,7 @@ jobs:
           --prerelease \
           --target "${{ github.sha }}" \
           --title "NexFusion v${VERSION_NAME} Beta" \
-          --notes "v${VERSION_NAME} Beta pre-release build (${GIT_SHORT}). Standalone APKs attached below."
+          --notes-file CHANGELOG.md
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
