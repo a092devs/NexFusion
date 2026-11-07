@@ -1,0 +1,30 @@
+name: Crowdin push sources
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+    paths:
+      - 'app/src/main/res/values/strings.xml'
+  workflow_dispatch:
+
+jobs:
+  push:
+    name: Upload strings to Crowdin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Upload sources to Crowdin
+        uses: crowdin/github-action@v3
+        with:
+          config: crowdin.yml
+          upload_sources: true
+          upload_translations: false
+          download_translations: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}

@@ -122,7 +122,7 @@ The official companion patch repository is maintained at:
 
 ### Included Bundles:
 - **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **22 supported application targets**:
-  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch, MX Player, Stremio
+  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch, VLC, Stremio
   - 💬 **Social & Communication:** Telegram, Telegram (Web), Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn
   - 🛠️ **System & Productivity:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN
 
@@ -131,18 +131,18 @@ The official companion patch repository is maintained at:
 ## 📱 Supported Applications Matrix
 
 <details>
-<summary><b>🎥 Video, Audio & Streaming (7 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll, MX Player, Stremio</i></summary>
+<summary><b>🎥 Video, Audio & Streaming (7 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll, VLC, Stremio</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
 |---|---|---|
 | **YouTube** | `com.google.android.youtube` | Ad-free playback, SponsorBlock, background audio, DeArrow replacement, custom speed/quality dialogs, swipe volume/brightness, miniplayer, ambient mode, Litho node bypass, channel search fix. |
-| **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners. |
+| **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners, SoundProof AI blocker, Playlist tags, offline fullscreen player, mark downloaded songs, third-party lyrics enhancement. |
 | **Kick** | `com.kick.mobile` | Live stream & VOD ad blocking, background playback, custom chat emotes (7TV, BTTV, FFZ), telemetry suppression, AMOLED black theme. |
 | **Twitch** | `tv.twitch.android.app` | Stream and display ad blocking, 7TV / BTTV / FFZ chat emotes, background playback, telemetry suppression, AMOLED black theme. |
 | **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
-| **MX Player** | `com.mxtech.videoplayer.ad` | Remove startup splash ads, Monetize-v2 ad engine, Google AdMob, InMobi, and banner ad containers; instant splash (bypass UMP consent dialogs and telemetry); clean offline local mode (collapse online streaming bottom navigation bar); clean layout (hide WhatsApp status tile, cloud recycle bin upsells, and promo banners); sidebar clutter cleanup; bypass Smart Enhance intro dialog; suppress 2x SpeedUp HUD overlay. |
-| **Stremio** | `com.stremio.one` | Auto & manual intro/credits skipping using embedded chapters and stream metadata; auto-pick best stream (resolves 4K/cached stream on tap); hide episode spoilers (synopses & thumbnails); avoid SDH subtitles; audio & subtitle track language memory; smoother playback buffer expansion (120s); seamless binge watching; external player progress & subtitle hand-off (MX Player, VLC, Vimu). |
+| **VLC** | `org.videolan.vlc` | AMOLED pure black theme; suppress What's New changelog dialog on updates; unlock experimental feature flags; force bitstream audio passthrough (digital output); force AAudio low-latency output; raise network cache to 3000ms; disable audio time-stretch for artifact-free 1x speed playback; force ReplayGain track normalization with peak protection; verbose libVLC logging. |
+| **Stremio** | `com.stremio.one` | Auto & manual intro/credits skipping using embedded chapters and stream metadata; auto-pick best stream (resolves 4K/cached stream on tap); hide episode spoilers (synopses & thumbnails); avoid SDH subtitles; audio & subtitle track language memory; smoother playback buffer expansion (120s); seamless binge watching; external player progress & subtitle hand-off (VLC, Vimu). |
 
 </details>
 

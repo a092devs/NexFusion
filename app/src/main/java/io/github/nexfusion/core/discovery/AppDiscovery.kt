@@ -314,10 +314,10 @@ object AppDiscovery {
             appIconColor = 0x9146FF,
         ),
         KnownSupportedApp(
-            packageName = "com.mxtech.videoplayer.ad",
-            appName = "MX Player",
+            packageName = "org.videolan.vlc",
+            appName = "VLC",
             defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x0078D7,
+            appIconColor = 0xFF6600,
         ),
         KnownSupportedApp(
             packageName = "com.stremio.one",

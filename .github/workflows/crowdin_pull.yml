@@ -1,0 +1,35 @@
+name: Crowdin pull translations
+
+on:
+  schedule:
+    - cron: "0 */12 * * *" # Every 12 hours
+  workflow_dispatch:
+
+jobs:
+  pull:
+    name: Pull community translations from Crowdin
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download translations from Crowdin
+        uses: crowdin/github-action@v3
+        with:
+          config: crowdin.yml
+          upload_sources: false
+          download_translations: true
+          localization_branch_name: crowdin-translations
+          create_pull_request: true
+          pull_request_title: "chore(i18n): update translations from Crowdin"
+          pull_request_body: "Automated community translation sync from Crowdin."
+          pull_request_base_branch_name: "beta"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}

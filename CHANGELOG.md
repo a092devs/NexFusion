@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.2.8
+
+- VLC Support & Target Discovery:
+  * Added package queries and discovery metadata for VLC (`org.videolan.vlc`).
+  * Removed MX Player (`com.mxtech.videoplayer.ad`) from discovery and bundle targets.
+  * Updated supported applications matrix across video, audio, social, and system utilities.
+- Community Translations via Crowdin:
+  * Integrated automated Crowdin translation configuration (`crowdin.yml`) for multi-language community localization.
+  * Added automated GitHub Actions workflows for source upload (`crowdin_push.yml`) and community translation sync (`crowdin_pull.yml`).
+
 ## 4.2.7
 
 - Stremio & MX Player Support & Target Discovery:
