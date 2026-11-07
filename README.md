@@ -3,12 +3,14 @@
   <h1>NexFusion</h1>
   <p><strong>Advanced root + LSPosed runtime bytecode patch manager for Android featuring fluid Material design.</strong></p>
   <p>
-    <a href="https://github.com/a092devs/NexFusion/releases"><img src="https://img.shields.io/github/v/release/a092devs/NexFusion?style=flat-square&color=0284C7&label=Release" alt="Latest Release" /></a>
-    <img src="https://img.shields.io/badge/Android-8.1%2B-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android 8.1+" />
-    <img src="https://img.shields.io/badge/LSPosed-API%20101-blue?style=flat-square" alt="LSPosed API 101" />
-    <img src="https://img.shields.io/badge/UI-Miuix%20%7C%20Material%203-blueviolet?style=flat-square" alt="Design Systems" />
-    <img src="https://img.shields.io/badge/Icon-Hardware%20Silicon%20Matrix-0284C7?style=flat-square" alt="Hardware Silicon Matrix" />
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-orange?style=flat-square" alt="GPL-3.0" /></a>
+    <a href="https://github.com/a092devs/NexFusion/releases"><img src="https://img.shields.io/github/v/release/a092devs/NexFusion?style=flat&color=1f6feb&labelColor=21262d&logo=github&label=Release" alt="Latest Release" /></a>
+    <img src="https://img.shields.io/badge/Android-8.1%2B-238636?style=flat&labelColor=21262d&logo=android&logoColor=white" alt="Android 8.1+" />
+    <img src="https://img.shields.io/badge/LSPosed-API%20101-8957e5?style=flat&labelColor=21262d" alt="LSPosed API 101" />
+    <img src="https://img.shields.io/badge/UI-Miuix%20%7C%20Material%203-a371f7?style=flat&labelColor=21262d" alt="Design Systems" />
+    <img src="https://img.shields.io/badge/Icon-Hardware%20Silicon%20Matrix-1f6feb?style=flat&labelColor=21262d" alt="Hardware Silicon Matrix" />
+    <a href="https://crowdin.com/project/nexfusion"><img src="https://img.shields.io/badge/Crowdin-Translate-1f6feb?style=flat&labelColor=21262d&logo=crowdin&logoColor=white" alt="Crowdin Translations" /></a>
+    <a href="https://t.me/a092devs"><img src="https://img.shields.io/badge/Telegram-@a092devs-2f81f7?style=flat&labelColor=21262d&logo=telegram&logoColor=white" alt="Telegram Support" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-d29922?style=flat&labelColor=21262d" alt="GPL-3.0" /></a>
   </p>
   <p>
     <a href="#-getting-started">🚀 Getting Started</a> •
@@ -16,6 +18,7 @@
     <a href="#-curated-patch-repositories">🧩 Patch Bundles</a> •
     <a href="#-supported-applications-matrix">📱 Supported Apps</a> •
     <a href="#-appearance--theming">🎨 Theming</a> •
+    <a href="#-translations">🌐 Translations</a> •
     <a href="#-troubleshooting">🔍 Troubleshooting</a>
   </p>
 </div>
@@ -206,6 +209,21 @@ cd NexFusion
 
 ---
 
+## 🌐 Translations
+
+NexFusion is localized by community contributors via [Crowdin](https://crowdin.com/project/nexfusion).
+
+<div align="center">
+  <a href="https://crowdin.com/project/nexfusion">
+    <img src="https://img.shields.io/badge/Crowdin-Translate%20NexFusion-1f6feb?style=flat&labelColor=21262d&logo=crowdin&logoColor=white" alt="Crowdin Translations" />
+  </a>
+</div>
+
+- **Help Translate:** Help translate NexFusion into your language or review existing localizations on our [Crowdin Project](https://crowdin.com/project/nexfusion).
+- **Automated Synchronization:** Completed translations are automatically synchronized into the repository and included in upcoming release builds.
+
+---
+
 ## 🔍 Troubleshooting
 
 <details>
@@ -218,16 +236,17 @@ cd NexFusion
 | **Patches not applying** | Target app not in scope | Check LSPosed scope; NexFusion Home screen displays a yellow scope warning if missing. |
 | **Compatibility Warning** | Installed app differs from target | Inspect the target app card in Home to check verified versions; hooks may still resolve dynamically. |
 | **Blur missing on Floating Bar** | Android version limitation | Runtime shader blur requires Android 13+ (API 33+); older versions render an opaque surface. |
-| **Need Support / Diagnostics** | Reporting an issue | Go to **Settings → Copy diagnostics** and attach the report when submitting a GitHub issue. |
+| **Need Support / Diagnostics** | Reporting an issue | Go to **Settings → Copy diagnostics** and attach the report when submitting a GitHub issue, or reach out on Telegram [@a092devs](https://t.me/a092devs). |
 
 </details>
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contributing & Support
 
-Contributions, bug reports, and pull requests are welcome!
-- Ensure all unit tests pass prior to opening pull requests: `./gradlew testDebugUnitTest`
+Contributions, bug reports, and feature requests are welcome!
+- **Feedback & Feature Requests:** If you encounter issues or have feature requests, feel free to contact [@a092devs](https://t.me/a092devs) on Telegram.
+- **Bug Reports & Pull Requests:** Ensure all unit tests pass prior to opening pull requests: `./gradlew testDebugUnitTest`
 - All contributions must adhere to the runtime-only architecture (in-memory execution via LSPosed API 101, zero APK tampering).
 - Ensure target application stability by wrapping non-essential hooks in `runCatching` safeguards.
 
