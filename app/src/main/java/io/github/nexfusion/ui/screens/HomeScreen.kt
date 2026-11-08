@@ -72,6 +72,8 @@ import io.github.nexfusion.ui.navigateTopLevel
 import io.github.nexfusion.ui.theme.isMiuixStyle
 import io.github.nexfusion.ui.theme.nexFusionCardBorder
 import io.github.nexfusion.ui.theme.nexFusionCardShape
+import io.github.nexfusion.ui.DesignTokens
+import io.github.nexfusion.ui.ProvideDesignSystem
 import io.github.nexfusion.updates.AppInstaller
 import io.github.nexfusion.updates.AppRelease
 import io.github.nexfusion.updates.UpdateDownloadState
@@ -138,7 +140,7 @@ fun HomeContent(
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(
-                    bottom = 24.dp + outerPadding.calculateBottomPadding(),
+                    bottom = DesignTokens.sectionSpacing + outerPadding.calculateBottomPadding(),
                 ),
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -508,7 +510,7 @@ private data class StatusPalette(
 @Composable
 private fun StatusCard(active: Boolean, title: String, text: String) {
     val isDark = isSystemInDarkTheme()
-    val shape = RoundedCornerShape(18.dp)
+    val shape = DesignTokens.shapeXLarge
 
     val palette = if (active) {
         if (isDark) {
@@ -555,11 +557,11 @@ private fun StatusCard(active: Boolean, title: String, text: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceSm)
             .clip(shape)
             .background(palette.bg)
-            .border(1.dp, palette.border, shape)
-            .padding(16.dp),
+            .border(DesignTokens.borderWidthThin, palette.border, shape)
+            .padding(DesignTokens.cardPaddingMd),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -573,10 +575,10 @@ private fun StatusCard(active: Boolean, title: String, text: String) {
                     imageVector = if (active) Icons.Filled.CheckCircle else Icons.Filled.Warning,
                     contentDescription = null,
                     tint = palette.icon,
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(DesignTokens.iconSizeLg),
                 )
             }
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(DesignTokens.spaceMd))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -585,7 +587,7 @@ private fun StatusCard(active: Boolean, title: String, text: String) {
                         fontWeight = FontWeight.Bold,
                         color = palette.title,
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(DesignTokens.spaceSm))
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
@@ -594,14 +596,14 @@ private fun StatusCard(active: Boolean, title: String, text: String) {
                     ) {
                         Text(
                             text = if (active) "Active" else "Inactive",
-                            fontSize = 11.sp,
+                            fontSize = DesignTokens.fontSizeLabelMedium,
                             fontWeight = FontWeight.Bold,
                             color = palette.icon,
                         )
                     }
                 }
                 if (text.isNotEmpty()) {
-                    Spacer(Modifier.height(3.dp))
+                    Spacer(Modifier.height(DesignTokens.spaceXs))
                     Text(
                         text = text,
                         style = MaterialTheme.typography.bodySmall,
@@ -624,13 +626,13 @@ fun ActionCard(
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
     val isMiuix = isMiuixStyle
-    val actualContainer = if (isMiuix) containerColor.copy(alpha = 0.82f) else containerColor
+    val actualContainer = if (isMiuix) containerColor.copy(alpha = DesignTokens.floatingBarTranslucentOpacity) else containerColor
 
     if (isMiuix) {
         MiuixCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceSm),
         ) {
             ActionCardContent(title, text, icon, primary, secondary, containerColor, isMiuix = true)
         }
@@ -639,7 +641,7 @@ fun ActionCard(
             colors = CardDefaults.cardColors(containerColor = actualContainer),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceSm),
             shape = nexFusionCardShape(),
             border = nexFusionCardBorder(),
         ) {
