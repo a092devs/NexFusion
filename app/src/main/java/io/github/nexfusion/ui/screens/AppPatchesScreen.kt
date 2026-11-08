@@ -41,7 +41,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -82,7 +81,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     val appName = appItem?.appName ?: liveInfo.appLabel.ifBlank { packageName }
 
     var result by remember { mutableStateOf<Result<List<BundlePatches>>?>(null) }
-    val enabled = remember { mutableStateMapOf<String, Boolean>() }
+    val enabled = remember { mutableStateOf(mapOf<String, Boolean>()) }
     var reload by remember { mutableIntStateOf(0) }
     var menu by remember { mutableStateOf(false) }
     var patchSearchQuery by remember { mutableStateOf("") }
@@ -100,7 +99,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
         val loaded = viewModel.patches(packageName)
         enabled.clear()
         loaded.getOrNull()?.forEach { group ->
-            group.patches.forEach { (patch, on) -> enabled[patchPreferenceKey(group.bundle.id, patch.name)] = on }
+            group.patches.forEach { (patch, on) -> enabled.value = enabled.value + (patchPreferenceKey(group.bundle.id, patch.name) to on) }
         }
         result = loaded
     }
@@ -432,9 +431,9 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                     ) {
                                         for ((patch, _) in filteredPatches) {
                                             val key = patchPreferenceKey(group.bundle.id, patch.name)
-                                            val checked = enabled[key] ?: patch.use
+                                            val checked = enabled.value[key] ?: patch.use
                                             fun toggle(value: Boolean) {
-                                                enabled[key] = value
+                                                enabled.value = enabled.value + (key to value)
                                                 viewModel.setPatchEnabled(packageName, group.bundle, patch, value)
                                             }
                                             val isDuplicate = patch.name in group.duplicateNames
@@ -458,9 +457,9 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                             } else {
                                 items(filteredPatches, key = { "${group.bundle.id}/${it.first.name}" }) { (patch, _) ->
                                     val key = patchPreferenceKey(group.bundle.id, patch.name)
-                                    val checked = enabled[key] ?: patch.use
+                                    val checked = enabled.value[key] ?: patch.use
                                     fun toggle(value: Boolean) {
-                                        enabled[key] = value
+                                        enabled.value = enabled.value + (key to value)
                                         viewModel.setPatchEnabled(packageName, group.bundle, patch, value)
                                     }
                                     val isDuplicate = patch.name in group.duplicateNames

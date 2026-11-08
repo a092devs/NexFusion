@@ -3,6 +3,7 @@ package io.github.nexfusion.core
 import android.content.SharedPreferences
 import io.github.nexfusion.AppTarget
 import io.github.nexfusion.core.compatibility.CompatibilityEngine
+import io.github.nexfusion.core.getOrDefault
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -125,8 +126,8 @@ data class InstalledBundle(
 /** Reads and writes the installed bundles in the shared remote preferences. */
 object BundleRegistry {
     /** Remote preferences group shared with hooked apps. */
-    const val PREFS_GROUP = "bundles"
-    private const val KEY = "installed"
+    const val PREFS_GROUP = PrefKeys.BUNDLES_GROUP
+    private const val KEY = PrefKeys.BUNDLES_INSTALLED
 
     fun read(prefs: SharedPreferences): List<InstalledBundle> {
         val raw = prefs.getString(KEY, null) ?: return emptyList()

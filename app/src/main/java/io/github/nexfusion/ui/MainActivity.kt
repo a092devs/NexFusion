@@ -747,10 +747,10 @@ private fun NotificationPermission() {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     val context = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(Unit) {
-        val prefs = context.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(PrefKeys.APP_PREFS, android.content.Context.MODE_PRIVATE)
         val granted = context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        if (!granted && !prefs.getBoolean("notification_permission_asked", false)) {
-            prefs.edit().putBoolean("notification_permission_asked", true).apply()
+        if (!granted && !prefs.getBoolean(PrefKeys.NOTIFICATION_PERMISSION_ASKED, false)) {
+            prefs.edit().putBoolean(PrefKeys.NOTIFICATION_PERMISSION_ASKED, true).apply()
             launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }

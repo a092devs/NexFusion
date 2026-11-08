@@ -1,5 +1,7 @@
 package io.github.nexfusion
 
+import io.github.nexfusion.core.PrefKeys
+
 /**
  * Version of the patcher API.
  *
@@ -59,4 +61,4 @@ class BundleInfo(
 )
 
 /** Key in the per-app remote preferences that stores whether a patch is enabled. */
-fun patchPreferenceKey(bundleId: String, patchName: String) = "$bundleId/$patchName"
+fun patchPreferenceKey(bundleId: String, patchName: String) = PrefKeys.patchEnabled(bundleId, patchName)

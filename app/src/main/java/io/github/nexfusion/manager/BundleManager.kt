@@ -9,6 +9,8 @@ import io.github.nexfusion.core.BundleParentClassLoader
 import io.github.nexfusion.core.BundleRegistry
 import io.github.nexfusion.core.InstalledBundle
 import io.github.nexfusion.core.InvalidBundleException
+import io.github.nexfusion.core.PrefKeys
+import io.github.nexfusion.core.getOrDefault
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -25,10 +27,10 @@ import java.security.MessageDigest
  * Offline resilience: reads from local preferences when the XposedService is inactive.
  */
 class BundleManager(private val context: Context, private val service: XposedService? = null) {
-    private val localPrefs get() = context.getSharedPreferences(BundleRegistry.PREFS_GROUP, Context.MODE_PRIVATE)
+    private val localPrefs get() = context.getSharedPreferences(PrefKeys.BUNDLES_GROUP, Context.MODE_PRIVATE)
     private val registryPrefs get() = service?.takeIf {
-        runCatching { it.getRemotePreferences(BundleRegistry.PREFS_GROUP) }.isSuccess
-    }?.getRemotePreferences(BundleRegistry.PREFS_GROUP)
+        runCatching { it.getRemotePreferences(PrefKeys.BUNDLES_GROUP) }.isSuccess
+    }?.getRemotePreferences(PrefKeys.BUNDLES_GROUP)
 
     private val localDir get() = File(context.filesDir, "bundles").apply { mkdirs() }
 
@@ -206,15 +208,15 @@ class BundleManager(private val context: Context, private val service: XposedSer
 
     val ignoredPackages: Set<String>
         get() {
-            val remote = registryPrefs?.let { runCatching { it.getStringSet("ignored_packages", null) }.getOrNull() }
-            return remote ?: localPrefs.getStringSet("ignored_packages", null) ?: io.github.nexfusion.updates.AppSettings(context).ignoredPackages
+            val remote = registryPrefs?.let { runCatching { it.getStringSet(PrefKeys.IGNORED_PACKAGES, null) }.getOrNull() }
+            return remote ?: localPrefs.getStringSet(PrefKeys.IGNORED_PACKAGES, null) ?: io.github.nexfusion.updates.AppSettings(context).ignoredPackages
         }
 
     fun setPackageIgnored(packageName: String, ignored: Boolean) {
         val current = ignoredPackages.toMutableSet()
         if (ignored) current.add(packageName) else current.remove(packageName)
-        localPrefs.edit().putStringSet("ignored_packages", current).apply()
-        registryPrefs?.let { runCatching { it.edit().putStringSet("ignored_packages", current).apply() } }
+        localPrefs.edit().putStringSet(PrefKeys.IGNORED_PACKAGES, current).apply()
+        registryPrefs?.let { runCatching { it.edit().putStringSet(PrefKeys.IGNORED_PACKAGES, current).apply() } }
         io.github.nexfusion.updates.AppSettings(context).setPackageIgnored(packageName, ignored)
     }
 

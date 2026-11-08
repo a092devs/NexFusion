@@ -11,19 +11,14 @@ import android.widget.Toast
 import de.robv.android.xposed.XposedBridge
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModuleInterface
+import io.github.nexfusion.core.PrefKeys
 import org.luckypray.dexkit.DexKitCacheBridge
 import org.luckypray.dexkit.annotations.DexKitExperimentalApi
 import kotlin.system.measureTimeMillis
 
-/**
- * Cache key of the last failing-patch set; see [PatchSession.finish]. Distinct from the
- * `nexfusion:id:` keys, which hold the cache validity token of one bundle.
- */
-private const val FAILURE_KEY = "nexfusion:failed"
-
 @Suppress("UNCHECKED_CAST")
 class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
-    val pref = app.getSharedPreferences("nexfusion_dexkit", MODE_PRIVATE)!!
+    val pref = app.getSharedPreferences(PrefKeys.DEXKIT_CACHE, MODE_PRIVATE)!!
     private val map = mutableMapOf<String, String>().apply {
         putAll(pref.all as Map<String, String>)
     }
@@ -120,14 +115,14 @@ class PatchSession(
             // A deterministic miss would toast on every start of the affected app until the system
             // blocks the app's toasts outright (and eats the message); only a change in the failing
             // set is news, the log line above carries the rest.
-            val previous = cache.getString(FAILURE_KEY, null)
+            val previous = cache.getString(PrefKeys.FAILED_PATCHES, null)
             if (signature != previous) {
-                cache.putString(FAILURE_KEY, signature)
+                cache.putString(PrefKeys.FAILED_PATCHES, signature)
                 showToast("Error while applying the following patches:\n$signature")
             }
         } else {
-            if (cache.getString(FAILURE_KEY, null)?.isNotEmpty() == true) {
-                cache.putString(FAILURE_KEY, "")
+            if (cache.getString(PrefKeys.FAILED_PATCHES, null)?.isNotEmpty() == true) {
+                cache.putString(PrefKeys.FAILED_PATCHES, "")
             }
             if (debug) {
                 XposedBridge.log("${lpparam.packageName} version: $appVersion: patches applied successfully")
@@ -138,7 +133,7 @@ class PatchSession(
 
     private fun loadCacheIfValid(bundle: BundleInfo) {
         val packageInfo = app.packageManager.getPackageInfo(app.packageName, 0)
-        val idKey = "nexfusion:id:${bundle.id}"
+        val idKey = PrefKeys.bundleCacheId(bundle.id)
         val bundleHash = java.io.File(bundle.apkPath).nameWithoutExtension
         val id = "${packageInfo.lastUpdateTime}-$coreVersion-${bundle.version}-$bundleHash"
         val cachedId = cache.getString(idKey, null)

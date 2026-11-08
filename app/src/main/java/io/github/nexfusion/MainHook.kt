@@ -15,6 +15,8 @@ import io.github.nexfusion.core.BundleParentClassLoader
 import io.github.nexfusion.core.BundleRegistry
 import io.github.nexfusion.core.InstalledBundle
 import io.github.nexfusion.core.ModuleStatus
+import io.github.nexfusion.core.PrefKeys
+import io.github.nexfusion.core.getOrDefault
 import io.github.nexfusion.core.XposedDexRemapper
 import io.github.nexfusion.morphe.ResourceFinder
 import io.github.nexfusion.morphe.resourceMappings
@@ -31,12 +33,12 @@ class MainHook : XposedModule() {
             return
         }
         val remotePrefs = runCatching { getRemotePreferences(BundleRegistry.PREFS_GROUP) }.getOrNull()
-        val ignored = remotePrefs?.let { runCatching { it.getStringSet("ignored_packages", null) }.getOrNull() } ?: emptySet()
+        val ignored = remotePrefs?.let { runCatching { it.getStringSet(PrefKeys.IGNORED_PACKAGES, null) }.getOrNull() } ?: emptySet()
         if (param.packageName in ignored) return
         if (targetPackageName != null && targetPackageName != param.packageName) return
 
         val bundles = remotePrefs?.let { runCatching { BundleRegistry.read(it) }.getOrNull() }
-            ?: runCatching { BundleRegistry.read(getRemotePreferences(BundleRegistry.PREFS_GROUP)) }.getOrDefault(emptyList())
+            ?: runCatching { BundleRegistry.read(getRemotePreferences(PrefKeys.BUNDLES_GROUP)) }.getOrDefault(emptyList())
         val matchingBundles = bundles.filter { it.enabled && param.packageName in it.apps }
         if (matchingBundles.isEmpty()) return
         targetPackageName = param.packageName

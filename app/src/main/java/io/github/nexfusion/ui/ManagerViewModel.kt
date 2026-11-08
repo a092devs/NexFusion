@@ -13,6 +13,7 @@ import io.github.nexfusion.activity.SettingApplication
 import io.github.nexfusion.core.BundleRegistry
 import io.github.nexfusion.core.InstalledBundle
 import io.github.nexfusion.core.ModuleStatus
+import io.github.nexfusion.core.PrefKeys
 import io.github.nexfusion.core.R
 import io.github.nexfusion.core.compatibility.VersionComparator
 import io.github.nexfusion.core.discovery.AppDiscovery
@@ -179,7 +180,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     override fun onServiceStateChanged(service: XposedService?) {
         val active = service?.takeIf {
-            runCatching { it.getRemotePreferences(BundleRegistry.PREFS_GROUP) }.isSuccess
+            runCatching { it.getRemotePreferences(PrefKeys.BUNDLES_GROUP) }.isSuccess
         }
         val framework = active?.let { "${it.frameworkName} ${it.frameworkVersion}" }
             ?: ModuleStatus.frameworkName()
