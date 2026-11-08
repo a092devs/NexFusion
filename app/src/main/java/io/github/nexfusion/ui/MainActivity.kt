@@ -101,6 +101,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import io.github.nexfusion.core.PrefKeys
 import io.github.nexfusion.core.R
 import io.github.nexfusion.ui.screens.AppPatchesScreen
 import io.github.nexfusion.ui.screens.HomeScreen

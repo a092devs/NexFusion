@@ -97,7 +97,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
 
     LaunchedEffect(packageName, state.isActive, state.bundles, reload) {
         val loaded = viewModel.patches(packageName)
-        enabled.clear()
+        enabled.value = mapOf()
         loaded.getOrNull()?.forEach { group ->
             group.patches.forEach { (patch, on) -> enabled.value = enabled.value + (patchPreferenceKey(group.bundle.id, patch.name) to on) }
         }
