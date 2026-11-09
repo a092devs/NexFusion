@@ -127,14 +127,14 @@
     <string name="filter_scope">Scope Issues</string>
     <string name="tab_sources">Sources</string>
     <string name="tab_bundles">Bundles</string>
-    <string name="theme_title">Colour mode</string>
+    <string name="theme_title">Color mode</string>
     <string name="theme_system">System default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_style_title">Design system</string>
     <string name="theme_style_material3">Material 3</string>
     <string name="theme_style_miuix">Miuix</string>
-    <string name="color_scheme_title">Colour scheme</string>
+    <string name="color_scheme_title">Color scheme</string>
     <string name="color_scheme_default">Default</string>
     <string name="color_scheme_violet">Violet</string>
     <string name="color_scheme_emerald">Emerald</string>

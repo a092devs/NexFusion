@@ -62,6 +62,7 @@ import io.github.nexfusion.core.discovery.AppDiscovery
 import io.github.nexfusion.patchPreferenceKey
 import io.github.nexfusion.ui.BundlePatches
 import io.github.nexfusion.ui.ManagerViewModel
+import io.github.nexfusion.ui.DesignTokens
 import io.github.nexfusion.ui.theme.isMiuixStyle
 import io.github.nexfusion.ui.screens.ThemedFilledButton
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
@@ -146,14 +147,14 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
         val loaded = result
         when {
             loaded == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(modifier = Modifier.size(DesignTokens.iconSizeMd))
             }
 
             loaded.isFailure -> Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(24.dp),
+                    .padding(DesignTokens.spaceXxl),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -161,9 +162,9 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                     Icons.Filled.Warning,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(DesignTokens.iconSizeXl),
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(DesignTokens.spaceMd))
                 Text(
                     stringResource(R.string.patches_load_failed, loaded.exceptionOrNull()?.message.orEmpty()),
                     style = MaterialTheme.typography.bodyMedium,
@@ -315,7 +316,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                     }
                                 }
 
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(DesignTokens.spaceMd))
 
                                 CompatibilityChip(compatibility)
 
@@ -367,7 +368,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                             placeholder = stringResource(R.string.search_patches_hint),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                                .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceXs),
                         )
                     }
 
@@ -375,7 +376,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                                .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceSm),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -427,7 +428,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                     MiuixCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                                            .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceXs),
                                     ) {
                                         for ((patch, _) in filteredPatches) {
                                             val key = patchPreferenceKey(group.bundle.id, patch.name)

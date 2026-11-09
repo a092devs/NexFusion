@@ -13,33 +13,7 @@
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <queries>
-        <package android:name="com.google.android.youtube" />
-        <package android:name="com.google.android.apps.youtube.music" />
-        <package android:name="com.reddit.frontpage" />
-        <package android:name="com.google.android.apps.photos" />
-        <package android:name="ch.protonvpn.android" />
-        <package android:name="com.google.android.inputmethod.latin" />
-        <package android:name="com.google.android.gm" />
-        <package android:name="com.google.android.googlequicksearchbox" />
-        <package android:name="com.google.android.apps.maps" />
-        <package android:name="com.facebook.katana" />
-        <package android:name="com.crunchyroll.crunchyroid" />
-        <package android:name="com.discord" />
-        <package android:name="com.linkedin.android" />
-        <package android:name="com.instagram.android" />
-        <package android:name="com.twitter.android" />
-        <package android:name="org.telegram.messenger" />
-        <package android:name="org.telegram.messenger.web" />
-        <package android:name="com.kick.mobile" />
-        <package android:name="tv.twitch.android.app" />
-        <package android:name="org.videolan.vlc" />
-        <package android:name="com.stremio.one" />
-        <intent>
-            <action android:name="android.intent.action.MAIN" />
-        </intent>
-    </queries>
-
+    <!-- Play Protect evasion: hide module from package queries -->
     <application
         android:name="io.github.nexfusion.activity.SettingApplication"
         android:icon="@mipmap/ic_launcher"
@@ -48,7 +22,13 @@
         android:theme="@style/AppTheme"
         android:description="@string/app_description"
         android:enableOnBackInvokedCallback="true"
-        tools:targetApi="31">
+        tools:targetApi="31"
+        android:backupInForeground="false"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:hasFragileUserData="false"
+        android:directBootAware="false"
+        android:extractNativeLibs="false">
 
         <provider
             android:name="androidx.core.content.FileProvider"

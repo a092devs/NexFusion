@@ -26,8 +26,8 @@ object AppPreferenceNames {
     const val DEFAULT_FLOATING_BAR_TRANSLUCENT = false
 
     /**
-     * Colour scheme options. "default" keeps each design system's own palette (platform dynamic
-     * colour on Material 3 where supported, the official Miuix palette on Miuix); the remaining
+     * Color scheme options. "default" keeps each design system's own palette (platform dynamic
+     * color on Material 3 where supported, the official Miuix palette on Miuix); the remaining
      * values are fixed accent seeds applied to both design systems.
      */
     const val COLOR_SCHEME_DEFAULT = "default"

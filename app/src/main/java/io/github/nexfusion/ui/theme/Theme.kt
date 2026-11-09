@@ -78,101 +78,40 @@ fun nexFusionCardColors(
     )
 }
 
-// Material 3 standard schemes
-private val M3Light = lightColorScheme(
-    primary = Color(0xFF3A5BA9),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFDAE2FF),
-    onPrimaryContainer = Color(0xFF001848),
-    secondary = Color(0xFF585E71),
-    secondaryContainer = Color(0xFFDDE2F9),
-    tertiary = Color(0xFF735572),
-    tertiaryContainer = Color(0xFFFED7F9),
-)
-
-private val M3Dark = darkColorScheme(
-    primary = Color(0xFFB1C5FF),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFF1F428F),
-    onPrimaryContainer = Color(0xFFDAE2FF),
-    secondary = Color(0xFFC0C6DC),
-    secondaryContainer = Color(0xFF404659),
-    tertiary = Color(0xFFE1BBDD),
-    tertiaryContainer = Color(0xFF5A3E59),
-)
-
-// Miuix: Material 3 equivalent roles re-tinted to the official Miuix palette so that shared
-// Material-based building blocks (custom pills, dividers, text) stay consistent inside the
-// Miuix design system.
-private val MiuixLightScheme = lightColorScheme(
-    primary = Color(0xFF0066FF),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFE5EFFF),
-    onPrimaryContainer = Color(0xFF003399),
-    secondary = Color(0xFF4B6079),
-    secondaryContainer = Color(0xFFE0EAF5),
-    onSecondaryContainer = Color(0xFF10263E),
-    tertiary = Color(0xFF00897B),
-    tertiaryContainer = Color(0xFFCCF2ED),
-    background = Color(0xFFF4F6FB),
-    onBackground = Color(0xFF1A1C22),
-    surface = Color(0xFFFAFBFE),
-    onSurface = Color(0xFF1A1C22),
-    surfaceVariant = Color(0xFFE4E8F2),
-    onSurfaceVariant = Color(0xFF444852),
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF7F9FC),
-    surfaceContainer = Color(0xFFF0F4FA),
-    surfaceContainerHigh = Color(0xFFE7EDF6),
-    surfaceContainerHighest = Color(0xFFDDE4F0),
-    outline = Color(0xFF6B7280),
-    outlineVariant = Color(0xFFCBD2DE),
-)
-
-private val MiuixDarkScheme = darkColorScheme(
-    primary = Color(0xFF3B82F6),
-    onPrimary = Color(0xFF00224E),
-    primaryContainer = Color(0xFF1E3A8A),
-    onPrimaryContainer = Color(0xFFDBEAFE),
-    secondary = Color(0xFF94A3B8),
-    secondaryContainer = Color(0xFF243044),
-    onSecondaryContainer = Color(0xFFE2E8F0),
-    tertiary = Color(0xFF2DD4BF),
-    tertiaryContainer = Color(0xFF004D40),
-    background = Color(0xFF0B0D14),
-    onBackground = Color(0xFFF1F5F9),
-    surface = Color(0xFF11141D),
-    onSurface = Color(0xFFF1F5F9),
-    surfaceVariant = Color(0xFF1E2330),
-    onSurfaceVariant = Color(0xFF94A3B8),
-    surfaceContainerLowest = Color(0xFF0E1119),
-    surfaceContainerLow = Color(0xFF141722),
-    surfaceContainer = Color(0xFF1A1F2C),
-    surfaceContainerHigh = Color(0xFF222838),
-    surfaceContainerHighest = Color(0xFF2C3448),
-    outline = Color(0xFF64748B),
-    outlineVariant = Color(0xFF334155),
-)
+// ============================================================================
+// NEXFUSION COLOR SYSTEM - Sophisticated Harmonious Palettes
+// ============================================================================
+// Each seed is carefully chosen for perceptual harmony, accessibility, and
+// brand coherence. Tonal palettes generated via Material 3's tonal spot algorithm
+// ensure consistent contrast across light/dark and both design systems.
+// ============================================================================
 
 /**
- * Signature seed for NexFusion's default theme: Royal Fusion Cobalt.
- * Produces an ultra-clean, modern, deep obsidian canvas in dark mode and crisp porcelain in light mode.
+ * Default seed for the "Default" scheme — a distinctive deep indigo.
+ * This is the brand seed used when no named scheme is selected.
  */
-val DefaultFusionSeed = Color(0xFF2563EB)
+val DefaultFusionSeed = Color(0xFF3B3FD9)
 
-/** Fixed accent seeds for the named colour schemes. */
+/** Fixed accent seeds for the named color schemes.
+ * Each seed is a carefully tuned hue with balanced chroma for both light/dark modes.
+ * Seeds are NOT pure hues — they're tuned for perceptual harmony in tonal palettes.
+ */
 private fun schemeSeed(colorScheme: String): Color = when (colorScheme) {
-    AppPreferenceNames.COLOR_SCHEME_VIOLET -> Color(0xFF7C5CFF)
-    AppPreferenceNames.COLOR_SCHEME_EMERALD -> Color(0xFF10B981)
-    AppPreferenceNames.COLOR_SCHEME_AMBER -> Color(0xFFF59E0B)
-    AppPreferenceNames.COLOR_SCHEME_ROSE -> Color(0xFFE11D48)
-    AppPreferenceNames.COLOR_SCHEME_OCEAN -> Color(0xFF0EA5E9)
+    // DEEP INDIGO VIOLET — Rich, mysterious, premium. High chroma but not garish.
+    AppPreferenceNames.COLOR_SCHEME_VIOLET -> Color(0xFF6B46E0)
+    // VERDANT EMERALD — Natural, vibrant, alive. Slightly blue-shifted for depth.
+    AppPreferenceNames.COLOR_SCHEME_EMERALD -> Color(0xFF009666)
+    // GOLDEN AMBER — Warm, energetic, optimistic. Not too yellow, not too orange.
+    AppPreferenceNames.COLOR_SCHEME_AMBER -> Color(0xFFE8A000)
+    // ROSE QUARTZ — Soft, sophisticated, modern. Red-violet balance, not pink.
+    AppPreferenceNames.COLOR_SCHEME_ROSE -> Color(0xFFD63A6D)
+    // DEEP TEAL OCEAN — Calm, tech-forward, trustworthy. Blue-green balance.
+    AppPreferenceNames.COLOR_SCHEME_OCEAN -> Color(0xFF0096A0)
     else -> DefaultFusionSeed
 }
 
-/**
- * Material 3 scheme generated from a seed colour with the same tonal-spot algorithm the Miuix
- * theme engine uses, so a chosen accent renders consistently on both design systems.
+/** Material 3 schemes generated from seeds using tonal spot algorithm.
+ * These provide the base M3 schemes that Miuix then harmonizes with.
  */
 private fun materialSchemeFromSeed(seed: Color, dark: Boolean): ColorScheme {
     val scheme = SchemeTonalSpot(
@@ -217,6 +156,64 @@ private fun materialSchemeFromSeed(seed: Color, dark: Boolean): ColorScheme {
         inversePrimary = Color(scheme.inversePrimary),
     )
 }
+
+/**
+ * Miuix Light: Official Xiaomi/HyperOS palette — clean, airy, slightly cool blue bias.
+ * Primary: Xiaomi Blue (0066FF). Surfaces: cool white with subtle blue tint.
+ */
+private val MiuixLightScheme = lightColorScheme(
+    primary = Color(0xFF0066FF),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFE5EFFF),
+    onPrimaryContainer = Color(0xFF003399),
+    secondary = Color(0xFF4B6079),
+    secondaryContainer = Color(0xFFE0EAF5),
+    onSecondaryContainer = Color(0xFF10263E),
+    tertiary = Color(0xFF00897B),
+    tertiaryContainer = Color(0xFFCCF2ED),
+    background = Color(0xFFF4F6FB),
+    onBackground = Color(0xFF1A1C22),
+    surface = Color(0xFFFAFBFE),
+    onSurface = Color(0xFF1A1C22),
+    surfaceVariant = Color(0xFFE4E8F2),
+    onSurfaceVariant = Color(0xFF444852),
+    surfaceContainerLowest = Color(0xFFFFFFFF),
+    surfaceContainerLow = Color(0xFFF7F9FC),
+    surfaceContainer = Color(0xFFF0F4FA),
+    surfaceContainerHigh = Color(0xFFE7EDF6),
+    surfaceContainerHighest = Color(0xFFDDE4F0),
+    outline = Color(0xFF6B7280),
+    outlineVariant = Color(0xFFCBD2DE),
+)
+
+/**
+ * Miuix Dark: Deep charcoal with cool blue undertones — not pure black.
+ * Primary: Bright Xiaomi Blue (3B82F6). Surfaces: layered charcoal blues.
+ */
+private val MiuixDarkScheme = darkColorScheme(
+    primary = Color(0xFF3B82F6),
+    onPrimary = Color(0xFF00224E),
+    primaryContainer = Color(0xFF1E3A8A),
+    onPrimaryContainer = Color(0xFFDBEAFE),
+    secondary = Color(0xFF94A3B8),
+    secondaryContainer = Color(0xFF243044),
+    onSecondaryContainer = Color(0xFFE2E8F0),
+    tertiary = Color(0xFF2DD4BF),
+    tertiaryContainer = Color(0xFF004D40),
+    background = Color(0xFF0B0D14),
+    onBackground = Color(0xFFF1F5F9),
+    surface = Color(0xFF11141D),
+    onSurface = Color(0xFFF1F5F9),
+    surfaceVariant = Color(0xFF1E2330),
+    onSurfaceVariant = Color(0xFF94A3B8),
+    surfaceContainerLowest = Color(0xFF0E1119),
+    surfaceContainerLow = Color(0xFF141722),
+    surfaceContainer = Color(0xFF1A1F2C),
+    surfaceContainerHigh = Color(0xFF222838),
+    surfaceContainerHighest = Color(0xFF2C3448),
+    outline = Color(0xFF64748B),
+    outlineVariant = Color(0xFF334155),
+)
 
 /**
  * NexFusion adaptive dual-theme system supporting both standard AndroidX Material 3
