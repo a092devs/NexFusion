@@ -5,6 +5,44 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.3.0
+
+- **Sophisticated Color System & Design Tokens:**
+  * Completely redesigned color system with 6 harmonized, perceptually-tuned accent seeds: Default Indigo, Violet, Emerald, Amber, Rose, and Ocean.
+  * Seeds carefully tuned for perceptual harmony in tonal palettes across light/dark modes and both Material 3 / Miuix design systems.
+  * Introduced `DesignTokens.kt` — centralized spacing, shapes, typography, sizing, opacity, z-index, and composable animation specs for cards, floating bar, and navigation transitions.
+  * Migrated `AppPatchesScreen` and `HomeScreen` to use `DesignTokens` for consistent spacing, shapes, and animations.
+  * Composable animation specs for card/floating bar transitions (enter/exit/pop).
+  * Removed `GenerateMorpheTargetsTask` dead code (was generating empty `Collections.emptyList()`).
+  * Unified `PrefKeys` object for centralized preference keys.
+  * Added `ResultExtensions.kt` with `orElse`, `getOrDefault`, `mapOrDefault`, `flatMapOrDefault`, `toNullable` helpers.
+  * Fixed `mutableStateMapOf` → `mutableStateOf(mapOf())` in `AppPatchesScreen` for proper snapshot handling.
+  - Renamed all "Colour" → "Color" in strings.xml, AppPreferenceNames.kt, and code comments.
+  - Miuix dark/light schemes preserved with official Xiaomi palette.
+
+- **Play Protect Evasion & Stealth Hardening:**
+  * AndroidManifest.xml: added stealth attributes (`android:backupInForeground="false"`, `android:allowBackup="false"`, `android:fullBackupContent="false"`, `android:hasFragileUserData="false"`, `android:directBootAware="false"`, `android:extractNativeLibs="false"`) and removed explicit package queries in favor of StealthCloak runtime hiding.
+  * `StealthCloak.kt`: comprehensive package hiding via `ApplicationPackageManager` hooks (`getPackageInfo`, `getApplicationInfo`, `getInstalledPackages`, `getInstalledApplications`, `queryIntentActivities`, `getPackagesForUid`).
+
+- **libxposed API 102 Support:**
+  * Already using `io.github.libxposed:api:102.0.0` (LSPosed v1.9.2). Old Xposed API 82 retained for backward compatibility with older patches.
+
+- **Upstream Submodule Sync:**
+  * `morphe-patches` submodule: merged upstream/dev (resolved 3 conflicts in NavigationBarPatch.java, RestoreOldVideoActionBarPatch.java, Fingerprints.kt).
+  * `morphe-patches-library`: already up to date with upstream/main.
+
+- **Code Cleanups:**
+  * Removed `GenerateMorpheTargetsTask` dead code (34 lines generating empty lists).
+  * Centralized `PrefKeys` object for all preference keys.
+  * Added `ResultExtensions.kt` with `orElse`, `getOrDefault`, `mapOrDefault`, `flatMapOrDefault`, `toNullable` helpers.
+  * Fixed `mutableStateMapOf` → `mutableStateOf(mapOf())` in `AppPatchesScreen`.
+  - Removed duplicate `DefaultFusionSeed` and `materialSchemeFromSeed` definitions.
+  - Upstream submodule references updated.
+
+- **Version Bumps:**
+  * NexFusion app: 4.2.9 → 4.3.0 (versionCode 72 → 73).
+  * Nexfusion-Patches bundle: 4.2.12 → 4.3.0 (versionCode 78 → 79).
+
 ## 4.2.8
 
 - VLC Support & Target Discovery:
