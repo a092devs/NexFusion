@@ -25,6 +25,11 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.hct.Hct
 import com.materialkolor.scheme.DynamicScheme
 import com.materialkolor.scheme.SchemeTonalSpot
+import io.github.nexfusion.ui.theme.ColorPalette.DefaultFusionSeed
+import io.github.nexfusion.ui.theme.ColorPalette.MiuixDarkScheme
+import io.github.nexfusion.ui.theme.ColorPalette.MiuixLightScheme
+import io.github.nexfusion.ui.theme.ColorPalette.materialSchemeFromSeed
+import io.github.nexfusion.ui.theme.ColorPalette.schemeSeed
 import io.github.nexfusion.updates.AppPreferenceNames
 import io.github.nexfusion.updates.AppSettings
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -76,38 +81,6 @@ fun nexFusionCardColors(
         containerColor = actualContainer,
         contentColor = contentColor,
     )
-}
-
-// ============================================================================
-// NEXFUSION COLOR SYSTEM - Sophisticated Harmonious Palettes
-// ============================================================================
-// Each seed is carefully chosen for perceptual harmony, accessibility, and
-// brand coherence. Tonal palettes generated via Material 3's tonal spot algorithm
-// ensure consistent contrast across light/dark and both design systems.
-// ============================================================================
-
-/**
- * Default seed for the "Default" scheme — a distinctive deep indigo.
- * This is the brand seed used when no named scheme is selected.
- */
-val DefaultFusionSeed = Color(0xFF3B3FD9)
-
-/** Fixed accent seeds for the named color schemes.
- * Each seed is a carefully tuned hue with balanced chroma for both light/dark modes.
- * Seeds are NOT pure hues — they're tuned for perceptual harmony in tonal palettes.
- */
-private fun schemeSeed(colorScheme: String): Color = when (colorScheme) {
-    // DEEP INDIGO VIOLET — Rich, mysterious, premium. High chroma but not garish.
-    AppPreferenceNames.COLOR_SCHEME_VIOLET -> Color(0xFF6B46E0)
-    // VERDANT EMERALD — Natural, vibrant, alive. Slightly blue-shifted for depth.
-    AppPreferenceNames.COLOR_SCHEME_EMERALD -> Color(0xFF009666)
-    // GOLDEN AMBER — Warm, energetic, optimistic. Not too yellow, not too orange.
-    AppPreferenceNames.COLOR_SCHEME_AMBER -> Color(0xFFE8A000)
-    // ROSE QUARTZ — Soft, sophisticated, modern. Red-violet balance, not pink.
-    AppPreferenceNames.COLOR_SCHEME_ROSE -> Color(0xFFD63A6D)
-    // DEEP TEAL OCEAN — Calm, tech-forward, trustworthy. Blue-green balance.
-    AppPreferenceNames.COLOR_SCHEME_OCEAN -> Color(0xFF0096A0)
-    else -> DefaultFusionSeed
 }
 
 /** Material 3 schemes generated from seeds using tonal spot algorithm.

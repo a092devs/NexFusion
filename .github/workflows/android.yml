@@ -101,7 +101,7 @@ jobs:
     - name: Create Beta Pre-Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
       run: |
-        VERSION_NAME=$(grep 'versionName = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+        VERSION_NAME=$(grep '^appVersionName=' gradle.properties | cut -d'=' -f2)
         GIT_SHORT=$(git rev-parse --short HEAD)
         mkdir -p beta-dist
         if [ -f app/build/outputs/apk/release/app-release.apk ]; then
@@ -143,13 +143,13 @@ jobs:
       run: |
         set -euo pipefail
 
-        CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -1)
-        NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -1)
-        VERSION="${NAME//\$versionCode/$CODE}"
+        CODE=$(grep '^appVersionCode=' gradle.properties | cut -d'=' -f2)
+        NAME=$(grep '^appVersionName=' gradle.properties | cut -d'=' -f2)
+        VERSION="${NAME}"
         echo "Resolved release version: $VERSION"
 
         if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]; then
-          echo "::error::Could not resolve a release version from app/build.gradle.kts (got '$VERSION')."
+          echo "::error::Could not resolve a release version from gradle.properties (got '$VERSION')."
           exit 1
         fi
 

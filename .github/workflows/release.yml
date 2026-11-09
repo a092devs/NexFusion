@@ -59,9 +59,9 @@ jobs:
                     echo "::error::Invalid release tag format: $RELEASE_TAG"
                     exit 1
                   fi
-                  app_version="$(sed -nE 's/.*versionName = "([^"]+)".*/\1/p' app/build.gradle.kts | head -n1)"
+                  app_version="$(grep '^appVersionName=' gradle.properties | cut -d'=' -f2)"
                   if [[ -n "$app_version" && "$RELEASE_TAG" != "$app_version"* ]]; then
-                    echo "::error::Conflicting version assignment: release tag $RELEASE_TAG does not match manager app versionName $app_version in app/build.gradle.kts"
+                    echo "::error::Conflicting version assignment: release tag $RELEASE_TAG does not match manager app versionName $app_version in gradle.properties"
                     exit 1
                   fi
 
