@@ -19,9 +19,9 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>de.robv.android.xposed</groupId>
-      <artifactId>api</artifactId>
-      <version>82</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.20.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
