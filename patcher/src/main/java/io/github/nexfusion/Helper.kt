@@ -6,9 +6,9 @@ import android.content.res.loader.ResourcesProvider
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.annotation.RequiresApi
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
+import io.github.nexfusion.compat.XC_MethodHook
+import io.github.nexfusion.compat.XposedBridge
+import io.github.nexfusion.compat.XposedHelpers
 import io.github.libxposed.api.XposedInterface.PRIORITY_DEFAULT
 import java.io.File
 import java.lang.ref.WeakReference

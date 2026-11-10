@@ -2,9 +2,7 @@ package io.github.nexfusion
 
 import android.app.Application
 import android.widget.Toast
-import de.robv.android.xposed.XC_MethodReplacement
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
+import io.github.nexfusion.compat.XposedBridge
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
@@ -44,8 +42,11 @@ class MainHook : XposedModule() {
         targetPackageName = param.packageName
 
         inContext(param) { app ->
+            // Initialize in-module XposedBridge with this XposedInterface instance
+            XposedBridge.init(this)
+
             // Install stealth cloak to hide NexFusion from target app package queries & Play Services
-            io.github.nexfusion.core.StealthCloak.install(app, moduleApplicationInfo.packageName)
+            io.github.nexfusion.core.StealthCloak.install(app, moduleApplicationInfo.packageName, this)
 
             if (isPatchedApp(param)) {
                 Toast.makeText(app, "NexFusion does not work with patched apps", Toast.LENGTH_LONG).show()
@@ -122,10 +123,16 @@ class MainHook : XposedModule() {
      * which the framework rewrote. The original names are assembled at runtime so the framework cannot rewrite them.
      */
     private val remapper by lazy {
-        fun name(vararg parts: String) = parts.joinToString(".")
+        fun slash(vararg parts: String) = "L" + parts.joinToString("/") + "/"
+        fun classDesc(vararg parts: String) = "L" + parts.joinToString("/") + ";"
+        val extraMappings = mapOf(
+            slash("de", "robv", "android", "xposed") to "Lio/github/nexfusion/compat/",
+            classDesc("android", "app", "AndroidAppHelper") to "Lio/github/nexfusion/compat/AndroidAppHelper;",
+        )
+        fun dot(vararg parts: String) = parts.joinToString(".")
         XposedDexRemapper.detect(
-            XposedBridge::class.java to name("de", "robv", "android", "xposed", "XposedBridge"),
-            XposedInterface::class.java to name("io", "github", "libxposed", "api", "XposedInterface"),
+            XposedInterface::class.java to dot("io", "github", "libxposed", "api", "XposedInterface"),
+            extraMappings = extraMappings,
         )
     }
 
@@ -156,8 +163,8 @@ class MainHook : XposedModule() {
     private fun reportActive(classLoader: ClassLoader) {
         val status = classLoader.loadClass(ModuleStatus::class.java.name)
         val framework = "$frameworkName $frameworkVersion"
-        status.getMethod("isActive").hookMethod(XC_MethodReplacement.returnConstant(true))
-        status.getMethod("frameworkName").hookMethod(XC_MethodReplacement.returnConstant(framework))
+        hook(status.getMethod("isActive")).intercept { true }
+        hook(status.getMethod("frameworkName")).intercept { framework }
     }
 
     private fun isPatchedApp(param: PackageReadyParam): Boolean = listOf(
@@ -174,10 +181,9 @@ class MainHook : XposedModule() {
 context(xposed: XposedInterface)
 fun inContext(lpparam: PackageReadyParam, f: (Application) -> Unit) {
     val appClassName = lpparam.applicationInfo.className ?: Application::class.java.name
-    val appClazz = XposedHelpers.findClass(appClassName, lpparam.classLoader)
-    appClazz.getMethod("onCreate").hookMethod {
-        before {
-            f(it.thisObject as Application)
-        }
+    val appClazz = Class.forName(appClassName, false, lpparam.classLoader)
+    xposed.hook(appClazz.getMethod("onCreate")).intercept { chain ->
+        f(chain.thisObject as Application)
+        chain.proceed()
     }
 }

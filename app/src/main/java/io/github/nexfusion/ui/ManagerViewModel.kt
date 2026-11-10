@@ -108,16 +108,8 @@ data class ManagerState(
     }
 
     fun isDowngrade(source: PatchSource): Boolean {
-        if (!source.enabled) return false
-        val release = releases[source.id]?.getOrNull() ?: return false
-        val installed = source.installedVersion ?: return false
-        if (release.version.equals("beta", ignoreCase = true) || installed.equals("beta", ignoreCase = true)) {
-            return false
-        }
-        if (updateChannel == AppSettings.UPDATE_CHANNEL_BETA || source.prerelease || release.version.contains("beta", ignoreCase = true) || installed.contains("beta", ignoreCase = true)) {
-            return false
-        }
-        return VersionComparator.compare(release.version, installed) < 0
+        // A newer installed version (e.g. beta or manually installed bundle) should not be flagged as a downgrade
+        return false
     }
 
     val sourcesWithUpdates get() = sources.filter { it.enabled }.filter(::hasUpdate)

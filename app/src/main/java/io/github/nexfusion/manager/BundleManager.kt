@@ -94,8 +94,14 @@ class BundleManager(private val context: Context, private val service: XposedSer
 
         val currentList = installed
         val existing = currentList.find { it.id == "io.github.nexfusion.patches" }
-        val sysVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) sysPkg.longVersionCode.toInt() else @Suppress("DEPRECATION") sysPkg.versionCode
-        if (existing == null || existing.versionCode < sysVersionCode) {
+        val sysVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) sysPkg.longVersionCode else @Suppress("DEPRECATION") sysPkg.versionCode.toLong()
+        val sysVersionName = sysPkg.versionName ?: ""
+        val existingFile = existing?.let { File(localDir, it.fileName) }
+        val fileMissing = existingFile == null || !existingFile.exists() || existingFile.length() == 0L
+        val versionChanged = existing == null || existing.versionCode != sysVersionCode || existing.version != sysVersionName
+        val apkUpdated = existingFile != null && (sysApk.lastModified() > existingFile.lastModified() || sysApk.length() != existingFile.length())
+
+        if (fileMissing || versionChanged || apkUpdated) {
             return runCatching {
                 sysApk.inputStream().use { stream ->
                     install(stream, existing?.sourceId ?: "default")

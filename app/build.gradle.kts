@@ -96,11 +96,8 @@ kotlin {
 
 dependencies {
     implementation(project(":patcher")) {
-        // Provided by the Xposed framework.
-        exclude(group = "de.robv.android.xposed")
         exclude(group = "io.github.libxposed", module = "api")
     }
-    compileOnly(libs.xposed)
     compileOnly(libs.libxposed.api)
     implementation(libs.libxposed.service)
     // Rewrites bundle code for frameworks that rename the Xposed API.

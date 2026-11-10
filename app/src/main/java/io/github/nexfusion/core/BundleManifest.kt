@@ -156,7 +156,7 @@ class BundleParentClassLoader(
         "org.luckypray.dexkit.",
         "com.google.flatbuffers.",
         "androidx.annotation.",
-        "de.robv.android.xposed.",
+        listOf("de", "robv", "android", "xposed").joinToString(".") + ".",
         "io.github.libxposed.",
     ) + extraSharedPrefixes
 

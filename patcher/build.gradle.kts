@@ -40,8 +40,7 @@ dependencies {
     api(":dexkit-android@aar")
     api(libs.flatbuffers) // dexkit dependency
     api(libs.annotation)
-    // Provided by the Xposed framework at runtime.
-    api(libs.xposed)
+    api(libs.lang3)
     api(libs.libxposed.api)
 }
 

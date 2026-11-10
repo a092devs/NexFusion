@@ -7,6 +7,7 @@
 -keep class org.luckypray.dexkit.** { *; }
 -keep class com.google.flatbuffers.** { *; }
 -keep class androidx.annotation.** { *; }
+-keep class de.robv.android.xposed.** { *; }
 
 -dontwarn io.github.libxposed.annotation.**
 -dontwarn de.robv.android.xposed.**

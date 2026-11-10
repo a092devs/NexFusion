@@ -8,7 +8,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
-import de.robv.android.xposed.XposedBridge
+import io.github.nexfusion.compat.XposedBridge
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModuleInterface
 import io.github.nexfusion.core.PrefKeys
@@ -78,6 +78,7 @@ class PatchSession(
     private val sessionAppliedPatches = mutableSetOf<String>()
 
     init {
+        XposedBridge.init(xposed)
         System.loadLibrary("dexkit")
         DexKitCacheBridge.init(cache)
     }

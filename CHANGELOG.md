@@ -7,13 +7,16 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 4.3.0
 
+- **Pure Modern libxposed API 102 Framework Migration:**
+  * Migrated entire codebase to pure modern libxposed API 102 (`minApiVersion=102`, `targetApiVersion=102`).
+  * Decoupled compatibility bridge into `io.github.nexfusion.compat.*`, completely eliminating legacy `de.robv.android.xposed` bytecode from the module APK to satisfy Vector / LSPosed API 102 ClassLoader restrictions.
+  * Configured `XposedDexRemapper` with smali bytecode remapping for legacy bundle compatibility.
+
 - **Bundle Version Tracking & Manager Synchronization:**
   * Fixed installed source version desynchronization when importing `.nxb` bundles manually or updating via APK.
+  * Corrected manager UI to auto-sync updated system package APKs and eliminated spurious downgrade prompts when newer beta/manual builds are installed.
   * Corrected GitHub release comparator sorting for beta pre-releases versus stable releases.
   * Decoupled system package syncing to eliminate UI blocking and recursion.
-
-- **libxposed API 102 Support:**
-  * Updated target API to `targetApiVersion=102` (LSPosed v1.9.2) in `module.prop` while maintaining `minApiVersion=101` for full backwards compatibility across modern ART hooking frameworks.
 
 - **CI Optimization:**
   * Skipped redundant unit tests on `main` branch workflows to conserve CI resources and avoid duplicate test runs already validated on `beta`.

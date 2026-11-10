@@ -1,6 +1,6 @@
 package io.github.nexfusion.morphe
 
-import de.robv.android.xposed.XC_MethodReplacement
+import io.github.nexfusion.compat.XC_MethodReplacement
 import io.github.nexfusion.hookMethod
 import io.github.nexfusion.morphe.Opcode.ADD_DOUBLE
 import io.github.nexfusion.morphe.Opcode.ADD_DOUBLE_2ADDR

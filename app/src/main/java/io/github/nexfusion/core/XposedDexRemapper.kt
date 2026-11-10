@@ -110,12 +110,13 @@ class XposedDexRemapper(
          *
          * Each pair is an API class as referenced in the module and its original name.
          */
-        fun detect(vararg anchors: Pair<Class<*>, String>): XposedDexRemapper =
-            fromNames(anchors.map { (clazz, originalName) -> clazz.name to originalName })
+        fun detect(vararg anchors: Pair<Class<*>, String>, extraMappings: Map<String, String> = emptyMap()): XposedDexRemapper =
+            fromNames(anchors.map { (clazz, originalName) -> clazz.name to originalName }, extraMappings)
 
         /** Like [detect], with each pair being the actual and the original name of an API class. */
-        fun fromNames(names: List<Pair<String, String>>): XposedDexRemapper {
+        fun fromNames(names: List<Pair<String, String>>, extraMappings: Map<String, String> = emptyMap()): XposedDexRemapper {
             val prefixes = mutableMapOf<String, String>()
+            prefixes.putAll(extraMappings)
             for ((actualName, originalName) in names) {
                 val original = "L" + originalName.replace('.', '/')
                 val actual = "L" + actualName.replace('.', '/')
