@@ -45,6 +45,7 @@ jobs:
         echo ${{ secrets.KEYSTORE }} | base64 --decode > key.jks
 
     - name: Unit tests
+      if: github.ref != 'refs/heads/main'
       run: ./gradlew testDebugUnitTest
 
     - name: Build module

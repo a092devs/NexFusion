@@ -7,6 +7,17 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 4.3.0
 
+- **Bundle Version Tracking & Manager Synchronization:**
+  * Fixed installed source version desynchronization when importing `.nxb` bundles manually or updating via APK.
+  * Corrected GitHub release comparator sorting for beta pre-releases versus stable releases.
+  * Decoupled system package syncing to eliminate UI blocking and recursion.
+
+- **libxposed API 102 Support:**
+  * Updated target API to `targetApiVersion=102` (LSPosed v1.9.2) in `module.prop` while maintaining `minApiVersion=101` for full backwards compatibility across modern ART hooking frameworks.
+
+- **CI Optimization:**
+  * Skipped redundant unit tests on `main` branch workflows to conserve CI resources and avoid duplicate test runs already validated on `beta`.
+
 - **Sophisticated Color System & Design Tokens:**
   * Completely redesigned color system with 6 harmonized, perceptually-tuned accent seeds: Default Indigo, Violet, Emerald, Amber, Rose, and Ocean.
   * Seeds carefully tuned for perceptual harmony in tonal palettes across light/dark modes and both Material 3 / Miuix design systems.
@@ -24,20 +35,9 @@ the release notes, falling back to generated commit notes when no section exists
   * AndroidManifest.xml: added stealth attributes (`android:backupInForeground="false"`, `android:allowBackup="false"`, `android:fullBackupContent="false"`, `android:hasFragileUserData="false"`, `android:directBootAware="false"`, `android:extractNativeLibs="false"`) and removed explicit package queries in favor of StealthCloak runtime hiding.
   * `StealthCloak.kt`: comprehensive package hiding via `ApplicationPackageManager` hooks (`getPackageInfo`, `getApplicationInfo`, `getInstalledPackages`, `getInstalledApplications`, `queryIntentActivities`, `getPackagesForUid`).
 
-- **libxposed API 102 Support:**
-  * Already using `io.github.libxposed:api:102.0.0` (LSPosed v1.9.2). Old Xposed API 82 retained for backward compatibility with older patches.
-
 - **Upstream Submodule Sync:**
-  * `morphe-patches` submodule: merged upstream/dev (resolved 3 conflicts in NavigationBarPatch.java, RestoreOldVideoActionBarPatch.java, Fingerprints.kt).
-  * `morphe-patches-library`: already up to date with upstream/main.
-
-- **Code Cleanups:**
-  * Removed `GenerateMorpheTargetsTask` dead code (34 lines generating empty lists).
-  * Centralized `PrefKeys` object for all preference keys.
-  * Added `ResultExtensions.kt` with `orElse`, `getOrDefault`, `mapOrDefault`, `flatMapOrDefault`, `toNullable` helpers.
-  * Fixed `mutableStateMapOf` → `mutableStateOf(mapOf())` in `AppPatchesScreen`.
-  - Removed duplicate `DefaultFusionSeed` and `materialSchemeFromSeed` definitions.
-  - Upstream submodule references updated.
+  * `morphe-patches` submodule: merged upstream/dev (resolved conflicts in NavigationBarPatch.java, RestoreOldVideoActionBarPatch.java, Fingerprints.kt, ClassicSubscriptionsLayoutPatch.java).
+  * `morphe-patches-library`: synchronized with upstream/main with `DEBUG_LEVEL` integration.
 
 - **Version Bumps:**
   * NexFusion app: 4.2.9 → 4.3.0 (versionCode 72 → 73).
