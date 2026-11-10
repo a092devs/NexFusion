@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.libxposed.service.XposedService
@@ -11,6 +12,7 @@ import io.github.nexfusion.AppPatchInfo
 import io.github.nexfusion.Patch
 import io.github.nexfusion.activity.SettingApplication
 import io.github.nexfusion.core.BundleRegistry
+import io.github.nexfusion.core.CacheManager
 import io.github.nexfusion.core.InstalledBundle
 import io.github.nexfusion.core.ModuleStatus
 import io.github.nexfusion.core.PrefKeys
@@ -156,10 +158,14 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     /** Current update-check job so repeated taps cancel the previous one. */
     private var updateCheckJob: Job? = null
 
+    var cacheSizeText = mutableStateOf("0 B")
+        private set
+
     init {
         SettingApplication.addServiceStateListener(this, true)
         refresh()
         checkUpdates()
+        refreshCacheSize()
     }
 
     private fun loadInitialReleases(): Map<String, Result<SourceRelease>> {
@@ -761,13 +767,23 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     // region Diagnostics & Cache
 
-    fun clearDexKitCache() {
+    fun refreshCacheSize() {
         viewModelScope.launch(Dispatchers.IO) {
-            val cacheDir = File(context.codeCacheDir, "nexfusion")
-            val count = cacheDir.listFiles()?.count { it.delete() } ?: 0
-            message(R.string.cache_cleared, count)
+            val bytes = CacheManager.getCacheSize(context)
+            cacheSizeText.value = CacheManager.formatSize(bytes)
         }
     }
+
+    fun clearCache() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val freedBytes = CacheManager.clearAll(context)
+            val freedStr = CacheManager.formatSize(freedBytes)
+            refreshCacheSize()
+            message(context.getString(R.string.cache_cleared, freedStr))
+        }
+    }
+
+    fun clearDexKitCache() = clearCache()
 
     // endregion
 

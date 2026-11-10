@@ -106,19 +106,26 @@ object AppUpdateChecker {
             .filter { !it.optBoolean("draft") }
             .filter {
                 val tag = it.optString("tag_name", "")
-                tag.isNotBlank() && (tag.equals("beta", ignoreCase = true) || VersionComparator.compare(tag, "0.0.0") > 0)
+                tag.isNotBlank() && (tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || tag.equals("beta", ignoreCase = true) || VersionComparator.compare(tag, "0.0.0") > 0)
             }
         val allowed = if (includePrerelease) {
             candidates
         } else {
-            val stable = candidates.filter { !it.optBoolean("prerelease") && !it.optString("tag_name", "").equals("beta", ignoreCase = true) }
+            val stable = candidates.filter {
+                !it.optBoolean("prerelease") &&
+                    !it.optString("tag_name", "").equals("beta", ignoreCase = true) &&
+                    !it.optString("tag_name", "").equals("autobuild", ignoreCase = true) &&
+                    !it.optString("tag_name", "").equals("nightly", ignoreCase = true)
+            }
             stable.ifEmpty { candidates }
         }
         val release = allowed.maxWithOrNull { a, b ->
             val tagA = a.optString("tag_name", "")
             val tagB = b.optString("tag_name", "")
-            if (tagA.equals("beta", ignoreCase = true) && !tagB.equals("beta", ignoreCase = true)) 1
-            else if (tagB.equals("beta", ignoreCase = true) && !tagA.equals("beta", ignoreCase = true)) -1
+            val isPreA = a.optBoolean("prerelease") || tagA.equals("autobuild", ignoreCase = true) || tagA.equals("nightly", ignoreCase = true) || tagA.equals("beta", ignoreCase = true)
+            val isPreB = b.optBoolean("prerelease") || tagB.equals("autobuild", ignoreCase = true) || tagB.equals("nightly", ignoreCase = true) || tagB.equals("beta", ignoreCase = true)
+            if (isPreA && !isPreB) 1
+            else if (isPreB && !isPreA) -1
             else VersionComparator.compare(tagA, tagB)
         } ?: return null
         val assets = release.getJSONArray("assets")
@@ -140,7 +147,9 @@ object AppUpdateChecker {
             notes = release.optString("body"),
             pageUrl = release.getString("html_url"),
             apkUrl = apk?.getString("browser_download_url"),
-            isPrerelease = release.optBoolean("prerelease") || release.optString("tag_name", "").equals("beta", ignoreCase = true),
+            isPrerelease = release.optBoolean("prerelease") || release.optString("tag_name", "").let {
+                it.equals("beta", ignoreCase = true) || it.equals("autobuild", ignoreCase = true) || it.equals("nightly", ignoreCase = true)
+            },
             targetCommitish = targetCommitish,
             publishedAt = publishedAt,
         )
@@ -164,9 +173,10 @@ object AppUpdateChecker {
             val link = linkRegex.find(block)?.groupValues?.get(1).orEmpty()
             val tag = link.substringAfterLast("/releases/tag/", "").takeIf { it.isNotEmpty() }
                 ?: titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
-            if (tag.isEmpty() || (!tag.equals("beta", ignoreCase = true) && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
+            val isSpecialPre = tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
+            if (tag.isEmpty() || (!isSpecialPre && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
             val content = contentRegex.find(block)?.groupValues?.get(1).orEmpty()
-            val isPre = tag.contains('-') || tag.equals("autobuild", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
+            val isPre = tag.contains('-') || isSpecialPre
             val updatedStr = Regex("""<updated>([^<]+)</updated>""").find(block)?.groupValues?.get(1).orEmpty()
             AtomEntry(tag, link, content, isPre, parseIsoDate(updatedStr))
         }.toList()
@@ -175,8 +185,10 @@ object AppUpdateChecker {
 
         val chosen = if (includePrerelease) {
             entries.maxWithOrNull { a, b ->
-                if (a.tag.equals("beta", ignoreCase = true) && !b.tag.equals("beta", ignoreCase = true)) 1
-                else if (b.tag.equals("beta", ignoreCase = true) && !a.tag.equals("beta", ignoreCase = true)) -1
+                val isPreA = a.isPre || a.tag.equals("autobuild", ignoreCase = true) || a.tag.equals("nightly", ignoreCase = true) || a.tag.equals("beta", ignoreCase = true)
+                val isPreB = b.isPre || b.tag.equals("autobuild", ignoreCase = true) || b.tag.equals("nightly", ignoreCase = true) || b.tag.equals("beta", ignoreCase = true)
+                if (isPreA && !isPreB) 1
+                else if (isPreB && !isPreA) -1
                 else VersionComparator.compare(a.tag, b.tag)
             }
         } else {

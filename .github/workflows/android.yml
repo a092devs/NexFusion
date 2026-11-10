@@ -83,12 +83,34 @@ jobs:
         if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
           cp app/build/outputs/apk/debug/app-debug.apk autobuild/NexFusion-${GIT_DESCRIBE}-debug.apk
         fi
+
+        # Extract only the latest version changelog (excluding older versions)
+        section=""
+        if [[ -f CHANGELOG.md ]]; then
+          section="$(awk '
+            /^## / {
+              if (found) exit
+              found = 1
+              print
+              next
+            }
+            found { print }
+          ' CHANGELOG.md)"
+        fi
+
+        notes_file="autobuild/notes.md"
+        if [[ -n "${section//[[:space:]]/}" ]]; then
+          printf '%s\n' "$section" > "$notes_file"
+        else
+          echo "Nightly build from commit ${GIT_DESCRIBE}." > "$notes_file"
+        fi
+
         gh release delete autobuild --cleanup-tag --yes || true
-        gh release create autobuild autobuild/* \
+        gh release create autobuild autobuild/*.apk \
           --prerelease \
           --target "${{ github.sha }}" \
           --title "Nightly Build ${GIT_DESCRIBE}" \
-          --notes "Nightly build from commit ${GIT_DESCRIBE}."
+          --notes-file "$notes_file"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -98,27 +120,6 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "> **Note:** GitHub Actions packages runtime artifacts in the table above into a `.zip` archive by default." >> $GITHUB_STEP_SUMMARY
         echo "> To download the direct standalone **`.apk`** files without zip packaging, visit the **[Releases](https://github.com/${{ github.repository }}/releases)** page." >> $GITHUB_STEP_SUMMARY
-
-    - name: Create Beta Pre-Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
-      run: |
-        VERSION_NAME=$(grep '^appVersionName=' gradle.properties | cut -d'=' -f2)
-        GIT_SHORT=$(git rev-parse --short HEAD)
-        mkdir -p beta-dist
-        if [ -f app/build/outputs/apk/release/app-release.apk ]; then
-          cp app/build/outputs/apk/release/app-release.apk beta-dist/NexFusion-release.apk
-        fi
-        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
-          cp app/build/outputs/apk/debug/app-debug.apk beta-dist/NexFusion-debug.apk
-        fi
-        gh release delete beta --cleanup-tag --yes || true
-        gh release create beta beta-dist/* \
-          --prerelease \
-          --target "${{ github.sha }}" \
-          --title "NexFusion v${VERSION_NAME} Beta" \
-          --notes-file CHANGELOG.md
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   auto-release:
     name: Auto release

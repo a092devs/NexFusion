@@ -8,6 +8,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import io.github.nexfusion.core.CacheManager
 import io.github.nexfusion.manager.SourceClient
 import io.github.nexfusion.manager.SourceStore
 import java.util.concurrent.TimeUnit
@@ -43,6 +44,10 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 }
             if (updated.isNotEmpty()) UpdateNotifications.patchUpdates(context, updated)
         }
+
+        // Lightweight periodic cache prune to prevent storage accumulation
+        runCatching { CacheManager.prune(context) }
+
         return Result.success()
     }
 

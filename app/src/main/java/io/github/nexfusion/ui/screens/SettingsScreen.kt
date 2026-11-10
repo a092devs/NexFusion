@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,6 +72,10 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     var showThemeStyleDialog by remember { mutableStateOf(false) }
     var showColorSchemeDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshCacheSize()
+    }
 
     val transparent = ListItemDefaults.colors(containerColor = Color.Transparent)
 
@@ -207,8 +212,8 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         )
                         ArrowPreference(
                             title = stringResource(R.string.action_clear_cache),
-                            summary = stringResource(R.string.action_clear_cache_summary),
-                            onClick = { viewModel.clearDexKitCache() },
+                            summary = stringResource(R.string.action_clear_cache_summary, viewModel.cacheSizeText.value),
+                            onClick = { viewModel.clearCache() },
                         )
                     }
                 }
@@ -360,9 +365,9 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 item {
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.action_clear_cache)) },
-                        supportingContent = { Text(stringResource(R.string.action_clear_cache_summary)) },
+                        supportingContent = { Text(stringResource(R.string.action_clear_cache_summary, viewModel.cacheSizeText.value)) },
                         colors = transparent,
-                        modifier = Modifier.clickable { viewModel.clearDexKitCache() },
+                        modifier = Modifier.clickable { viewModel.clearCache() },
                     )
                 }
 

@@ -36,6 +36,13 @@ object AppInstaller {
             val cleanTag = tag.replace(Regex("[^a-zA-Z0-9.-]"), "_")
             val targetFile = File(updatesDir, "NexFusion-$cleanTag.apk")
 
+            // Purge any stale update APKs or leftover temporary download chunks
+            updatesDir.listFiles()?.forEach { file ->
+                if (file.name.endsWith(".tmp") || (file.name.endsWith(".apk") && file.name != targetFile.name)) {
+                    file.delete()
+                }
+            }
+
             onProgress(UpdateDownloadState.Downloading(0f, 0L, -1L))
 
             var connection: HttpURLConnection? = null

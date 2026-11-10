@@ -150,6 +150,14 @@ class BundleManager(private val context: Context, private val service: XposedSer
         totalBytes: Long = -1L,
         onProgress: ((downloaded: Long, total: Long) -> Unit)? = null,
     ): InstalledBundle {
+        // Clean up any stale temporary bundle downloads older than 5 minutes
+        context.cacheDir?.listFiles()?.forEach { file ->
+            if (file.isFile && (file.name.endsWith(".tmp") || (file.name.startsWith("bundle") && file.name.endsWith(".apk")))) {
+                if (System.currentTimeMillis() - file.lastModified() > 5 * 60 * 1000L) {
+                    file.delete()
+                }
+            }
+        }
         val tmp = File.createTempFile("bundle", ".apk", context.cacheDir)
         try {
             val digest = MessageDigest.getInstance("SHA-256")

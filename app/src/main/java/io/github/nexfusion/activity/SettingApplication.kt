@@ -3,6 +3,7 @@ package io.github.nexfusion.activity
 import android.app.Application
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
+import io.github.nexfusion.core.CacheManager
 import io.github.nexfusion.updates.UpdateNotifications
 import io.github.nexfusion.updates.UpdateWorker
 import java.util.concurrent.CopyOnWriteArraySet
@@ -52,6 +53,7 @@ class SettingApplication : Application(), XposedServiceHelper.OnServiceListener 
         XposedServiceHelper.registerListener(this)
         UpdateNotifications.createChannels(this)
         UpdateWorker.schedule(this)
+        CacheManager.sanitizeAndPruneAsync(this)
     }
 
     interface ServiceStateListener {

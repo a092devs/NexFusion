@@ -153,9 +153,9 @@
     <string name="miuix_floating_nav_summary">Floating pill navigation bar with fluid spring animation.</string>
     <string name="miuix_floating_nav_translucent_title">Translucent glass effect</string>
     <string name="miuix_floating_nav_translucent_summary">Apply translucent glass blur and refraction to the floating bar.</string>
-    <string name="cache_cleared">Cleared %d cached files</string>
-    <string name="action_clear_cache">Clear DexKit cache</string>
-    <string name="action_clear_cache_summary">Removes cached bytecode fingerprints and resets hook index</string>
+    <string name="cache_cleared">Cleared %s of cached files</string>
+    <string name="action_clear_cache">Clear cache</string>
+    <string name="action_clear_cache_summary">Frees temporary downloads, update files, and bytecode index (%s occupied)</string>
     <string name="patches_count">%d patches available</string>
     <string name="search_patches_hint">Search patches…</string>
     <string name="no_patches_found">No matching patches found</string>

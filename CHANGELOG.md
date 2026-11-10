@@ -7,10 +7,20 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 4.3.0
 
-- **Pure Modern libxposed API 102 Framework Migration:**
-  * Migrated entire codebase to pure modern libxposed API 102 (`minApiVersion=102`, `targetApiVersion=102`).
-  * Decoupled compatibility bridge into `io.github.nexfusion.compat.*`, completely eliminating legacy `de.robv.android.xposed` bytecode from the module APK to satisfy Vector / LSPosed API 102 ClassLoader restrictions.
-  * Configured `XposedDexRemapper` with smali bytecode remapping for legacy bundle compatibility.
+- **libxposed API 101 & 102 Compatibility:**
+  * Added compatibility supporting both **libxposed API 101** and **API 102** (`minApiVersion=101, targetApiVersion=102`).
+  * Runtime hooking bridge isolated into `io.github.nexfusion.compat.*`.
+  * Configured `XposedDexRemapper` with smali bytecode remapping for backward compatibility.
+
+- **In-App Build Variant Selection (Release vs Debug):**
+  * Added **Build variant** switcher under **Settings → Updates** allowing users to switch between **Release** (production) and **Debug** (development) APKs directly in-app without visiting GitHub.
+  * Enhanced `AppUpdateChecker` and `HomeScreen` with variant-aware asset resolution and update cards.
+
+- **Sophisticated Color System & Design Tokens:**
+  * Completely redesigned color system with 6 harmonized, perceptually-tuned accent seeds: Default Indigo, Violet, Emerald, Amber, Rose, and Ocean.
+  * Balanced tonal palettes across light and dark modes for both Material 3 and Miuix design systems.
+  * Introduced `DesignTokens.kt` for centralized spacing, rounded corner geometry, typography scales, opacity levels, and fluid motion animations.
+  * Unified `PrefKeys` and streamlined preference state handling.
 
 - **Bundle Version Tracking & Manager Synchronization:**
   * Fixed installed source version desynchronization when importing `.nxb` bundles manually or updating via APK.
@@ -18,33 +28,18 @@ the release notes, falling back to generated commit notes when no section exists
   * Corrected GitHub release comparator sorting for beta pre-releases versus stable releases.
   * Decoupled system package syncing to eliminate UI blocking and recursion.
 
-- **CI Optimization:**
-  * Skipped redundant unit tests on `main` branch workflows to conserve CI resources and avoid duplicate test runs already validated on `beta`.
-
-- **Sophisticated Color System & Design Tokens:**
-  * Completely redesigned color system with 6 harmonized, perceptually-tuned accent seeds: Default Indigo, Violet, Emerald, Amber, Rose, and Ocean.
-  * Seeds carefully tuned for perceptual harmony in tonal palettes across light/dark modes and both Material 3 / Miuix design systems.
-  * Introduced `DesignTokens.kt` — centralized spacing, shapes, typography, sizing, opacity, z-index, and composable animation specs for cards, floating bar, and navigation transitions.
-  * Migrated `AppPatchesScreen` and `HomeScreen` to use `DesignTokens` for consistent spacing, shapes, and animations.
-  * Composable animation specs for card/floating bar transitions (enter/exit/pop).
-  * Removed `GenerateMorpheTargetsTask` dead code (was generating empty `Collections.emptyList()`).
-  * Unified `PrefKeys` object for centralized preference keys.
-  * Added `ResultExtensions.kt` with `orElse`, `getOrDefault`, `mapOrDefault`, `flatMapOrDefault`, `toNullable` helpers.
-  * Fixed `mutableStateMapOf` → `mutableStateOf(mapOf())` in `AppPatchesScreen` for proper snapshot handling.
-  - Renamed all "Colour" → "Color" in strings.xml, AppPreferenceNames.kt, and code comments.
-  - Miuix dark/light schemes preserved with official Xiaomi palette.
-
-- **Play Protect Evasion & Stealth Hardening:**
-  * AndroidManifest.xml: added stealth attributes (`android:backupInForeground="false"`, `android:allowBackup="false"`, `android:fullBackupContent="false"`, `android:hasFragileUserData="false"`, `android:directBootAware="false"`, `android:extractNativeLibs="false"`) and removed explicit package queries in favor of StealthCloak runtime hiding.
+- **Stealth & Anti-Detection Hardening:**
+  * AndroidManifest.xml: added stealth attributes (`android:backupInForeground="false"`, `android:allowBackup="false"`, `android:fullBackupContent="false"`, `android:hasFragileUserData="false"`, `android:directBootAware="false"`, `android:extractNativeLibs="false"`) and removed explicit package queries in favor of runtime hiding.
   * `StealthCloak.kt`: comprehensive package hiding via `ApplicationPackageManager` hooks (`getPackageInfo`, `getApplicationInfo`, `getInstalledPackages`, `getInstalledApplications`, `queryIntentActivities`, `getPackagesForUid`).
 
-- **Upstream Submodule Sync:**
-  * `morphe-patches` submodule: merged upstream/dev (resolved conflicts in NavigationBarPatch.java, RestoreOldVideoActionBarPatch.java, Fingerprints.kt, ClassicSubscriptionsLayoutPatch.java).
-  * `morphe-patches-library`: synchronized with upstream/main with `DEBUG_LEVEL` integration.
+- **Smart Zero-Storage Cache Management & Quota Protection:**
+  * Implemented an intelligent, battery-friendly `CacheManager` designed for minimal storage footprint and zero persistent storage accumulation.
+  * Added proactive sanitization that automatically detects and purges rogue nested directories, orphan temporary containers, and expired update APKs.
+  * Enhanced Settings with real-time cache occupancy reporting and comprehensive 1-tap cache purging across both temporary files and bytecode indexes.
+  * Integrated zero-overhead periodic cache pruning into background update checks.
 
-- **Version Bumps:**
-  * NexFusion app: 4.2.9 → 4.3.0 (versionCode 72 → 73).
-  * Nexfusion-Patches bundle: 4.2.12 → 4.3.0 (versionCode 78 → 79).
+- **CI & Build Optimization:**
+  * Skipped redundant unit tests on `main` branch pushes to conserve GitHub Actions resources while preserving complete unit test validation on `beta` and pull requests.
 
 ## 4.2.8
 

@@ -396,13 +396,16 @@ object SourceClient {
             val title = titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
             val tag = link.substringAfterLast("/releases/tag/", "").takeIf { it.isNotEmpty() }
                 ?: title
-            if (tag.isEmpty() || (!tag.equals("beta", ignoreCase = true) && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
+            val isSpecialPre = tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
+            if (tag.isEmpty() || (!isSpecialPre && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
             val content = cleanChangelog(contentRegex.find(block)?.groupValues?.get(1).orEmpty())
-            val isPre = tag.contains('-') || tag.equals("autobuild", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
+            val isPre = tag.contains('-') || isSpecialPre
             AtomCandidate(tag, title, content, link, isPre)
         }.sortedWith { a, b ->
-            if (a.tag.equals("beta", ignoreCase = true) && !b.tag.equals("beta", ignoreCase = true)) -1
-            else if (b.tag.equals("beta", ignoreCase = true) && !a.tag.equals("beta", ignoreCase = true)) 1
+            val isPreA = a.tag.equals("autobuild", ignoreCase = true) || a.tag.equals("nightly", ignoreCase = true) || a.tag.equals("beta", ignoreCase = true)
+            val isPreB = b.tag.equals("autobuild", ignoreCase = true) || b.tag.equals("nightly", ignoreCase = true) || b.tag.equals("beta", ignoreCase = true)
+            if (isPreA && !isPreB) -1
+            else if (isPreB && !isPreA) 1
             else VersionComparator.compare(b.tag, a.tag)
         }.toList()
 
