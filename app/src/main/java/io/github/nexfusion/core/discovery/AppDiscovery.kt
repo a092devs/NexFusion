@@ -330,7 +330,6 @@ object AppDiscovery {
             appName = "Spotify",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x1ED760,
-            targets = listOf(AppTarget(version = "9.1.94.1929")),
         ),
     )
 
