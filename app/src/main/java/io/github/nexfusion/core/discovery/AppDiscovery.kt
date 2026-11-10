@@ -325,6 +325,13 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x5B67F1,
         ),
+        KnownSupportedApp(
+            packageName = "com.spotify.music",
+            appName = "Spotify",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x1ED760,
+            targets = listOf(AppTarget(version = "9.1.94.1929")),
+        ),
     )
 
     /**
