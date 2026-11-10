@@ -35,6 +35,19 @@ class DebugBundleInstallReceiver : BroadcastReceiver() {
                 val app = context.applicationContext as SettingApplication
                 val manager = BundleManager(app, SettingApplication.mService)
                 val bundle = File(path).inputStream().use { manager.install(it, null) }
+                val store = io.github.nexfusion.manager.SourceStore(app)
+                val matchingSource = store.all().find { s ->
+                    s.id == bundle.sourceId ||
+                    (bundle.id == "io.github.nexfusion.patches" && (s.id == "default" || s.url.contains("Nexfusion-Patches", ignoreCase = true)))
+                }
+                if (matchingSource != null) {
+                    if (bundle.sourceId == null) {
+                        val updatedBundle = bundle.copy(sourceId = matchingSource.id)
+                        val updatedList = manager.installed.map { if (it.id == updatedBundle.id) updatedBundle else it }
+                        manager.updateInstalled(updatedList)
+                    }
+                    store.save(matchingSource.copy(installedVersion = bundle.version))
+                }
                 manager.syncToService()
                 resultFile.writeText("OK ${bundle.id} ${bundle.version} ${bundle.fileName}")
             } catch (t: Throwable) {

@@ -1,6 +1,8 @@
 package io.github.nexfusion.manager
 
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import io.github.libxposed.service.XposedService
 import io.github.nexfusion.AppPatchInfo
 import io.github.nexfusion.core.BundleClassLoader
@@ -67,8 +69,46 @@ class BundleManager(private val context: Context, private val service: XposedSer
                 registryPrefs?.let { runCatching { BundleRegistry.write(it, refreshed) } }
                 BundleRegistry.write(localPrefs, refreshed)
             }
+
             return refreshed
         }
+
+    /**
+     * Checks if io.github.nexfusion.patches is installed on the system as an APK with a newer
+     * versionCode or if it is missing from installed bundles, and imports it.
+     */
+    fun syncInstalledSystemPackage(): InstalledBundle? {
+        val sysPkg = runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo("io.github.nexfusion.patches", PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo("io.github.nexfusion.patches", 0)
+            }
+        }.getOrNull() ?: return null
+
+        val appInfo = sysPkg.applicationInfo ?: return null
+        val sourceDir = appInfo.publicSourceDir ?: appInfo.sourceDir ?: return null
+        val sysApk = File(sourceDir)
+        if (!sysApk.exists()) return null
+
+        val currentList = installed
+        val existing = currentList.find { it.id == "io.github.nexfusion.patches" }
+        val sysVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) sysPkg.longVersionCode.toInt() else @Suppress("DEPRECATION") sysPkg.versionCode
+        if (existing == null || existing.versionCode < sysVersionCode) {
+            return runCatching {
+                sysApk.inputStream().use { stream ->
+                    install(stream, existing?.sourceId ?: "default")
+                }
+            }.getOrNull()
+        }
+        return null
+    }
+
+    fun updateInstalled(bundles: List<InstalledBundle>) {
+        registryPrefs?.let { runCatching { BundleRegistry.write(it, bundles) } }
+        BundleRegistry.write(localPrefs, bundles)
+    }
 
     /**
      * Synchronizes local bundles and their APK files to the XposedService remote storage.

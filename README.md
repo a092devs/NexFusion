@@ -5,7 +5,7 @@
   <p>
     <a href="https://github.com/a092devs/NexFusion/releases"><img src="https://img.shields.io/github/v/release/a092devs/NexFusion?style=flat&color=1f6feb&labelColor=21262d&logo=github&label=Release" alt="Latest Release" /></a>
     <img src="https://img.shields.io/badge/Android-8.1%2B-238636?style=flat&labelColor=21262d&logo=android&logoColor=white" alt="Android 8.1+" />
-    <img src="https://img.shields.io/badge/LSPosed-API%20101-8957e5?style=flat&labelColor=21262d" alt="LSPosed API 101" />
+    <img src="https://img.shields.io/badge/LSPosed-API%20101%2F102-8957e5?style=flat&labelColor=21262d" alt="LSPosed API 101/102" />
     <img src="https://img.shields.io/badge/UI-Miuix%20%7C%20Material%203-a371f7?style=flat&labelColor=21262d" alt="Design Systems" />
     <img src="https://img.shields.io/badge/Icon-Hardware%20Silicon%20Matrix-1f6feb?style=flat&labelColor=21262d" alt="Hardware Silicon Matrix" />
     <a href="https://crowdin.com/project/nexfusion"><img src="https://img.shields.io/badge/Crowdin-Translate-1f6feb?style=flat&labelColor=21262d&logo=crowdin&logoColor=white" alt="Crowdin Translations" /></a>
@@ -27,7 +27,7 @@
 
 ## 📖 Overview
 
-**NexFusion** is an advanced Android application that applies modular runtime bytecode patches to supported applications via **LSPosed / libxposed (API 101)** and **DexKit**.
+**NexFusion** is an advanced Android application that applies modular runtime bytecode patches to supported applications via **LSPosed / libxposed (API 101/102)** and **DexKit**.
 
 Unlike traditional ahead-of-time (AOT) patchers that decompile, modify, re-sign, and reinstall target APKs, **NexFusion operates purely in-memory at process startup**:
 
@@ -37,7 +37,7 @@ Unlike traditional ahead-of-time (AOT) patchers that decompile, modify, re-sign,
 - 📦 **Modular `.nxb` Bundles:** Patches are packaged into signed `.nxb` (NexFusion Bundle) APK containers loaded directly into process memory — no APK installation required.
 
 > [!IMPORTANT]
-> - **Root & Framework Requirements:** Android 8.1+ (API 27) with root access and LSPosed or any modern framework implementing `libxposed` API 101.
+> - **Root & Framework Requirements:** Android 8.1+ (API 27) with root access and LSPosed or any modern framework implementing `libxposed` API 101/102.
 > - **Security Boundary:** Patch bundles execute bytecode within target application processes. Always source bundles from trusted maintainers.
 > - **Integrity Guarantee:** NexFusion deliberately excludes banking, payment, and security-critical applications from patching.
 
@@ -247,7 +247,7 @@ NexFusion is localized by community contributors via [Crowdin](https://crowdin.c
 Contributions, bug reports, and feature requests are welcome!
 - **Feedback & Feature Requests:** If you encounter issues or have feature requests, feel free to contact [@a092devs](https://t.me/a092devs) on Telegram.
 - **Bug Reports & Pull Requests:** Ensure all unit tests pass prior to opening pull requests: `./gradlew testDebugUnitTest`
-- All contributions must adhere to the runtime-only architecture (in-memory execution via LSPosed API 101, zero APK tampering).
+- All contributions must adhere to the runtime-only architecture (in-memory execution via LSPosed API 101/102, zero APK tampering).
 - Ensure target application stability by wrapping non-essential hooks in `runCatching` safeguards.
 
 ---
@@ -262,7 +262,7 @@ NexFusion is developed and maintained by **a092devs**. We gratefully acknowledge
 
 | Project | Contribution |
 |---|---|
-| **[LSPosed](https://github.com/LSPosed/LSPosed)** | Core ART runtime hooking framework and official `libxposed` (API 101) |
+| **[LSPosed](https://github.com/LSPosed/LSPosed)** | Core ART runtime hooking framework and official `libxposed` (API 101/102) |
 | **[DexKit](https://luckypray.org/DexKit/en/)** | High-performance Dex bytecode pattern matching and opcode resolution |
 | **[compose-miuix-ui](https://github.com/compose-miuix-ui/miuix)** | Official Compose Multiplatform MIUI / HyperOS design components by YuKongA |
 | **[Morphe](https://morphe.software)** | Bytecode runtime hook patterns, fingerprint specifications, and shared utilities |

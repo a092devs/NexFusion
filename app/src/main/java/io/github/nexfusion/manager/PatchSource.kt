@@ -290,7 +290,7 @@ class SourceStore(context: Context) {
 object SourceClient {
     const val BUNDLE_EXTENSION = ".nxb"
 
-    fun parseReleaseVersion(tag: String, bundles: List<Pair<String, String>>): String {
+    fun parseReleaseVersion(tag: String, bundles: List<Pair<String, String>>, releaseName: String = ""): String {
         if (!tag.equals("beta", ignoreCase = true) &&
             !tag.equals("nightly", ignoreCase = true) &&
             !tag.equals("autobuild", ignoreCase = true)
@@ -303,6 +303,10 @@ object SourceClient {
             if (match != null) {
                 return match.groupValues[1]
             }
+        }
+        val nameMatch = Regex("""v?(\d+\.\d+\.\d+(?:[-_][a-zA-Z0-9.]+)?(?:[-_]beta(?:\.\d+)?)?)""", RegexOption.IGNORE_CASE).find(releaseName)
+        if (nameMatch != null) {
+            return nameMatch.groupValues[1]
         }
         return tag
     }
@@ -350,8 +354,8 @@ object SourceClient {
             .sortedWith { r1, r2 ->
                 val tag1 = r1.optString("tag_name", "")
                 val tag2 = r2.optString("tag_name", "")
-                if (tag2.equals("beta", ignoreCase = true) && !tag1.equals("beta", ignoreCase = true)) -1
-                else if (tag1.equals("beta", ignoreCase = true) && !tag2.equals("beta", ignoreCase = true)) 1
+                if (tag1.equals("beta", ignoreCase = true) && !tag2.equals("beta", ignoreCase = true)) -1
+                else if (tag2.equals("beta", ignoreCase = true) && !tag1.equals("beta", ignoreCase = true)) 1
                 else VersionComparator.compare(tag2, tag1)
             }
         // Without a stable release, fall back to pre-releases, e.g. for projects still in alpha.
@@ -368,7 +372,7 @@ object SourceClient {
             val bundles = deduplicateBundleAssets(rawBundles)
             if (bundles.isEmpty()) continue
             return SourceRelease(
-                version = parseReleaseVersion(release.getString("tag_name"), bundles),
+                version = parseReleaseVersion(release.getString("tag_name"), bundles, release.optString("name", "")),
                 changelog = release.optString("body"),
                 pageUrl = release.optString("html_url"),
                 bundles = bundles,
@@ -384,17 +388,18 @@ object SourceClient {
         val linkRegex = Regex("""<link[^>]*href="([^"]+)"""")
         val contentRegex = Regex("""<content[^>]*>([\s\S]*?)</content>""")
 
-        data class AtomCandidate(val tag: String, val body: String, val pageUrl: String, val isPrerelease: Boolean)
+        data class AtomCandidate(val tag: String, val title: String, val body: String, val pageUrl: String, val isPrerelease: Boolean)
 
         val candidates = entryRegex.findAll(atomXml).mapNotNull { match ->
             val block = match.groupValues[1]
             val link = linkRegex.find(block)?.groupValues?.get(1).orEmpty()
+            val title = titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
             val tag = link.substringAfterLast("/releases/tag/", "").takeIf { it.isNotEmpty() }
-                ?: titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
+                ?: title
             if (tag.isEmpty() || (!tag.equals("beta", ignoreCase = true) && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
             val content = cleanChangelog(contentRegex.find(block)?.groupValues?.get(1).orEmpty())
             val isPre = tag.contains('-') || tag.equals("autobuild", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
-            AtomCandidate(tag, content, link, isPre)
+            AtomCandidate(tag, title, content, link, isPre)
         }.sortedWith { a, b ->
             if (a.tag.equals("beta", ignoreCase = true) && !b.tag.equals("beta", ignoreCase = true)) -1
             else if (b.tag.equals("beta", ignoreCase = true) && !a.tag.equals("beta", ignoreCase = true)) 1
@@ -422,7 +427,7 @@ object SourceClient {
             if (bundles.isEmpty()) continue
 
             return SourceRelease(
-                version = parseReleaseVersion(candidate.tag, bundles),
+                version = parseReleaseVersion(candidate.tag, bundles, candidate.title),
                 changelog = candidate.body,
                 pageUrl = candidate.pageUrl,
                 bundles = bundles,

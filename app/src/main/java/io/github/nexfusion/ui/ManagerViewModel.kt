@@ -258,14 +258,35 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     fun refresh() {
         viewModelScope.launch(Dispatchers.IO) {
             val mgr = manager
+            runCatching { mgr.syncInstalledSystemPackage() }
             val sources = store.all()
             val bundles = runCatching { mgr.installed }.getOrDefault(emptyList())
             val missing = runCatching { mgr.missingScope() }.getOrDefault(emptyList())
             val ignored = runCatching { mgr.ignoredPackages }.getOrDefault(emptySet())
-            val catalog = AppDiscovery.buildCatalog(context, bundles, missing.toSet(), sources, ignored)
+
+            // Synchronize each source's installedVersion with the actually installed bundle
+            val syncedSources = sources.map { source ->
+                val matchingBundle = bundles.find { it.sourceId == source.id }
+                    ?: if (source.id == "default" || source.url.contains("Nexfusion-Patches", ignoreCase = true)) {
+                        bundles.find { it.id == "io.github.nexfusion.patches" }
+                    } else null
+                if (matchingBundle != null && matchingBundle.version != source.installedVersion) {
+                    val updated = source.copy(installedVersion = matchingBundle.version)
+                    store.save(updated)
+                    updated
+                } else if (matchingBundle == null && source.installedVersion != null && bundles.none { it.sourceId == source.id }) {
+                    val updated = source.copy(installedVersion = null)
+                    store.save(updated)
+                    updated
+                } else {
+                    source
+                }
+            }
+
+            val catalog = AppDiscovery.buildCatalog(context, bundles, missing.toSet(), syncedSources, ignored)
             _state.update { state ->
                 state.copy(
-                    sources = sources,
+                    sources = syncedSources,
                     bundles = bundles,
                     missingScope = missing,
                     ignoredPackages = ignored,
@@ -541,7 +562,24 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         val before = mgr.installed
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
-                runCatching { context.contentResolver.openInputStream(uri)!!.use { mgr.install(it, null) } }
+                runCatching {
+                    context.contentResolver.openInputStream(uri)!!.use { stream ->
+                        val installed = mgr.install(stream, null)
+                        val matchingSource = store.all().find { s ->
+                            s.id == installed.sourceId ||
+                            (installed.id == "io.github.nexfusion.patches" && (s.id == "default" || s.url.contains("Nexfusion-Patches", ignoreCase = true)))
+                        }
+                        if (matchingSource != null) {
+                            if (installed.sourceId == null) {
+                                val updatedBundle = installed.copy(sourceId = matchingSource.id)
+                                val updatedList = mgr.installed.map { if (it.id == updatedBundle.id) updatedBundle else it }
+                                mgr.updateInstalled(updatedList)
+                            }
+                            store.save(matchingSource.copy(installedVersion = installed.version))
+                        }
+                        installed
+                    }
+                }
             }
             result.onSuccess {
                 message(R.string.bundles_installed, "${it.name} ${it.version}")
