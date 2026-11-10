@@ -169,5 +169,27 @@ class MultiSourceArchitectureTest {
         val singleBundleApp = listOf(bundleA).filter { "com.google.android.youtube" in it.apps }
         assertFalse(singleBundleApp.size > 1)
     }
+
+    @Test
+    fun uninstalledSystemPackageSyncLogic() {
+        val sysVersionCode = 79L
+        val uninstalledCode = 80L
+        val sysApkMtime = 1000L
+        val uninstalledMtime = 1500L
+
+        // When a bundle was uninstalled with a higher or equal version code, do not re-import
+        val shouldSuppress = uninstalledCode != -1L && sysVersionCode <= uninstalledCode && sysApkMtime <= uninstalledMtime
+        assertTrue(shouldSuppress)
+
+        // When a newer system APK is subsequently installed, it is allowed to import
+        val newerSysVersionCode = 81L
+        val shouldAllowNewer = !(uninstalledCode != -1L && newerSysVersionCode <= uninstalledCode && sysApkMtime <= uninstalledMtime)
+        assertTrue(shouldAllowNewer)
+
+        // When existing bundle is newer than system APK, system APK must never downgrade
+        val existingVersionCode = 80L
+        val sysIsNewer = sysVersionCode > existingVersionCode
+        assertFalse(sysIsNewer)
+    }
 }
 

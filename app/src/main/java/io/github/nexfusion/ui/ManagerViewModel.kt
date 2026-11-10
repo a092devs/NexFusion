@@ -280,7 +280,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     val updated = source.copy(installedVersion = matchingBundle.version)
                     store.save(updated)
                     updated
-                } else if (matchingBundle == null && source.installedVersion != null && bundles.none { it.sourceId == source.id }) {
+                } else if (matchingBundle == null && source.installedVersion != null) {
                     val updated = source.copy(installedVersion = null)
                     store.save(updated)
                     updated
@@ -609,12 +609,19 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun uninstall(bundle: InstalledBundle) {
-        val mgr = manager
-        mgr.uninstall(bundle)
-        store.all().find { it.id == bundle.sourceId }?.let { source ->
-            if (mgr.installed.none { it.sourceId == source.id }) store.save(source.copy(installedVersion = null))
+        viewModelScope.launch(Dispatchers.IO) {
+            val mgr = manager
+            mgr.uninstall(bundle)
+            store.all().find {
+                it.id == bundle.sourceId ||
+                (bundle.id == "io.github.nexfusion.patches" && (it.id == "default" || it.url.contains("Nexfusion-Patches", ignoreCase = true)))
+            }?.let { source ->
+                if (mgr.installed.none { it.sourceId == source.id || (source.id == "default" && it.id == "io.github.nexfusion.patches") }) {
+                    store.save(source.copy(installedVersion = null))
+                }
+            }
+            refresh()
         }
-        refresh()
     }
 
     /** Apps of [bundle] it did not patch before this install, so updates do not ask again for declined apps. */

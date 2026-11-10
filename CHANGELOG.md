@@ -5,6 +5,15 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.3.1
+
+- **Patch Bundle Lifecycle & Synchronization Fixes:**
+  * Fixed an issue where updating patch bundles in-app glitched and reverted due to system package synchronization incorrectly downgrading newer bundle versions.
+  * Fixed bundle deletion/uninstallation so uninstalled bundles are cleanly removed and not inadvertently revived by background system package synchronization.
+  * Added uninstalled bundle tombstoning in local preferences to prevent unwanted resurrection of uninstalled system packages.
+  * Added automated orphan bundle artifact pruning in manager storage to eliminate stale bundle accumulation and maintain a zero persistent storage overhead.
+  * Offloaded bundle uninstallation tasks from the main thread to prevent UI frame stalls during deletion and disk operations.
+
 ## 4.3.0
 
 - **libxposed API 101 & 102 Compatibility:**

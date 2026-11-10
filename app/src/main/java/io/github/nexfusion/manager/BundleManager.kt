@@ -39,16 +39,12 @@ class BundleManager(private val context: Context, private val service: XposedSer
     val installed: List<InstalledBundle>
         get() {
             val remote = registryPrefs?.let { runCatching { BundleRegistry.read(it) }.getOrNull() }
-            val baseList = if (!remote.isNullOrEmpty()) {
+            val baseList = if (remote != null) {
                 // Sync to local preferences for offline access
                 BundleRegistry.write(localPrefs, remote)
                 remote
             } else {
-                val local = BundleRegistry.read(localPrefs)
-                if (local.isNotEmpty()) {
-                    registryPrefs?.let { runCatching { BundleRegistry.write(it, local) } }
-                }
-                local
+                BundleRegistry.read(localPrefs)
             }
 
             var changed = false
@@ -74,8 +70,26 @@ class BundleManager(private val context: Context, private val service: XposedSer
         }
 
     /**
-     * Checks if io.github.nexfusion.patches is installed on the system as an APK with a newer
-     * versionCode or if it is missing from installed bundles, and imports it.
+     * Cleans up stale/orphan bundle files in the local bundles directory that are
+     * not associated with any actively registered bundle.
+     */
+    fun pruneOrphanBundles() {
+        val validFileNames = runCatching { installed.map { it.fileName }.toSet() }.getOrDefault(emptySet())
+        localDir.listFiles()?.forEach { file ->
+            if (file.isFile && file.name !in validFileNames && !file.name.endsWith(".tmp")) {
+                file.setWritable(true)
+                if (!file.delete()) {
+                    runCatching {
+                        Runtime.getRuntime().exec(arrayOf("su", "-c", "rm -f '${file.absolutePath}'")).waitFor()
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks if io.github.nexfusion.patches is installed on the system as an APK with a strictly
+     * newer versionCode or if it is missing from installed bundles and has not been explicitly uninstalled.
      */
     fun syncInstalledSystemPackage(): InstalledBundle? {
         val sysPkg = runCatching {
@@ -92,19 +106,36 @@ class BundleManager(private val context: Context, private val service: XposedSer
         val sysApk = File(sourceDir)
         if (!sysApk.exists()) return null
 
+        val sysVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) sysPkg.longVersionCode else @Suppress("DEPRECATION") sysPkg.versionCode.toLong()
         val currentList = installed
         val existing = currentList.find { it.id == "io.github.nexfusion.patches" }
-        val sysVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) sysPkg.longVersionCode else @Suppress("DEPRECATION") sysPkg.versionCode.toLong()
-        val sysVersionName = sysPkg.versionName ?: ""
-        val existingFile = existing?.let { File(localDir, it.fileName) }
-        val fileMissing = existingFile == null || !existingFile.exists() || existingFile.length() == 0L
-        val versionChanged = existing == null || existing.versionCode != sysVersionCode || existing.version != sysVersionName
-        val apkUpdated = existingFile != null && (sysApk.lastModified() > existingFile.lastModified() || sysApk.length() != existingFile.length())
 
-        if (fileMissing || versionChanged || apkUpdated) {
+        // If the bundle is not currently installed, verify if the user explicitly uninstalled it
+        if (existing == null) {
+            val uninstalledCode = localPrefs.getLong("uninstalled_${sysPkg.packageName}_code", -1L)
+            val uninstalledTime = localPrefs.getLong("uninstalled_${sysPkg.packageName}_time", -1L)
+            if (uninstalledCode != -1L && sysVersionCode <= uninstalledCode && sysApk.lastModified() <= uninstalledTime) {
+                return null
+            }
             return runCatching {
                 sysApk.inputStream().use { stream ->
-                    install(stream, existing?.sourceId ?: "default")
+                    install(stream, "default")
+                }
+            }.getOrNull()
+        }
+
+        // Bundle is already installed: only upgrade from system package if the system APK is strictly NEWER,
+        // or if the existing local file is missing/empty, or if reinstalled with newer modification time and different size.
+        val existingFile = File(localDir, existing.fileName)
+        val fileMissing = !existingFile.exists() || existingFile.length() == 0L
+        val sysIsNewer = sysVersionCode > existing.versionCode
+        val apkUpdated = sysVersionCode == existing.versionCode && existingFile.exists() &&
+            (sysApk.lastModified() > existingFile.lastModified() && sysApk.length() != existingFile.length())
+
+        if (fileMissing || sysIsNewer || apkUpdated) {
+            return runCatching {
+                sysApk.inputStream().use { stream ->
+                    install(stream, existing.sourceId ?: "default")
                 }
             }.getOrNull()
         }
@@ -198,17 +229,20 @@ class BundleManager(private val context: Context, private val service: XposedSer
             )
             val fileName = "${manifest.id}-$hash.apk"
             val local = File(localDir, fileName)
-            if (!local.exists()) {
+            if (!local.exists() || local.length() != tmp.length()) {
+                if (local.exists()) local.setWritable(true)
                 tmp.copyTo(local, overwrite = true)
             }
             // Fails here, before anything is published, if the bundle's code cannot be loaded.
             val apps = loadApps(local, manifest.entryClass)
 
             service?.let { svc ->
-                svc.openRemoteFile(fileName).use { pfd ->
-                    FileOutputStream(pfd.fileDescriptor).use { output ->
-                        output.channel.truncate(0)
-                        local.inputStream().use { it.copyTo(output) }
+                runCatching {
+                    svc.openRemoteFile(fileName).use { pfd ->
+                        FileOutputStream(pfd.fileDescriptor).use { output ->
+                            output.channel.truncate(0)
+                            local.inputStream().use { it.copyTo(output) }
+                        }
                     }
                 }
             }
@@ -238,7 +272,14 @@ class BundleManager(private val context: Context, private val service: XposedSer
             registryPrefs?.let { BundleRegistry.write(it, updated) }
             BundleRegistry.write(localPrefs, updated)
 
+            // Clear uninstalled marker for this bundle ID
+            localPrefs.edit()
+                .remove("uninstalled_${manifest.id}_code")
+                .remove("uninstalled_${manifest.id}_time")
+                .apply()
+
             if (previous != null && previous.fileName != fileName) deleteFiles(previous.fileName)
+            pruneOrphanBundles()
             return bundle
         } finally {
             tmp.delete()
@@ -250,6 +291,22 @@ class BundleManager(private val context: Context, private val service: XposedSer
         registryPrefs?.let { BundleRegistry.write(it, updated) }
         BundleRegistry.write(localPrefs, updated)
         deleteFiles(bundle.fileName)
+
+        // Record that this bundle was explicitly uninstalled by the user
+        // so syncInstalledSystemPackage does not immediately resurrect it.
+        localPrefs.edit()
+            .putLong("uninstalled_${bundle.id}_code", bundle.versionCode)
+            .putLong("uninstalled_${bundle.id}_time", System.currentTimeMillis())
+            .apply()
+
+        pruneOrphanBundles()
+
+        // If the uninstalled bundle is also installed on the system as an APK, remove it via root if available
+        if (bundle.id == "io.github.nexfusion.patches") {
+            runCatching {
+                Runtime.getRuntime().exec(arrayOf("su", "-c", "pm uninstall ${bundle.id}")).waitFor()
+            }
+        }
     }
 
     fun setEnabled(bundle: InstalledBundle, enabled: Boolean) {
@@ -340,7 +397,15 @@ class BundleManager(private val context: Context, private val service: XposedSer
 
     private fun deleteFiles(fileName: String) {
         service?.let { runCatching { it.deleteRemoteFile(fileName) } }
-        File(localDir, fileName).delete()
+        val f = File(localDir, fileName)
+        if (f.exists()) {
+            f.setWritable(true)
+            if (!f.delete()) {
+                runCatching {
+                    Runtime.getRuntime().exec(arrayOf("su", "-c", "rm -f '${f.absolutePath}'")).waitFor()
+                }
+            }
+        }
         loadedApps.remove(fileName)
     }
 
