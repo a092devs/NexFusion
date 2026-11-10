@@ -25,7 +25,15 @@ class AppRelease(
     val isPrerelease: Boolean = false,
     val targetCommitish: String = "",
     val publishedAt: Long = 0L,
+    val isDebugAsset: Boolean = apkUrl?.contains("-debug.apk", ignoreCase = true) == true,
 ) {
+    fun isAvailable(targetBuildType: String = AppSettings.BUILD_TYPE_RELEASE): Boolean {
+        val currentIsDebug = BuildConfig.DEBUG
+        val targetIsDebug = targetBuildType == AppSettings.BUILD_TYPE_DEBUG
+        val isDifferentVariant = currentIsDebug != targetIsDebug
+        return isNewer || isDifferentVariant
+    }
+
     val isNewer: Boolean
         get() {
             if (tag.equals("beta", ignoreCase = true) || tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || isPrerelease) {
@@ -67,13 +75,13 @@ object AppUpdateChecker {
     fun versionCodeOf(tag: String): Int =
         Regex("""v?\d+\.\d+\.(\d+)(-.*)?""").matchEntire(tag)?.groupValues?.get(1)?.toInt() ?: 0
 
-    /** The latest release, respecting the selected channel (stable vs beta pre-releases). */
-    fun latest(includePrerelease: Boolean = false): AppRelease? {
+    /** The latest release, respecting the selected channel (stable vs beta pre-releases) and build type (release vs debug). */
+    fun latest(includePrerelease: Boolean = false, buildType: String = AppSettings.BUILD_TYPE_RELEASE): AppRelease? {
         val repo = BuildConfig.UPDATE_REPOSITORY
         // Try the GitHub REST API first
         val apiResult = runCatching {
             val response = SourceClient.get("https://api.github.com/repos/$repo/releases?per_page=20")
-            parseApiResponse(response, includePrerelease)
+            parseApiResponse(response, includePrerelease, buildType)
         }
         if (apiResult.isSuccess && apiResult.getOrNull() != null) {
             return apiResult.getOrNull()
@@ -82,13 +90,17 @@ object AppUpdateChecker {
         // Fallback: parse releases.atom directly from github.com (immune to GitHub API rate limits)
         return runCatching {
             val atomXml = SourceClient.get("https://github.com/$repo/releases.atom")
-            parseAtomFeed(atomXml, repo, includePrerelease)
+            parseAtomFeed(atomXml, repo, includePrerelease, buildType)
         }.getOrElse { fallbackError ->
             throw apiResult.exceptionOrNull() ?: fallbackError
         }
     }
 
-    internal fun parseApiResponse(jsonText: String, includePrerelease: Boolean = false): AppRelease? {
+    internal fun parseApiResponse(
+        jsonText: String,
+        includePrerelease: Boolean = false,
+        buildType: String = AppSettings.BUILD_TYPE_RELEASE,
+    ): AppRelease? {
         val releases = JSONArray(jsonText)
         val candidates = (0 until releases.length()).map { releases.getJSONObject(it) }
             .filter { !it.optBoolean("draft") }
@@ -112,8 +124,13 @@ object AppUpdateChecker {
         val assets = release.getJSONArray("assets")
         val allApks = (0 until assets.length()).map { assets.getJSONObject(it) }
             .filter { it.getString("name").endsWith(".apk") }
-        val apk = allApks.firstOrNull { !it.getString("name").contains("-debug.apk", ignoreCase = true) }
-            ?: allApks.firstOrNull()
+        val apk = if (buildType == AppSettings.BUILD_TYPE_DEBUG) {
+            allApks.firstOrNull { it.getString("name").contains("-debug.apk", ignoreCase = true) }
+                ?: allApks.firstOrNull()
+        } else {
+            allApks.firstOrNull { !it.getString("name").contains("-debug.apk", ignoreCase = true) }
+                ?: allApks.firstOrNull()
+        }
         val targetCommitish = release.optString("target_commitish", "")
         val publishedStr = release.optString("published_at", "").ifEmpty { release.optString("created_at", "") }
         val publishedAt = parseIsoDate(publishedStr)
@@ -129,7 +146,12 @@ object AppUpdateChecker {
         )
     }
 
-    internal fun parseAtomFeed(atomXml: String, repo: String, includePrerelease: Boolean = false): AppRelease? {
+    internal fun parseAtomFeed(
+        atomXml: String,
+        repo: String,
+        includePrerelease: Boolean = false,
+        buildType: String = AppSettings.BUILD_TYPE_RELEASE,
+    ): AppRelease? {
         val entryRegex = Regex("""<entry>([\s\S]*?)</entry>""")
         val titleRegex = Regex("""<title>([^<]+)</title>""")
         val linkRegex = Regex("""<link[^>]*href="([^"]+)"""")
@@ -173,12 +195,21 @@ object AppUpdateChecker {
             val apkMatches = Regex("""href="(/[^"]+/releases/download/[^"]+?\.apk)"""").findAll(expandedAssets)
                 .map { "https://github.com" + it.groupValues[1] }
                 .toList()
-            apkUrl = apkMatches.firstOrNull { !it.contains("-debug.apk", ignoreCase = true) }
-                ?: apkMatches.firstOrNull()
+            apkUrl = if (buildType == AppSettings.BUILD_TYPE_DEBUG) {
+                apkMatches.firstOrNull { it.contains("-debug.apk", ignoreCase = true) }
+                    ?: apkMatches.firstOrNull()
+            } else {
+                apkMatches.firstOrNull { !it.contains("-debug.apk", ignoreCase = true) }
+                    ?: apkMatches.firstOrNull()
+            }
         }
 
         if (apkUrl == null) {
-            apkUrl = "https://github.com/$repo/releases/download/${chosen.tag}/NexFusion-${chosen.tag}.apk"
+            apkUrl = if (buildType == AppSettings.BUILD_TYPE_DEBUG) {
+                "https://github.com/$repo/releases/download/${chosen.tag}/NexFusion-${chosen.tag}-debug.apk"
+            } else {
+                "https://github.com/$repo/releases/download/${chosen.tag}/NexFusion-${chosen.tag}.apk"
+            }
         }
 
         return AppRelease(

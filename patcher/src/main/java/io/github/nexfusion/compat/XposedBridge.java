@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class XposedBridge {
-    public static final int XPOSED_MIN_API_VERSION = 102;
+    public static final int XPOSED_MIN_API_VERSION = 101;
     public static final ClassLoader BOOTCLASSLOADER = ClassLoader.getSystemClassLoader();
     private static volatile XposedInterface sXposedInterface;
 

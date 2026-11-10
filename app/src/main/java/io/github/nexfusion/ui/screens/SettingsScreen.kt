@@ -67,6 +67,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     var iconHidden by remember { mutableStateOf(viewModel.launcherIconHidden) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showUpdateChannelDialog by remember { mutableStateOf(false) }
+    var showBuildTypeDialog by remember { mutableStateOf(false) }
     var showThemeStyleDialog by remember { mutableStateOf(false) }
     var showColorSchemeDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
@@ -82,6 +83,11 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     val currentUpdateChannelLabel = when (state.updateChannel) {
         AppSettings.UPDATE_CHANNEL_BETA -> stringResource(R.string.update_channel_beta)
         else -> stringResource(R.string.update_channel_stable)
+    }
+
+    val currentBuildTypeLabel = when (state.updateBuildType) {
+        AppSettings.BUILD_TYPE_DEBUG -> stringResource(R.string.update_build_type_debug)
+        else -> stringResource(R.string.update_build_type_release)
     }
 
     val currentThemeStyleLabel = when (state.currentThemeStyle) {
@@ -133,6 +139,11 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             title = stringResource(R.string.update_channel_title),
                             summary = currentUpdateChannelLabel,
                             onClick = { showUpdateChannelDialog = true },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.update_build_type_title),
+                            summary = currentBuildTypeLabel,
+                            onClick = { showBuildTypeDialog = true },
                         )
                         ArrowPreference(
                             title = stringResource(R.string.check_for_update_title),
@@ -284,6 +295,14 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 }
                 item {
                     ListItem(
+                        headlineContent = { Text(stringResource(R.string.update_build_type_title)) },
+                        supportingContent = { Text(currentBuildTypeLabel) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showBuildTypeDialog = true },
+                    )
+                }
+                item {
+                    ListItem(
                         headlineContent = { Text(stringResource(R.string.check_for_update_title)) },
                         supportingContent = if (state.checkingUpdates) {
                             { Text(stringResource(R.string.source_checking)) }
@@ -398,6 +417,20 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             selected = state.updateChannel,
             onSelect = { viewModel.setUpdateChannel(it) },
             onDismissRequest = { showUpdateChannelDialog = false },
+        )
+    }
+
+    if (showBuildTypeDialog) {
+        ThemedRadioDialog(
+            show = true,
+            title = stringResource(R.string.update_build_type_title),
+            options = listOf(
+                AppSettings.BUILD_TYPE_RELEASE to stringResource(R.string.update_build_type_release),
+                AppSettings.BUILD_TYPE_DEBUG to stringResource(R.string.update_build_type_debug),
+            ),
+            selected = state.updateBuildType,
+            onSelect = { viewModel.setUpdateBuildType(it) },
+            onDismissRequest = { showBuildTypeDialog = false },
         )
     }
 

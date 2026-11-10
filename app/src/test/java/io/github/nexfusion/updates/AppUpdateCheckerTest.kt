@@ -65,6 +65,37 @@ class AppUpdateCheckerTest {
     }
 
     @Test
+    fun parseApiResponsePrefersDebugApkWhenRequested() {
+        val sampleJson = """
+[
+  {
+    "tag_name": "4.0.0",
+    "draft": false,
+    "prerelease": false,
+    "body": "Major release",
+    "html_url": "https://github.com/a092devs/NexFusion/releases/tag/4.0.0",
+    "assets": [
+      {
+        "name": "NexFusion-4.0.0.apk",
+        "browser_download_url": "https://github.com/a092devs/NexFusion/releases/download/4.0.0/NexFusion-4.0.0.apk"
+      },
+      {
+        "name": "NexFusion-4.0.0-debug.apk",
+        "browser_download_url": "https://github.com/a092devs/NexFusion/releases/download/4.0.0/NexFusion-4.0.0-debug.apk"
+      }
+    ]
+  }
+]
+""".trimIndent()
+
+        val release = AppUpdateChecker.parseApiResponse(sampleJson, buildType = AppSettings.BUILD_TYPE_DEBUG)
+        assertNotNull(release)
+        assertEquals("4.0.0", release.tag)
+        assertEquals(0, release.versionCode)
+        assertEquals("https://github.com/a092devs/NexFusion/releases/download/4.0.0/NexFusion-4.0.0-debug.apk", release.apkUrl)
+    }
+
+    @Test
     fun parseApiResponseBetaReleaseIncludesCommitishAndPublishedDate() {
         val sampleJson = """
 [

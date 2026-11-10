@@ -76,6 +76,7 @@ import io.github.nexfusion.ui.DesignTokens
 import io.github.nexfusion.ui.ProvideDesignSystem
 import io.github.nexfusion.updates.AppInstaller
 import io.github.nexfusion.updates.AppRelease
+import io.github.nexfusion.updates.AppSettings
 import io.github.nexfusion.updates.UpdateDownloadState
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
@@ -192,14 +193,26 @@ fun HomeContent(
                             else -> stringResource(R.string.action_download)
                         }
 
+                        val isSwitchingVariant = (state.updateBuildType == AppSettings.BUILD_TYPE_DEBUG && !io.github.nexfusion.core.BuildConfig.DEBUG) ||
+                            (state.updateBuildType == AppSettings.BUILD_TYPE_RELEASE && io.github.nexfusion.core.BuildConfig.DEBUG)
+                        val variantSuffix = if (release.isDebugAsset) "Debug" else "Release"
+                        val updateTitle = if (isSwitchingVariant) {
+                            stringResource(R.string.app_update_title, "${release.tag} ($variantSuffix)")
+                        } else {
+                            stringResource(R.string.app_update_title, release.tag)
+                        }
+                        val updateText = if (downloadState is UpdateDownloadState.Error) {
+                            stringResource(R.string.download_failed, downloadState.message)
+                        } else if (isSwitchingVariant) {
+                            "Switch to the $variantSuffix build variant."
+                        } else {
+                            stringResource(R.string.app_update_text)
+                        }
+
                         ActionCard(
                             icon = Icons.Filled.Notifications,
-                            title = stringResource(R.string.app_update_title, release.tag),
-                            text = if (downloadState is UpdateDownloadState.Error) {
-                                stringResource(R.string.download_failed, downloadState.message)
-                            } else {
-                                stringResource(R.string.app_update_text)
-                            },
+                            title = updateTitle,
+                            text = updateText,
                             primary = primaryLabel to {
                                 if (downloadState is UpdateDownloadState.ReadyToInstall) {
                                     AppInstaller.installApk(context, downloadState.apkFile)

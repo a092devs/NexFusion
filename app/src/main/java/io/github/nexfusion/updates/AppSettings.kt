@@ -23,6 +23,13 @@ class AppSettings(context: Context) {
         set(value) = prefs.edit().putString("update_channel", value).apply()
 
     /**
+     * Selected build variant for APK downloads: "release" or "debug".
+     */
+    var updateBuildType: String
+        get() = prefs.getString("update_build_type", if (io.github.nexfusion.core.BuildConfig.DEBUG) BUILD_TYPE_DEBUG else BUILD_TYPE_RELEASE) ?: BUILD_TYPE_RELEASE
+        set(value) = prefs.edit().putString("update_build_type", value).apply()
+
+    /**
      * Selected colour mode: "system", "light", or "dark".
      */
     var theme: String
@@ -114,5 +121,8 @@ class AppSettings(context: Context) {
 
         const val UPDATE_CHANNEL_STABLE = "stable"
         const val UPDATE_CHANNEL_BETA = "beta"
+
+        const val BUILD_TYPE_RELEASE = "release"
+        const val BUILD_TYPE_DEBUG = "debug"
     }
 }

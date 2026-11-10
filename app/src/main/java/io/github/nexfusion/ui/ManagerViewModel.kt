@@ -78,6 +78,7 @@ data class ManagerState(
     val appCatalog: List<AppItemState> = emptyList(),
     val currentTheme: String = AppSettings.THEME_SYSTEM,
     val updateChannel: String = AppSettings.UPDATE_CHANNEL_STABLE,
+    val updateBuildType: String = AppSettings.BUILD_TYPE_RELEASE,
     val currentThemeStyle: String = AppSettings.THEME_STYLE_MATERIAL3,
     val currentColorScheme: String = AppSettings.COLOR_SCHEME_DEFAULT,
     /** Miuix-only: floating navigation bar preference. Disabled by default. */
@@ -135,6 +136,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         ManagerState(
             sources = store.all(),
             updateChannel = settings.updateChannel,
+            updateBuildType = settings.updateBuildType,
             currentTheme = settings.theme,
             currentThemeStyle = settings.themeStyle,
             currentColorScheme = settings.colorScheme,
@@ -241,6 +243,12 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         checkUpdates(userInitiated = true)
     }
 
+    fun setUpdateBuildType(buildType: String) {
+        settings.updateBuildType = buildType
+        _state.update { it.copy(updateBuildType = buildType) }
+        checkUpdates(userInitiated = true)
+    }
+
     fun setHideUninstalledApps(hide: Boolean) {
         settings.hideUninstalledApps = hide
         _state.update { it.copy(hideUninstalledApps = hide) }
@@ -284,6 +292,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     ignoredPackages = ignored,
                     appCatalog = catalog,
                     updateChannel = settings.updateChannel,
+                    updateBuildType = settings.updateBuildType,
                     currentTheme = settings.theme,
                     currentThemeStyle = settings.themeStyle,
                     currentColorScheme = settings.colorScheme,
@@ -303,7 +312,8 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             delay(200)
             _state.update { it.copy(checkingUpdates = true) }
             val includeBeta = settings.updateChannel == AppSettings.UPDATE_CHANNEL_BETA
-            val appUpdate = withContext(Dispatchers.IO) { runCatching { AppUpdateChecker.latest(includeBeta) } }
+            val targetBuildType = settings.updateBuildType
+            val appUpdate = withContext(Dispatchers.IO) { runCatching { AppUpdateChecker.latest(includeBeta, targetBuildType) } }
             val sources = store.all()
             val currentReleases = _state.value.releases.toMutableMap()
 
@@ -333,7 +343,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             _state.update {
                 it.copy(
                     sources = store.all(),
-                    appUpdate = appUpdate.getOrNull()?.takeIf { release -> release.isNewer },
+                    appUpdate = appUpdate.getOrNull()?.takeIf { release -> release.isAvailable(targetBuildType) },
                     releases = currentReleases,
                     checkingUpdates = false,
                 )

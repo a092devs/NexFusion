@@ -21,7 +21,7 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         val includeBeta = settings.updateChannel == AppSettings.UPDATE_CHANNEL_BETA
 
         if (settings.notifyAppUpdates) {
-            runCatching { AppUpdateChecker.latest(includeBeta) }.getOrNull()
+            runCatching { AppUpdateChecker.latest(includeBeta, settings.updateBuildType) }.getOrNull()
                 ?.takeIf { it.isNewer && settings.lastNotified(KEY_APP) != it.tag }
                 ?.let { release ->
                     UpdateNotifications.appUpdate(context, release)

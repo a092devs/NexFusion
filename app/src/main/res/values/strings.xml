@@ -104,6 +104,14 @@
     <string name="update_channel_beta">Beta</string>
     <string name="update_channel_beta_summary">Preview pre-release builds and patches for early testing</string>
 
+    <!-- Build Variant -->
+    <string name="update_build_type_title">Build variant</string>
+    <string name="update_build_type_summary">Select whether to download release or debug APKs</string>
+    <string name="update_build_type_release">Release</string>
+    <string name="update_build_type_release_summary">Production signed build</string>
+    <string name="update_build_type_debug">Debug</string>
+    <string name="update_build_type_debug_summary">Debug build for testing and development</string>
+
     <!-- Notifications -->
     <string name="channel_app_updates">App updates</string>
     <string name="channel_patch_updates">Patch updates</string>
