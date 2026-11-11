@@ -23,8 +23,8 @@ object CacheManager {
 
     private const val TAG = "NexFusion-Cache"
 
-    /** Temporary files older than 1 minute are considered abandoned. */
-    private const val STALE_TEMP_AGE_MS = 60 * 1000L
+    /** Temporary files older than 10 minutes are considered abandoned. */
+    private const val STALE_TEMP_AGE_MS = 10 * 60 * 1000L
 
     /** Completed update packages older than 15 minutes are considered expired. */
     private const val EXPIRED_UPDATE_AGE_MS = 15 * 60 * 1000L
@@ -134,11 +134,12 @@ object CacheManager {
         // 1. Sanitize rogue directories and stale temporary files
         sanitize(context)
 
-        // 2. Prune old/stale entries in codeCacheDir/nexfusion
+        // 2. Prune abandoned temporary files in codeCacheDir/nexfusion
         val codeCacheNexfusion = File(context.codeCacheDir, "nexfusion")
         if (codeCacheNexfusion.exists()) {
             codeCacheNexfusion.listFiles()?.forEach { file ->
-                if (file.isFile && (file.name.endsWith(".tmp") || (now - file.lastModified() > 24 * 60 * 60 * 1000L))) {
+                if (file.isFile && (file.name.endsWith(".tmp") || file.name.endsWith(".part") || file.name.endsWith(".lck")) &&
+                    (now - file.lastModified() > STALE_TEMP_AGE_MS)) {
                     val len = file.length()
                     if (file.delete()) {
                         totalFreed += len
@@ -171,9 +172,8 @@ object CacheManager {
         var bytesToFree = bytesToFreeTarget
         var freed = 0L
         val cacheFiles = mutableListOf<File>()
-        listOfNotNull(context.cacheDir, context.codeCacheDir).forEach { baseDir ->
-            collectFiles(baseDir, cacheFiles)
-        }
+        // Only evict transient files from cacheDir; protect codeCacheDir and compiled code
+        context.cacheDir?.let { collectFiles(it, cacheFiles) }
         cacheFiles.sortBy { it.lastModified() }
         for (file in cacheFiles) {
             if (bytesToFree <= 0) break

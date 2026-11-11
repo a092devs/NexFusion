@@ -117,7 +117,12 @@ class PatchExecutor(
 ) : IHook(xposed) {
     override val classLoader = lpparam.classLoader
 
-    private val patchPreferences = xposed.getRemotePreferences(lpparam.packageName)
+    private val patchPreferences = runCatching { xposed.getRemotePreferences(lpparam.packageName) }.getOrNull()
+    private val localPreferences by lazy {
+        runCatching {
+            appContext.getSharedPreferences("nexfusion_patch_prefs_${bundle.id}", Application.MODE_PRIVATE)
+        }.getOrNull()
+    }
 
     private val appliedPatches = mutableSetOf<Patch>()
     internal val failedPatches = mutableListOf<Patch>()
@@ -125,7 +130,15 @@ class PatchExecutor(
     internal fun executePatches(patches: Array<Patch>) {
         patches.forEach { hook ->
             if (appliedPatches.contains(hook)) return@forEach
-            val isEnabled = patchPreferences.getBoolean(patchPreferenceKey(bundle.id, hook.name), hook.use)
+            val prefKey = patchPreferenceKey(bundle.id, hook.name)
+            val isEnabled = runCatching {
+                patchPreferences?.let { remote ->
+                    val remoteVal = remote.getBoolean(prefKey, hook.use)
+                    localPreferences?.edit()?.putBoolean(prefKey, remoteVal)?.apply()
+                    remoteVal
+                }
+            }.getOrNull() ?: localPreferences?.getBoolean(prefKey, hook.use) ?: hook.use
+
             if (!isEnabled) {
                 PatcherLog.state { "${bundle.id}: patch '${hook.name}' is DISABLED by user preference" }
                 return@forEach

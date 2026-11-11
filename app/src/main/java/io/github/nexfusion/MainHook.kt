@@ -35,10 +35,15 @@ class MainHook : XposedModule() {
         if (param.packageName in ignored) return
         if (targetPackageName != null && targetPackageName != param.packageName) return
 
-        val bundles = remotePrefs?.let { runCatching { BundleRegistry.read(it) }.getOrNull() }
-            ?: runCatching { BundleRegistry.read(getRemotePreferences(PrefKeys.BUNDLES_GROUP)) }.getOrDefault(emptyList())
-        val matchingBundles = bundles.filter { it.enabled && param.packageName in it.apps }
-        if (matchingBundles.isEmpty()) return
+        val remoteBundles = remotePrefs?.let { runCatching { BundleRegistry.read(it) }.getOrNull() }
+            ?: runCatching { BundleRegistry.read(getRemotePreferences(PrefKeys.BUNDLES_GROUP)) }.getOrNull()
+
+        // Fast path: if remote preferences explicitly responded with bundles, and no enabled bundle targets this app, skip
+        if (remoteBundles != null && remoteBundles.isNotEmpty()) {
+            val matching = remoteBundles.filter { it.enabled && param.packageName in it.apps }
+            if (matching.isEmpty()) return
+        }
+
         targetPackageName = param.packageName
 
         inContext(param) { app ->
@@ -53,6 +58,24 @@ class MainHook : XposedModule() {
                 return@inContext
             }
 
+            // Fallback / persistent bundle cache for idle, doze, or binder disconnect resilience
+            val localPrefs = app.getSharedPreferences("nexfusion_bundles", Application.MODE_PRIVATE)
+            val bundles = if (remoteBundles != null && remoteBundles.isNotEmpty()) {
+                runCatching { BundleRegistry.write(localPrefs, remoteBundles) }
+                remoteBundles
+            } else {
+                val cached = BundleRegistry.read(localPrefs)
+                if (cached.isNotEmpty()) {
+                    PatcherLog.info { "NexFusion: using locally cached bundles for ${param.packageName} (offline/idle fallback)" }
+                    cached
+                } else {
+                    remoteBundles ?: emptyList()
+                }
+            }
+
+            val matchingBundles = bundles.filter { it.enabled && param.packageName in it.apps }
+            if (matchingBundles.isEmpty()) return@inContext
+
             resourceMappings = object : ResourceFinder {
                 override operator fun get(type: String, name: String): Int {
                     val id = app.resources.getIdentifier(name, type, app.packageName)
@@ -63,8 +86,8 @@ class MainHook : XposedModule() {
             PatcherLog.verbose = BuildConfig.DEBUG
 
             val session = PatchSession(app, param, this, BuildConfig.COMMIT_HASH, BuildConfig.DEBUG)
-            val loaded = bundles.mapNotNull { bundle ->
-                runCatching { loadBundle(app, bundle, bundles) }
+            val loaded = matchingBundles.mapNotNull { bundle ->
+                runCatching { loadBundle(app, bundle, matchingBundles) }
                     .onFailure { session.reportBundleFailure(bundle.name, it) }
                     .getOrNull()
             }
@@ -82,16 +105,24 @@ class MainHook : XposedModule() {
     }
 
     /**
-     * Copies the bundle APK from the module's remote files into the app's code cache and loads it.
+     * Copies the bundle APK from the module's remote files into the app's persistent internal storage and loads it.
      *
-     * The copy is named after the remote file, which changes with every bundle update.
+     * Stored in [Application.getFilesDir] so the bundle survives Android OS idle cache trimming, low-memory
+     * evictions, and deep doze cycles. The copy is named after the remote file, which changes with every bundle update.
      */
     private fun loadBundle(
         app: Application,
         bundle: InstalledBundle,
         activeBundles: List<InstalledBundle>,
     ): Pair<BundleInfo, Array<Patch>> {
-        val dir = File(app.codeCacheDir, "nexfusion").apply { mkdirs() }
+        val dir = File(app.filesDir, "nexfusion").apply { mkdirs() }
+
+        // Clean up legacy codeCacheDir if present to reclaim storage
+        runCatching {
+            val legacyDir = File(app.codeCacheDir, "nexfusion")
+            if (legacyDir.exists()) legacyDir.deleteRecursively()
+        }
+
         dir.listFiles()?.forEach { file ->
             // Bundle APKs and the dex files remapped from them start with the bundle's file name.
             if (activeBundles.none { file.name.startsWith(it.fileName) } || file.name.endsWith(".tmp")) file.delete()
