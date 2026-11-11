@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.3.2
+
+- **Idle Hook Persistence & App Storage Hardening:**
+  * Migrated target application bundle APK and remapped `.dex` storage to `filesDir/nexfusion` (owned permanently by the app UID), preventing Android OS idle cache trimming (`pm trim-caches`), low-memory killer sweeps, and deep doze maintenance from evicting active patch bundles.
+  * Added persistent local `SharedPreferences` bundle registry caching in hooked applications. If the Xposed/LSPosed remote binder drops, sleeps, or times out during deep doze, hooked applications seamlessly fall back to local cached bundle configurations and load without unhooking.
+  * Protected `PatchExecutor` user preference resolution with local SharedPreferences caching, ensuring custom patch settings persist across idle waking cycles.
+  * Softened `CacheManager` pruning by extending stale temp timeout to 10 minutes and strictly restricting storage quota eviction to transient `cacheDir` artifacts, shielding ART bytecode and DexKit cache directories from eviction.
+
 ## 4.3.1
 
 - **Patch Bundle Lifecycle & Synchronization Fixes:**
