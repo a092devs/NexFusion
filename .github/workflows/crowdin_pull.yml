@@ -13,12 +13,27 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
+      - name: Check Crowdin credentials
+        id: check_auth
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+        run: |
+          if [ -z "$CROWDIN_PROJECT_ID" ] || [ -z "$CROWDIN_PERSONAL_TOKEN" ]; then
+            echo "Crowdin credentials (CROWDIN_PROJECT_ID, CROWDIN_PERSONAL_TOKEN) are not configured. Skipping Crowdin operations."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout repository
+        if: steps.check_auth.outputs.configured == 'true'
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Download translations from Crowdin
+        if: steps.check_auth.outputs.configured == 'true'
         uses: crowdin/github-action@v3
         with:
           config: crowdin.yml

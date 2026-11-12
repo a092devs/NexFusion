@@ -12,11 +12,29 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        fetch-depth: 10
+
+    - name: Check duplicate push on beta
+      id: check-duplicate
+      if: github.ref == 'refs/heads/beta'
+      shell: bash
+      run: |
+        git fetch origin main --depth=10
+        MAIN_SHA="$(git rev-parse FETCH_HEAD 2>/dev/null || true)"
+        if [[ -n "$MAIN_SHA" ]] && git merge-base --is-ancestor "$GITHUB_SHA" "$MAIN_SHA"; then
+          echo "Commit $GITHUB_SHA is already on main; skipping duplicate workflow run on beta."
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: set up JDK
+      if: steps.check-duplicate.outputs.skip != 'true'
       uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -24,15 +42,17 @@ jobs:
         cache: gradle
 
     - name: Set up Android SDK
+      if: steps.check-duplicate.outputs.skip != 'true'
       uses: android-actions/setup-android@v4
       with:
         packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
 
     - name: Grant execute permission for gradlew
+      if: steps.check-duplicate.outputs.skip != 'true'
       run: chmod +x gradlew
 
     - name: Write key
-      if: github.event_name != 'pull_request'
+      if: steps.check-duplicate.outputs.skip != 'true' && github.event_name != 'pull_request'
       run: |
         if [ -z "${{ secrets.KEYSTORE }}" ]; then
           echo "::warning::Signing secrets are missing, the release APK is not built. Add KEYSTORE (base64), KEYSTORE_PASSWORD, KEYSTORE_ALIAS and KEYSTORE_ALIAS_PASSWORD in Settings > Secrets and variables > Actions."
@@ -45,17 +65,20 @@ jobs:
         echo ${{ secrets.KEYSTORE }} | base64 --decode > key.jks
 
     - name: Unit tests
-      if: github.ref != 'refs/heads/main'
+      if: steps.check-duplicate.outputs.skip != 'true' && github.ref != 'refs/heads/main'
       run: ./gradlew testDebugUnitTest
 
-    - name: Build module
-      run: ./gradlew :app:assembleDebug
-
-    - name: Build release module
-      if: hashFiles('signing.properties') != ''
-      run: ./gradlew :app:assembleRelease
+    - name: Build modules
+      if: steps.check-duplicate.outputs.skip != 'true'
+      run: |
+        if [ -f signing.properties ]; then
+          ./gradlew :app:assembleDebug :app:assembleRelease
+        else
+          ./gradlew :app:assembleDebug
+        fi
 
     - name: Prepare APKs
+      if: steps.check-duplicate.outputs.skip != 'true'
       run: |
         mkdir -p dist-apk
         if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
@@ -66,6 +89,7 @@ jobs:
         fi
 
     - name: Upload module
+      if: steps.check-duplicate.outputs.skip != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: NexFusion-APKs
@@ -73,7 +97,7 @@ jobs:
         if-no-files-found: error
 
     - name: Create AutoBuild Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: steps.check-duplicate.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         GIT_DESCRIBE=$(git rev-parse --short HEAD)
         mkdir autobuild
@@ -105,16 +129,21 @@ jobs:
           echo "Nightly build from commit ${GIT_DESCRIBE}." > "$notes_file"
         fi
 
-        gh release delete autobuild --cleanup-tag --yes || true
-        gh release create autobuild autobuild/*.apk \
-          --prerelease \
-          --target "${{ github.sha }}" \
-          --title "Nightly Build ${GIT_DESCRIBE}" \
-          --notes-file "$notes_file"
+        if gh release view autobuild >/dev/null 2>&1; then
+          gh release upload autobuild autobuild/*.apk --clobber
+          gh release edit autobuild --target "${{ github.sha }}" --title "Nightly Build ${GIT_DESCRIBE}" --notes-file "$notes_file"
+        else
+          gh release create autobuild autobuild/*.apk \
+            --prerelease \
+            --target "${{ github.sha }}" \
+            --title "Nightly Build ${GIT_DESCRIBE}" \
+            --notes-file "$notes_file"
+        fi
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Publish Artifact Notice
+      if: steps.check-duplicate.outputs.skip != 'true'
       run: |
         echo "## 📦 Standalone APK Downloads" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY

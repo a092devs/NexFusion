@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.3.3
+
+- **Build, CI & Automation Maintenance:**
+  * Increased Gradle memory heap to 4GB and unified APK compilation tasks for significantly faster CI builds.
+  * Added duplicate push detection for `beta` branch to avoid redundant CI runs without cancellation errors.
+  * Hardened nightly `autobuild` release workflow with in-place asset updates, preventing GitHub release race condition collisions.
+  * Added authentication guard to Crowdin localization workflows to skip gracefully when API secrets are not configured.
+
 ## 4.3.2
 
 - **Idle Hook Persistence & App Storage Hardening:**
