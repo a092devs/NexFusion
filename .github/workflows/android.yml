@@ -129,12 +129,16 @@ jobs:
           echo "Nightly build from commit ${GIT_DESCRIBE}." > "$notes_file"
         fi
 
-        gh release delete autobuild --cleanup-tag --yes || true
-        gh release create autobuild autobuild/*.apk \
-          --prerelease \
-          --target "${{ github.sha }}" \
-          --title "Nightly Build ${GIT_DESCRIBE}" \
-          --notes-file "$notes_file"
+        if gh release view autobuild >/dev/null 2>&1; then
+          gh release upload autobuild autobuild/*.apk --clobber
+          gh release edit autobuild --target "${{ github.sha }}" --title "Nightly Build ${GIT_DESCRIBE}" --notes-file "$notes_file"
+        else
+          gh release create autobuild autobuild/*.apk \
+            --prerelease \
+            --target "${{ github.sha }}" \
+            --title "Nightly Build ${GIT_DESCRIBE}" \
+            --notes-file "$notes_file"
+        fi
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
