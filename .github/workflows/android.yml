@@ -23,16 +23,12 @@ jobs:
       id: check-duplicate
       if: github.ref == 'refs/heads/beta'
       shell: bash
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git fetch origin main --depth=10
         MAIN_SHA="$(git rev-parse FETCH_HEAD 2>/dev/null || true)"
         if [[ -n "$MAIN_SHA" ]] && git merge-base --is-ancestor "$GITHUB_SHA" "$MAIN_SHA"; then
-          echo "Commit $GITHUB_SHA is already on main; cancelling duplicate workflow run on beta."
+          echo "Commit $GITHUB_SHA is already on main; skipping duplicate workflow run on beta."
           echo "skip=true" >> "$GITHUB_OUTPUT"
-          gh run cancel "$GITHUB_RUN_ID" || true
-          exit 0
         else
           echo "skip=false" >> "$GITHUB_OUTPUT"
         fi
