@@ -72,13 +72,14 @@ jobs:
       if: steps.check-duplicate.outputs.skip != 'true' && github.ref != 'refs/heads/main'
       run: ./gradlew testDebugUnitTest
 
-    - name: Build module
+    - name: Build modules
       if: steps.check-duplicate.outputs.skip != 'true'
-      run: ./gradlew :app:assembleDebug
-
-    - name: Build release module
-      if: steps.check-duplicate.outputs.skip != 'true' && hashFiles('signing.properties') != ''
-      run: ./gradlew :app:assembleRelease
+      run: |
+        if [ -f signing.properties ]; then
+          ./gradlew :app:assembleDebug :app:assembleRelease
+        else
+          ./gradlew :app:assembleDebug
+        fi
 
     - name: Prepare APKs
       if: steps.check-duplicate.outputs.skip != 'true'
