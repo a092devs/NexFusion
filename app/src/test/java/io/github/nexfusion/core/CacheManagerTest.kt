@@ -18,6 +18,8 @@ class CacheManagerTest {
         assertEquals("10.0 MB", CacheManager.formatSize(10 * 1024 * 1024))
         assertEquals("20.0 MB", CacheManager.formatSize(20 * 1024 * 1024))
         assertEquals("1.0 GB", CacheManager.formatSize(1024L * 1024L * 1024L))
+        assertEquals("5.0 GB", CacheManager.formatSize(CacheManager.MAX_CACHE_SIZE_BYTES))
+        assertEquals(5L * 1024L * 1024L * 1024L, CacheManager.MAX_CACHE_SIZE_BYTES)
     }
 
     @Test

@@ -19,8 +19,15 @@ import kotlin.system.measureTimeMillis
 @Suppress("UNCHECKED_CAST")
 class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
     val pref = app.getSharedPreferences(PrefKeys.DEXKIT_CACHE, MODE_PRIVATE)!!
+    private val dpsPref = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        runCatching { app.createDeviceProtectedStorageContext()?.getSharedPreferences(PrefKeys.DEXKIT_CACHE, MODE_PRIVATE) }.getOrNull()
+    } else null
+
     private val map = mutableMapOf<String, String>().apply {
         putAll(pref.all as Map<String, String>)
+        if (isEmpty() && dpsPref != null) {
+            putAll(dpsPref.all as Map<String, String>)
+        }
     }
 
     override fun clearAll() {
@@ -55,6 +62,15 @@ class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
             edit.putString(k, v)
         }
         edit.commit()
+
+        dpsPref?.let { dps ->
+            runCatching {
+                val dpsEdit = dps.edit()
+                dpsEdit.clear()
+                map.forEach { (k, v) -> dpsEdit.putString(k, v) }
+                dpsEdit.commit()
+            }
+        }
     }
 }
 

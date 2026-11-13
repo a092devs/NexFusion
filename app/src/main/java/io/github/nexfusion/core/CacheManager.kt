@@ -23,11 +23,14 @@ object CacheManager {
 
     private const val TAG = "NexFusion-Cache"
 
-    /** Temporary files older than 10 minutes are considered abandoned. */
-    private const val STALE_TEMP_AGE_MS = 10 * 60 * 1000L
+    /** Maximum cache limit cap (5 GB), preventing aggressive cache eviction. */
+    const val MAX_CACHE_SIZE_BYTES = 5L * 1024L * 1024L * 1024L
 
-    /** Completed update packages older than 15 minutes are considered expired. */
-    private const val EXPIRED_UPDATE_AGE_MS = 15 * 60 * 1000L
+    /** Temporary files older than 24 hours are considered abandoned. */
+    private const val STALE_TEMP_AGE_MS = 24 * 60 * 60 * 1000L
+
+    /** Completed update packages older than 24 hours are considered expired. */
+    private const val EXPIRED_UPDATE_AGE_MS = 24 * 60 * 60 * 1000L
 
     /**
      * Calculates the total cache size across [Context.getCacheDir] and [Context.getCodeCacheDir].
@@ -148,20 +151,10 @@ object CacheManager {
             }
         }
 
-        // 3. Dynamic system quota enforcement if system indicates low storage
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            runCatching {
-                val storageManager = context.getSystemService(Context.STORAGE_SERVICE) as? StorageManager
-                val cacheDir = context.cacheDir
-                if (storageManager != null && cacheDir != null) {
-                    val uuid = storageManager.getUuidForPath(cacheDir)
-                    val quota = storageManager.getCacheQuotaBytes(uuid)
-                    val current = getCacheSize(context)
-                    if (current > quota) {
-                        totalFreed += evictOldestFiles(context, current - quota)
-                    }
-                }
-            }
+        // 3. Enforce maximum cache limit (5 GB cap)
+        val current = getCacheSize(context)
+        if (current > MAX_CACHE_SIZE_BYTES) {
+            totalFreed += evictOldestFiles(context, current - MAX_CACHE_SIZE_BYTES)
         }
 
         Log.i(TAG, "Pruned cache: freed $totalFreed bytes")

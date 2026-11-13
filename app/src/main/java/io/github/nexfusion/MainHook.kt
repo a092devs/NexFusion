@@ -23,6 +23,8 @@ import java.io.FileInputStream
 
 class MainHook : XposedModule() {
     private var targetPackageName: String? = null
+    @Volatile
+    private var isHookApplied = false
 
     override fun onPackageReady(param: PackageReadyParam) {
         if (!param.isFirstPackage) return
@@ -47,6 +49,9 @@ class MainHook : XposedModule() {
         targetPackageName = param.packageName
 
         inContext(param) { app ->
+            if (isHookApplied) return@inContext
+            isHookApplied = true
+
             // Initialize in-module XposedBridge with this XposedInterface instance
             XposedBridge.init(this)
 
@@ -60,11 +65,18 @@ class MainHook : XposedModule() {
 
             // Fallback / persistent bundle cache for idle, doze, or binder disconnect resilience
             val localPrefs = app.getSharedPreferences("nexfusion_bundles", Application.MODE_PRIVATE)
+            val dpsPrefs = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                runCatching { app.createDeviceProtectedStorageContext()?.getSharedPreferences("nexfusion_bundles", Application.MODE_PRIVATE) }.getOrNull()
+            } else null
+
             val bundles = if (remoteBundles != null && remoteBundles.isNotEmpty()) {
                 runCatching { BundleRegistry.write(localPrefs, remoteBundles) }
+                dpsPrefs?.let { runCatching { BundleRegistry.write(it, remoteBundles) } }
                 remoteBundles
             } else {
-                val cached = BundleRegistry.read(localPrefs)
+                val cached = BundleRegistry.read(localPrefs).ifEmpty {
+                    dpsPrefs?.let { BundleRegistry.read(it) } ?: emptyList()
+                }
                 if (cached.isNotEmpty()) {
                     PatcherLog.info { "NexFusion: using locally cached bundles for ${param.packageName} (offline/idle fallback)" }
                     cached
@@ -123,21 +135,37 @@ class MainHook : XposedModule() {
             if (legacyDir.exists()) legacyDir.deleteRecursively()
         }
 
-        dir.listFiles()?.forEach { file ->
-            // Bundle APKs and the dex files remapped from them start with the bundle's file name.
-            if (activeBundles.none { file.name.startsWith(it.fileName) } || file.name.endsWith(".tmp")) file.delete()
+        // Only prune files if activeBundles is not empty to avoid wiping cached bundles on IPC disconnect
+        if (activeBundles.isNotEmpty()) {
+            dir.listFiles()?.forEach { file ->
+                // Bundle APKs and the dex files remapped from them start with the bundle's file name.
+                if (activeBundles.none { file.name.startsWith(it.fileName) } || file.name.endsWith(".tmp")) file.delete()
+            }
         }
 
         val apk = File(dir, bundle.fileName)
+        val dpsDir = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            runCatching { File(app.createDeviceProtectedStorageContext()?.filesDir, "nexfusion").apply { mkdirs() } }.getOrNull()
+        } else null
+        val dpsApk = dpsDir?.let { File(it, bundle.fileName) }
+
         if (!apk.exists() || apk.length() == 0L) {
             if (apk.exists()) apk.delete()
-            val tmp = File(dir, "${bundle.fileName}.tmp")
-            openRemoteFile(bundle.fileName).use { pfd ->
-                FileInputStream(pfd.fileDescriptor).use { input ->
-                    tmp.outputStream().use { input.copyTo(it) }
-                }
+            if (dpsApk != null && dpsApk.exists() && dpsApk.length() > 0L) {
+                runCatching { dpsApk.copyTo(apk, overwrite = true) }
             }
-            if (!tmp.renameTo(apk)) throw IllegalStateException("Cannot store bundle ${bundle.id}")
+            if (!apk.exists() || apk.length() == 0L) {
+                val tmp = File(dir, "${bundle.fileName}.tmp")
+                openRemoteFile(bundle.fileName).use { pfd ->
+                    FileInputStream(pfd.fileDescriptor).use { input ->
+                        tmp.outputStream().use { input.copyTo(it) }
+                    }
+                }
+                if (!tmp.renameTo(apk)) throw IllegalStateException("Cannot store bundle ${bundle.id}")
+            }
+        }
+        if (dpsApk != null && (!dpsApk.exists() || dpsApk.length() != apk.length())) {
+            runCatching { apk.copyTo(dpsApk, overwrite = true) }
         }
 
         val manifest = BundleManifest.read(app.packageManager, apk)
