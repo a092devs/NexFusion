@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.3.4
+
+- **Cache Cap & Background Patch Persistence:**
+  * Capped maximum cache size to 5GB in `CacheManager` (`MAX_CACHE_SIZE_BYTES`), preventing aggressive OS storage quota sweeps from evicting cached artifacts.
+  * Increased stale temporary file and expired update package retention thresholds from 10/15 minutes to 24 hours.
+  * Added Device Protected Storage (DPS) fallback for bundle registry and DexKit fingerprint cache, ensuring hooked applications like Gboard running in Direct Boot or background wakeups reliably retain their patches.
+  * Guarded `loadBundle()` against deleting bundle APKs if remote IPC temporarily times out.
+  * Added an atomic process-level execution guard in `MainHook` to prevent duplicate patch session initialization.
+  * Verified cold-start-only initialization toast popup behavior, eliminating repeated popups during background operations.
+
 ## 4.3.3
 
 - **Build, CI & Automation Maintenance:**
