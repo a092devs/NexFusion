@@ -60,6 +60,9 @@ jobs:
       - name: Clean empty translation stubs and prune untranslated files
         if: steps.check_auth.outputs.configured == 'true'
         run: |
+          # Fix file ownership from Docker container run
+          sudo chown -R $(id -u):$(id -g) app/src/main/res
+
           # Remove any generated translation XML file that has no actual <string> elements
           removed_count=0
           retained_count=0
