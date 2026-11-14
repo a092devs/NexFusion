@@ -125,17 +125,8 @@ jobs:
             echo "Please review the updated translations in the PR before merging." >> $GITHUB_STEP_SUMMARY
           else
             echo "Creating new Pull Request for crowdin-translations into $TARGET_BRANCH..."
-            PR_OUTPUT=$(gh pr create \
-              --head crowdin-translations \
-              --base "$TARGET_BRANCH" \
-              --title "chore(i18n): update translations from Crowdin" \
-              --body "### 🌐 Crowdin Translation Sync
-
-Automated sync of community translations from Crowdin.
-
-> [!IMPORTANT]
-> **Manual Review Required:**
-> Please review the changed strings in the **Files changed** tab before merging to verify accuracy and ensure no incorrect or placeholder text is introduced." 2>&1) || PR_FAILED=true
+            PR_BODY="Automated sync of community translations from Crowdin. Please review changed strings in the Files changed tab before merging."
+            PR_OUTPUT=$(gh pr create --head crowdin-translations --base "$TARGET_BRANCH" --title "chore(i18n): update translations from Crowdin" --body "$PR_BODY" 2>&1) || PR_FAILED=true
 
             if [ "$PR_FAILED" = "true" ]; then
               echo "::warning::Unable to automatically create PR via GITHUB_TOKEN (requires repository setting: Allow GitHub Actions to create and approve pull requests)."
