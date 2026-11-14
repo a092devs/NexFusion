@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       target_branch:
-        description: 'Branch to commit translations to'
+        description: 'Target branch to open PR against'
         required: true
         default: 'beta'
         type: string
@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Check Crowdin credentials
@@ -42,6 +43,14 @@ jobs:
         with:
           ref: ${{ github.event.inputs.target_branch || 'beta' }}
           fetch-depth: 0
+
+      - name: Prepare translation branch
+        if: steps.check_auth.outputs.configured == 'true'
+        env:
+          TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'beta' }}
+        run: |
+          git fetch origin "$TARGET_BRANCH"
+          git checkout -B crowdin-translations "origin/$TARGET_BRANCH"
 
       - name: Download translations from Crowdin
         if: steps.check_auth.outputs.configured == 'true'
@@ -80,20 +89,67 @@ jobs:
           done
           echo "Pruned $removed_count empty translation stubs. Retained $retained_count files with real translated strings."
 
-      - name: Commit and push translations
+      - name: Commit and push to translation branch
         if: steps.check_auth.outputs.configured == 'true'
+        id: commit_push
         env:
           TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'beta' }}
         run: |
-          if git diff --quiet app/src/main/res/ && [ -z "$(git status --porcelain app/src/main/res/)" ]; then
-            echo "No new or updated translations found. Working tree is clean, skipping commit."
+          if git diff --quiet "origin/$TARGET_BRANCH" -- app/src/main/res/ && [ -z "$(git status --porcelain app/src/main/res/)" ]; then
+            echo "No new or updated translations found compared to $TARGET_BRANCH. Skipping PR."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add app/src/main/res/values-*/strings.xml
           git commit -m "chore(i18n): update translations from Crowdin [skip ci]"
-          git push origin "$TARGET_BRANCH"
-          echo "Successfully pushed updated translations to $TARGET_BRANCH."
+          git push origin crowdin-translations --force
+          echo "Pushed updated translation changes to crowdin-translations branch."
+
+      - name: Create or update Pull Request
+        if: steps.check_auth.outputs.configured == 'true' && steps.commit_push.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'beta' }}
+        run: |
+          EXISTING_PR=$(gh pr list --head crowdin-translations --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || true)
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Pull request #$EXISTING_PR already exists and has been updated with the latest translations."
+            echo "### 🌐 Translation PR Updated: [#$EXISTING_PR](https://github.com/${{ github.repository }}/pull/$EXISTING_PR)" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the updated translations in the PR before merging." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Creating new Pull Request for crowdin-translations into $TARGET_BRANCH..."
+            PR_OUTPUT=$(gh pr create \
+              --head crowdin-translations \
+              --base "$TARGET_BRANCH" \
+              --title "chore(i18n): update translations from Crowdin" \
+              --body "### 🌐 Crowdin Translation Sync
+
+Automated sync of community translations from Crowdin.
+
+> [!IMPORTANT]
+> **Manual Review Required:**
+> Please review the changed strings in the **Files changed** tab before merging to verify accuracy and ensure no incorrect or placeholder text is introduced." 2>&1) || PR_FAILED=true
+
+            if [ "$PR_FAILED" = "true" ]; then
+              echo "::warning::Unable to automatically create PR via GITHUB_TOKEN (requires repository setting: Allow GitHub Actions to create and approve pull requests)."
+              echo "### ⚠️ Manual PR Creation Needed" >> $GITHUB_STEP_SUMMARY
+              echo "Translations branch \`crowdin-translations\` was updated successfully." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "[Click here to open the Pull Request into $TARGET_BRANCH](https://github.com/${{ github.repository }}/compare/$TARGET_BRANCH...crowdin-translations?expand=1)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "> **Tip to enable automatic PR creation:** Go to [Repository Settings > Actions > General](https://github.com/${{ github.repository }}/settings/actions), scroll down to **Workflow permissions**, and check **Allow GitHub Actions to create and approve pull requests**." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "Created PR: $PR_OUTPUT"
+              echo "### 🌐 Translation Pull Request Created" >> $GITHUB_STEP_SUMMARY
+              echo "$PR_OUTPUT" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Please review the translations before merging." >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
