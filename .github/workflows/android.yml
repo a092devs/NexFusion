@@ -3,7 +3,18 @@ name: Android CI
 on:
   push:
     branches: [ "main", "beta" ]
+    paths-ignore:
+      - 'app/src/main/res/values-*/strings.xml'
+      - '**.md'
+      - '.github/workflows/crowdin_*.yml'
+      - 'crowdin.yml'
   pull_request:
+    branches: [ "main", "beta" ]
+    paths-ignore:
+      - 'app/src/main/res/values-*/strings.xml'
+      - '**.md'
+      - '.github/workflows/crowdin_*.yml'
+      - 'crowdin.yml'
   workflow_dispatch:
 
 jobs:
