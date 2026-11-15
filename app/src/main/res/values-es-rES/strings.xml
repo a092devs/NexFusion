@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_description">LSPosed module that applies patch bundles from patch sources.</string>
+    <string name="slogan_summary">NexFusion applies patch bundles from patch sources. Only add sources you trust.</string>
+    <!-- Navigation -->
+    <!-- Home -->
+    <!-- Patches -->
+    <!-- App patches -->
+    <!-- Settings -->
+    <!-- Update Channels -->
+    <!-- Build Variant -->
+    <!-- Notifications -->
+    <!-- Compatibility Statuses & Redesign -->
+    <!-- Multi-source Management -->
+</resources>
