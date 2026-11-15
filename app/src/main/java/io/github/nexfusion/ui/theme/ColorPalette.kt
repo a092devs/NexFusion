@@ -11,18 +11,19 @@ import androidx.compose.ui.graphics.toArgb
  */
 object ColorPalette {
 
-    /** Default seed for the "Default" scheme — a distinctive deep indigo. */
-    val DefaultFusionSeed = Color(0xFF3B3FD9)
+    /** Default seed for the "Default" scheme — vibrant cyan/teal. */
+    val DefaultFusionSeed = Color(0xFF00A2C7)
 
     /** Fixed accent seeds for the named color schemes.
-     * Each seed is a carefully tuned hue with balanced chroma for both light/dark modes.
-     * Seeds are NOT pure hues — they're tuned for perceptual harmony in tonal palettes.
+     * Vibrant, distinct, high-chroma seeds tuned for perceptual harmony.
      */
-    val VioletSeed = Color(0xFF6B46E0)
-    val EmeraldSeed = Color(0xFF009666)
-    val AmberSeed = Color(0xFFE8A000)
-    val RoseSeed = Color(0xFFD63A6D)
-    val OceanSeed = Color(0xFF0096A0)
+    val SunsetSeed = Color(0xFFFF5722)
+    val EmeraldSeed = Color(0xFF10B981)
+    val RoseSeed = Color(0xFFF43F5E)
+    val AmberSeed = Color(0xFFF59E0B)
+    val IndigoSeed = Color(0xFF4F46E5)
+    val FuchsiaSeed = Color(0xFFD946EF)
+    val LimeSeed = Color(0xFF84CC16)
 
     /** Miuix Light: Official Xiaomi/HyperOS palette */
     val MiuixLightPrimary = Color(0xFF0066FF)
@@ -174,11 +175,13 @@ object ColorPalette {
 
     // Scheme seed for Theme.kt
     fun schemeSeed(schemeName: String): Color = when (schemeName) {
-        "violet" -> VioletSeed
+        "sunset" -> SunsetSeed
         "emerald" -> EmeraldSeed
-        "amber" -> AmberSeed
         "rose" -> RoseSeed
-        "ocean" -> OceanSeed
+        "amber" -> AmberSeed
+        "indigo" -> IndigoSeed
+        "fuchsia" -> FuchsiaSeed
+        "lime" -> LimeSeed
         else -> DefaultFusionSeed
     }
 }

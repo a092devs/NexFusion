@@ -116,36 +116,18 @@ data class PatchSource(
             provenance = SourceProvenance.NEXFUSION,
         )
 
-        /** Known curated community and upstream sources available for one-tap addition. */
-        val UPSTREAM_2ENO = PatchSource(
+        /** Community source suggestion available for one-tap addition in the Add Source dialog. */
+        val SUGGESTED_2ENO = PatchSource(
             id = "2eno_upstream",
-            name = "2eno NexFusion Patches",
-            url = "2eno/Nexfusion-Patches",
+            name = "2eno NexAlloyNext Patches",
+            url = "https://github.com/2eno/NexAlloyNext-Patches",
+            prerelease = true,
             provenance = SourceProvenance.COMMUNITY,
         )
 
-        val COMMUNITY_PIKO = PatchSource(
-            id = "crimera_piko",
-            name = "Piko Patches (Instagram & X)",
-            url = "crimera/piko",
-            provenance = SourceProvenance.COMMUNITY,
-        )
-
-        val COMMUNITY_2ENO_MORPHE = PatchSource(
-            id = "2eno_morphe",
-            name = "2eno Patches (Extras)",
-            url = "2eno/2eno-patches",
-            provenance = SourceProvenance.COMMUNITY,
-        )
-
-        val OFFICIAL_MORPHE = PatchSource(
-            id = "morphe_official",
-            name = "Official Morphe Patches",
-            url = "MorpheApp/morphe-patches",
-            provenance = SourceProvenance.OFFICIAL,
-        )
-
-        val PRESET_SOURCES = listOf(default, UPSTREAM_2ENO, COMMUNITY_PIKO, COMMUNITY_2ENO_MORPHE, OFFICIAL_MORPHE)
+        /** Suggestions available in the Add Source dialog. */
+        val SUGGESTED_SOURCES = listOf(SUGGESTED_2ENO)
+        val PRESET_SOURCES = listOf(default, SUGGESTED_2ENO)
     }
 }
 
@@ -246,7 +228,7 @@ class SourceStore(context: Context) {
                     defaultIncluded = true
                 }
             } else {
-                // Preserve all other sources! Do not wipe or collapse them!
+                // Preserve all other user sources as-is without hardcoding or rewriting!
                 result.add(source)
             }
         }

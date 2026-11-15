@@ -26,30 +26,37 @@ object AppPreferenceNames {
     const val DEFAULT_FLOATING_BAR_TRANSLUCENT = false
 
     /**
-     * Color scheme options. "default" keeps each design system's own palette (platform dynamic
-     * color on Material 3 where supported, the official Miuix palette on Miuix); the remaining
-     * values are fixed accent seeds applied to both design systems.
+     * Color scheme options. Default is the refreshed cyan palette; remaining values
+     * are fixed accent seeds applied consistently to both Material 3 and Miuix design systems.
      */
     const val COLOR_SCHEME_DEFAULT = "default"
-    const val COLOR_SCHEME_VIOLET = "violet"
+    const val COLOR_SCHEME_SUNSET = "sunset"
     const val COLOR_SCHEME_EMERALD = "emerald"
-    const val COLOR_SCHEME_AMBER = "amber"
     const val COLOR_SCHEME_ROSE = "rose"
-    const val COLOR_SCHEME_OCEAN = "ocean"
+    const val COLOR_SCHEME_AMBER = "amber"
+    const val COLOR_SCHEME_INDIGO = "indigo"
+    const val COLOR_SCHEME_FUCHSIA = "fuchsia"
+    const val COLOR_SCHEME_LIME = "lime"
 
     /** Preference order of the colour-scheme dialog. */
     val COLOR_SCHEMES = listOf(
         COLOR_SCHEME_DEFAULT,
-        COLOR_SCHEME_VIOLET,
+        COLOR_SCHEME_SUNSET,
         COLOR_SCHEME_EMERALD,
-        COLOR_SCHEME_AMBER,
         COLOR_SCHEME_ROSE,
-        COLOR_SCHEME_OCEAN,
+        COLOR_SCHEME_AMBER,
+        COLOR_SCHEME_INDIGO,
+        COLOR_SCHEME_FUCHSIA,
+        COLOR_SCHEME_LIME,
     )
 
     /** Maps any stored colour-scheme value to a supported one. */
-    fun normalizeColorScheme(raw: String?): String =
-        if (raw != null && raw in COLOR_SCHEMES) raw else COLOR_SCHEME_DEFAULT
+    fun normalizeColorScheme(raw: String?): String = when (raw) {
+        "ocean", "sky" -> COLOR_SCHEME_DEFAULT
+        "violet", "blurple" -> COLOR_SCHEME_INDIGO
+        in COLOR_SCHEMES -> raw!!
+        else -> COLOR_SCHEME_DEFAULT
+    }
 
     /** Maps any stored theme-style value to a supported one. */
     fun normalizeStyle(raw: String?): String = when (raw) {

@@ -5,6 +5,19 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.3.5
+
+- **Color Schemes & Theming:**
+  * Refreshed default color scheme with vibrant cyan/teal tones.
+  * Added distinct, high-chroma color schemes across the spectrum: Sunset, Emerald, Rose, Amber, Indigo, Fuchsia, and Lime.
+  * Added live color swatch previews to the color scheme selector dialog.
+  * Resolved FAB button icon contrast by computing dynamic high-contrast foreground tints.
+- **Patch Sources:**
+  * Removed incompatible curated presets that do not produce NexFusion NXB bundles.
+  * Added 2eno (`https://github.com/2eno/NexAlloyNext-Patches`) as a quick-add community suggestion in the Add Source dialog with pre-release auto-discovery.
+- **Cache & Maintenance:**
+  * Verified battery-friendly zero-waste cache lifecycle and 5GB safety bounds.
+
 ## 4.3.4
 
 - **Cache Cap & Background Patch Persistence:**

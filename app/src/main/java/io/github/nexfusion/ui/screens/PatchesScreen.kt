@@ -64,6 +64,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import io.github.nexfusion.core.InstalledBundle
 import io.github.nexfusion.core.R
 import io.github.nexfusion.core.discovery.AppDiscovery
@@ -75,6 +77,7 @@ import io.github.nexfusion.ui.theme.isMiuixStyle
 import io.github.nexfusion.updates.AppSettings
 import top.yukonga.miuix.kmp.basic.FloatingActionButton as MiuixFloatingActionButton
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun PatchesScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
@@ -270,13 +273,20 @@ fun PatchesContent(
                 bodyContent(PaddingValues(0.dp))
             }
             if (selectedTab == 0) {
+                val fabBg = MiuixTheme.colorScheme.primary
+                val fabFg = if (fabBg.luminance() > 0.5f) Color(0xFF0F172A) else Color.White
                 MiuixFloatingActionButton(
                     onClick = { addSource = true },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 16.dp, bottom = 16.dp + outerPadding.calculateBottomPadding()),
                 ) {
-                    Icon(icons.add, contentDescription = stringResource(R.string.add_source_title))
+                    Icon(
+                        icons.add,
+                        contentDescription = stringResource(R.string.add_source_title),
+                        tint = fabFg,
+                        modifier = Modifier.size(26.dp),
+                    )
                 }
             }
         }
@@ -310,6 +320,8 @@ fun PatchesContent(
                         onClick = { addSource = true },
                         icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                         text = { Text(stringResource(R.string.add_source_title)) },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
             },
@@ -871,8 +883,8 @@ private fun AddSourceDialog(
                 )
             }
 
-            // Curated Presets Quick-Add
-            val availablePresets = PatchSource.PRESET_SOURCES.filter { preset ->
+            // Suggestions Quick-Add
+            val availablePresets = PatchSource.SUGGESTED_SOURCES.filter { preset ->
                 existingSources.none { it.url.equals(preset.url, ignoreCase = true) }
             }
             if (availablePresets.isNotEmpty()) {
@@ -893,6 +905,7 @@ private fun AddSourceDialog(
                                 onClick = {
                                     name = preset.name
                                     url = preset.url
+                                    prerelease = preset.prerelease
                                 },
                             )
                         } else {
@@ -900,6 +913,7 @@ private fun AddSourceDialog(
                                 onClick = {
                                     name = preset.name
                                     url = preset.url
+                                    prerelease = preset.prerelease
                                 },
                                 label = { Text(preset.name, style = MaterialTheme.typography.labelSmall) },
                             )

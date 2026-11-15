@@ -144,11 +144,13 @@
     <string name="theme_style_miuix">Miuix</string>
     <string name="color_scheme_title">Color scheme</string>
     <string name="color_scheme_default">Default</string>
-    <string name="color_scheme_violet">Violet</string>
+    <string name="color_scheme_sunset">Sunset</string>
     <string name="color_scheme_emerald">Emerald</string>
-    <string name="color_scheme_amber">Amber</string>
     <string name="color_scheme_rose">Rose</string>
-    <string name="color_scheme_ocean">Ocean</string>
+    <string name="color_scheme_amber">Amber</string>
+    <string name="color_scheme_indigo">Indigo</string>
+    <string name="color_scheme_fuchsia">Fuchsia</string>
+    <string name="color_scheme_lime">Lime</string>
     <string name="miuix_floating_nav_title">Floating bar</string>
     <string name="miuix_floating_nav_summary">Floating pill navigation bar with fluid spring animation.</string>
     <string name="miuix_floating_nav_translucent_title">Translucent glass effect</string>
@@ -170,7 +172,7 @@
     <string name="provenance_community">Community</string>
     <string name="provenance_nexfusion">NexFusion</string>
     <string name="provenance_custom">Custom</string>
-    <string name="preset_sources_title">Quick-add curated source:</string>
+    <string name="preset_sources_title">Quick-add preset source:</string>
     <string name="source_enabled">Enabled</string>
     <string name="source_disabled">Disabled</string>
     <string name="last_refreshed">Refreshed: %s</string>

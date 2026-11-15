@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import io.github.nexfusion.core.BuildConfig
 import io.github.nexfusion.core.R
 import io.github.nexfusion.ui.ManagerViewModel
+import io.github.nexfusion.ui.theme.ColorPalette
 import io.github.nexfusion.ui.theme.isMiuixStyle
 import io.github.nexfusion.updates.AppPreferenceNames
 import io.github.nexfusion.updates.AppSettings
@@ -101,11 +102,13 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     }
 
     val currentColorSchemeLabel = when (state.currentColorScheme) {
-        AppPreferenceNames.COLOR_SCHEME_VIOLET -> stringResource(R.string.color_scheme_violet)
+        AppPreferenceNames.COLOR_SCHEME_SUNSET -> stringResource(R.string.color_scheme_sunset)
         AppPreferenceNames.COLOR_SCHEME_EMERALD -> stringResource(R.string.color_scheme_emerald)
-        AppPreferenceNames.COLOR_SCHEME_AMBER -> stringResource(R.string.color_scheme_amber)
         AppPreferenceNames.COLOR_SCHEME_ROSE -> stringResource(R.string.color_scheme_rose)
-        AppPreferenceNames.COLOR_SCHEME_OCEAN -> stringResource(R.string.color_scheme_ocean)
+        AppPreferenceNames.COLOR_SCHEME_AMBER -> stringResource(R.string.color_scheme_amber)
+        AppPreferenceNames.COLOR_SCHEME_INDIGO -> stringResource(R.string.color_scheme_indigo)
+        AppPreferenceNames.COLOR_SCHEME_FUCHSIA -> stringResource(R.string.color_scheme_fuchsia)
+        AppPreferenceNames.COLOR_SCHEME_LIME -> stringResource(R.string.color_scheme_lime)
         else -> stringResource(R.string.color_scheme_default)
     }
 
@@ -474,15 +477,18 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             title = stringResource(R.string.color_scheme_title),
             options = listOf(
                 AppPreferenceNames.COLOR_SCHEME_DEFAULT to stringResource(R.string.color_scheme_default),
-                AppPreferenceNames.COLOR_SCHEME_VIOLET to stringResource(R.string.color_scheme_violet),
+                AppPreferenceNames.COLOR_SCHEME_SUNSET to stringResource(R.string.color_scheme_sunset),
                 AppPreferenceNames.COLOR_SCHEME_EMERALD to stringResource(R.string.color_scheme_emerald),
-                AppPreferenceNames.COLOR_SCHEME_AMBER to stringResource(R.string.color_scheme_amber),
                 AppPreferenceNames.COLOR_SCHEME_ROSE to stringResource(R.string.color_scheme_rose),
-                AppPreferenceNames.COLOR_SCHEME_OCEAN to stringResource(R.string.color_scheme_ocean),
+                AppPreferenceNames.COLOR_SCHEME_AMBER to stringResource(R.string.color_scheme_amber),
+                AppPreferenceNames.COLOR_SCHEME_INDIGO to stringResource(R.string.color_scheme_indigo),
+                AppPreferenceNames.COLOR_SCHEME_FUCHSIA to stringResource(R.string.color_scheme_fuchsia),
+                AppPreferenceNames.COLOR_SCHEME_LIME to stringResource(R.string.color_scheme_lime),
             ),
             selected = state.currentColorScheme,
             onSelect = { viewModel.setColorScheme(it) },
             onDismissRequest = { showColorSchemeDialog = false },
+            colorMap = { ColorPalette.schemeSeed(it) },
         )
     }
 

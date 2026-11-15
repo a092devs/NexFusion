@@ -760,6 +760,7 @@ fun ThemedRadioDialog(
     selected: String,
     onSelect: (String) -> Unit,
     onDismissRequest: () -> Unit,
+    colorMap: ((String) -> Color?)? = null,
 ) {
     ThemedDialog(
         show = show,
@@ -786,7 +787,20 @@ fun ThemedRadioDialog(
                     } else {
                         RadioButton(selected = selected == value, onClick = select)
                     }
-                    Text(text = label, modifier = Modifier.padding(start = 8.dp))
+                    val swatch = colorMap?.invoke(value)
+                    if (swatch != null) {
+                        Spacer(Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(swatch),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                    } else {
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text(text = label)
                 }
             }
         }
