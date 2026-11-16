@@ -3,11 +3,11 @@
   <groupId>io.github.nexfusion</groupId>
   <artifactId>patcher</artifactId>
   <versioning>
-    <latest>2.1.0</latest>
-    <release>2.1.0</release>
+    <latest>2.1.0-beta</latest>
+    <release>2.1.0-beta</release>
     <versions>
-      <version>2.1.0</version>
+      <version>2.1.0-beta</version>
     </versions>
-    <lastUpdated>20261115093318</lastUpdated>
+    <lastUpdated>20261116075229</lastUpdated>
   </versioning>
 </metadata>
