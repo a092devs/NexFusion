@@ -49,6 +49,9 @@ jobs:
             - name: Grant execute permission for gradlew
               run: chmod +x gradlew
 
+            - name: Configure Gradle timeouts
+              run: echo "GRADLE_OPTS=-Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000" >> $GITHUB_ENV
+
             - name: Validate version and release tag
               shell: bash
               env:

@@ -1,6 +1,7 @@
 pluginManagement {
     includeBuild("build-logic")
     repositories {
+        maven { url = uri("https://maven.google.com") }
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -19,6 +20,7 @@ dependencyResolutionManagement {
         flatDir {
             dirs(rootDir.resolve("libs"))
         }
+        maven { url = uri("https://maven.google.com") }
         google()
         mavenCentral()
         maven(url = "https://api.xposed.info")
