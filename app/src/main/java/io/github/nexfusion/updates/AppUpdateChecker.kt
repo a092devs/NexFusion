@@ -52,17 +52,13 @@ class AppRelease(
                         return false
                     }
                 }
-                // Fallback: check if version in notes is newer than running app
-                val versionInBody = Regex("""[vV]?(\d+\.\d+\.\d+)""").find(notes)?.groupValues?.get(1)
-                if (versionInBody != null) {
-                    val cmp = VersionComparator.compare(versionInBody, BuildConfig.VERSION_NAME)
-                    if (cmp <= 0) return false
-                    return true
-                }
-                // If no version string in notes, but published timestamp is strictly newer than build commit date
-                if (publishedAt > 0L && commitDateMs > 0L && publishedAt > commitDateMs) {
-                    return true
-                }
+                // Compare tag version directly (not from notes which may contain previous version in changelog link)
+                val cmp = VersionComparator.compare(tag, BuildConfig.VERSION_NAME)
+                if (cmp > 0) return true
+                if (cmp < 0) return false
+                // Same version: use versionCode or publishedAt as tiebreaker
+                if (versionCode > BuildConfig.VERSION_CODE) return true
+                if (publishedAt > 0L && commitDateMs > 0L && publishedAt > commitDateMs) return true
                 return false
             }
             return VersionComparator.compare(tag, BuildConfig.VERSION_NAME) > 0 || (versionCode > BuildConfig.VERSION_CODE)
