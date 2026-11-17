@@ -5,13 +5,15 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
-## 4.4.0-beta1
+## 4.4.0
 
 - **Navigation & Settings:**
-  * Preserve active navigation screen and backstack when changing design system (Material 3 / Miuix), floating bar navigation, color schemes, or other settings for seamless visual inspection.
+  * Unified navigation architecture into a single persistent NavHost to preserve active screen and backstack across design system switches (Material 3 / Miuix), floating bar toggles, color schemes, and theme mode changes.
+  * Maintained immediate visual feedback on SettingsScreen without unexpected resets to the home destination.
 - **Xposed & Vector Framework Integration:**
-  * Added `de.robv.android.xposed.category.MODULE_SETTINGS` to `MainActivity` and preserved module settings alias so Vector and LSPosed can always launch NexFusion even when the launcher icon is hidden from the home screen.
-  * Auto-repair disabled settings alias on startup to recover accessibility after stealth hiding.
+  * Added `de.robv.android.xposed.category.MODULE_SETTINGS` to `MainActivity` following CorePatch standard.
+  * Preserved module settings alias when launcher icon is hidden from the system home screen so Vector and LSPosed can always detect and launch the module.
+  * Added auto-repair on startup to recover module settings accessibility if previously disabled by earlier versions.
   * Styled scope missing notification card in a comfortable tertiary warning tone that clearly indicates action is required.
 
 ## 4.3.5
