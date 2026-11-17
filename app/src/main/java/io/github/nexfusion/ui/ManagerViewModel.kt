@@ -639,6 +639,9 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val appName = AppDiscovery.queryPackage(context, packageName).appLabel
             val msg = if (ignored) "Excluded $appName from patching" else "Included $appName in patching"
             _messages.tryEmit(msg)
+            if (!ignored) {
+                requestMissingScope(listOf(packageName))
+            }
             refresh()
         }
     }

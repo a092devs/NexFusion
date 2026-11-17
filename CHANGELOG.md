@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.3.8-beta1
+
+- **Scope & Framework Compatibility:**
+  * Added framework detection for LSPatch; in non-root LSPatch environments, scope is self-contained per patched application rather than centrally managed via Zygote, eliminating runtime scope request errors.
+  * Declared comprehensive default application scope in both `scope.list` and AndroidManifest `xposedscope` metadata so LSPatch and LSPosed automatically recommend all supported applications.
+  * Added an interactive "Request Module Scope" dialog allowing users to choose exactly which applications to request module scope permissions for.
+  * Automatically request framework scope when re-including an excluded application.
+
 ## 4.3.5
 
 - **Color Schemes & Theming:**

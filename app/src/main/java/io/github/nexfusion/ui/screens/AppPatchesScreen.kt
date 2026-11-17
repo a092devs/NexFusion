@@ -351,7 +351,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                             ActionCard(
                                 icon = Icons.Filled.Warning,
                                 title = stringResource(R.string.scope_missing_title),
-                                text = "This application is not in the LSPosed module scope. Patches will not take effect until added.",
+                                text = "This application is not in the module scope. Patches will not take effect until added.",
                                 primary = stringResource(R.string.action_request) to {
                                     viewModel.requestMissingScope(listOf(packageName))
                                 },
