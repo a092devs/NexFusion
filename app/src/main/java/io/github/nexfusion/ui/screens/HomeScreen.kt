@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -101,9 +100,7 @@ fun HomeScreen(viewModel: ManagerViewModel, navController: NavHostController, ou
         onSearchQueryChange = viewModel::setSearchQuery,
         onCheckUpdates = { viewModel.checkUpdates(userInitiated = true) },
         onUpdateAll = viewModel::updateAll,
-        onRequestScope = { pkgs ->
-            if (pkgs != null) viewModel.requestMissingScope(pkgs) else viewModel.requestMissingScope()
-        },
+        onRequestScope = { viewModel.requestMissingScope() },
         onSetAppIgnored = viewModel::setAppIgnored,
         onOpenPatches = { navController.navigateTopLevel(MainActivity.DESTINATION_PATCHES) },
         onOpenApp = { navController.navigate("${MainActivity.DESTINATION_APP}/$it") },
@@ -120,7 +117,7 @@ fun HomeContent(
     onSearchQueryChange: (String) -> Unit,
     onCheckUpdates: () -> Unit,
     onUpdateAll: () -> Unit,
-    onRequestScope: (Collection<String>?) -> Unit = {},
+    onRequestScope: () -> Unit,
     onSetAppIgnored: (String, Boolean) -> Unit = { _, _ -> },
     onOpenPatches: () -> Unit,
     onOpenApp: (String) -> Unit,
@@ -131,8 +128,6 @@ fun HomeContent(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     var changelog by remember { mutableStateOf<Pair<String, String>?>(null) }
     var showExcludeDialog by remember { mutableStateOf(false) }
-    var showRequestDialog by remember { mutableStateOf(false) }
-    var selectedScopeApps by remember { mutableStateOf<Set<String>>(emptySet()) }
     var selectedFilter by remember { mutableStateOf(AppFilter.ALL) }
     val isMiuix = isMiuixStyle
 
@@ -169,10 +164,7 @@ fun HomeContent(
                                 R.string.scope_missing_text,
                                 state.missingScope.mapNotNull { state.apps[it] }.joinToString()
                             ),
-                            primary = stringResource(R.string.action_request) to {
-                                selectedScopeApps = state.missingScope.toSet()
-                                showRequestDialog = true
-                            },
+                            primary = stringResource(R.string.action_request) to onRequestScope,
                             secondary = (if (state.missingScope.size == 1) "Don't Patch" else "Exclude...") to {
                                 if (state.missingScope.size == 1) {
                                     onSetAppIgnored(state.missingScope.first(), true)
@@ -180,7 +172,7 @@ fun HomeContent(
                                     showExcludeDialog = true
                                 }
                             },
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         )
                     }
                 }
@@ -510,66 +502,6 @@ fun HomeContent(
                             onClick = {
                                 onSetAppIgnored(pkg, true)
                                 if (state.missingScope.size <= 1) showExcludeDialog = false
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    if (showRequestDialog && state.missingScope.isNotEmpty()) {
-        ThemedDialog(
-            show = true,
-            title = "Request Module Scope",
-            onDismissRequest = { showRequestDialog = false },
-            confirmText = "Request (${selectedScopeApps.size})",
-            onConfirm = {
-                if (selectedScopeApps.isNotEmpty()) {
-                    onRequestScope(selectedScopeApps)
-                }
-                showRequestDialog = false
-            },
-            dismissText = "Cancel",
-            onDismiss = { showRequestDialog = false },
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "Select which applications to add to the module scope in your Xposed framework:",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                state.missingScope.forEach { pkg ->
-                    val appName = state.apps[pkg] ?: pkg
-                    val isChecked = selectedScopeApps.contains(pkg)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                selectedScopeApps = if (isChecked) {
-                                    selectedScopeApps - pkg
-                                } else {
-                                    selectedScopeApps + pkg
-                                }
-                            }
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = appName,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Checkbox(
-                            checked = isChecked,
-                            onCheckedChange = { checked ->
-                                selectedScopeApps = if (checked) {
-                                    selectedScopeApps + pkg
-                                } else {
-                                    selectedScopeApps - pkg
-                                }
                             },
                         )
                     }

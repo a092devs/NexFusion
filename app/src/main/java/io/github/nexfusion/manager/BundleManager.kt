@@ -331,12 +331,6 @@ class BundleManager(private val context: Context, private val service: XposedSer
         io.github.nexfusion.updates.AppSettings(context).setPackageIgnored(packageName, ignored)
     }
 
-    val isLSPatch: Boolean
-        get() = runCatching {
-            service?.frameworkName?.contains("LSPatch", ignoreCase = true) == true ||
-            io.github.nexfusion.core.ModuleStatus.frameworkName()?.contains("LSPatch", ignoreCase = true) == true
-        }.getOrDefault(false)
-
     /**
      * Installed apps patched by enabled bundles that are not yet in the module scope.
      *
@@ -344,7 +338,6 @@ class BundleManager(private val context: Context, private val service: XposedSer
      */
     fun missingScope(): List<String> {
         val svc = service ?: return emptyList()
-        if (isLSPatch) return emptyList()
         val scope = runCatching { svc.scope.toSet() }.getOrDefault(emptySet())
         val ignored = ignoredPackages
         return installed.filter { it.enabled }.flatMap { it.apps.keys }.distinct()
@@ -357,10 +350,6 @@ class BundleManager(private val context: Context, private val service: XposedSer
     fun requestScope(packages: List<String>, onResult: (String) -> Unit) {
         val svc = service ?: run {
             onResult("Xposed framework service is currently inactive")
-            return
-        }
-        if (isLSPatch) {
-            onResult("In LSPatch, module scope is configured during app patching")
             return
         }
         svc.requestScope(packages, object : XposedService.OnScopeEventListener {

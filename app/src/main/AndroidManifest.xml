@@ -30,19 +30,6 @@
         android:directBootAware="false"
         android:extractNativeLibs="false">
 
-        <meta-data
-            android:name="xposedmodule"
-            android:value="true" />
-        <meta-data
-            android:name="xposeddescription"
-            android:value="@string/app_description" />
-        <meta-data
-            android:name="xposedminversion"
-            android:value="93" />
-        <meta-data
-            android:name="xposedscope"
-            android:resource="@array/xposed_scope" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -55,6 +42,7 @@
 
         <activity-alias
             android:name="io.github.nexfusion.ui.MainActivityAlias"
+            android:enabled="true"
             android:exported="true"
             android:targetActivity="io.github.nexfusion.ui.MainActivity">
             <intent-filter>
@@ -68,11 +56,17 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:showForAllUsers="true"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
+            </intent-filter>
+        </activity>
 
-        <!-- Dedicated Xposed settings category alias, can be disabled in stealth mode -->
+        <!-- Dedicated Xposed settings category alias, permanently accessible in Vector/LSPosed even when launcher icon is hidden -->
         <activity-alias
             android:name="io.github.nexfusion.ui.ModuleSettingsAlias"
+            android:enabled="true"
             android:exported="true"
             android:targetActivity="io.github.nexfusion.ui.MainActivity">
             <intent-filter>

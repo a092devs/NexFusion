@@ -163,6 +163,13 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         SettingApplication.addServiceStateListener(this, true)
+        // Ensure moduleSettingsAlias is always enabled so Vector / LSPosed can always launch NexFusion
+        runCatching {
+            val pm = context.packageManager
+            if (pm.getComponentEnabledSetting(moduleSettingsAlias) == PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                pm.setComponentEnabledSetting(moduleSettingsAlias, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+            }
+        }
         refresh()
         checkUpdates()
         refreshCacheSize()
@@ -808,7 +815,14 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         set(hidden) {
             val state = if (hidden) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
             context.packageManager.setComponentEnabledSetting(launcherAlias, state, PackageManager.DONT_KILL_APP)
-            runCatching { context.packageManager.setComponentEnabledSetting(moduleSettingsAlias, state, PackageManager.DONT_KILL_APP) }
+            // Ensure moduleSettingsAlias is always enabled so Vector / LSPosed can launch the app even if hidden from launcher
+            runCatching {
+                context.packageManager.setComponentEnabledSetting(
+                    moduleSettingsAlias,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+            }
         }
 
     // endregion

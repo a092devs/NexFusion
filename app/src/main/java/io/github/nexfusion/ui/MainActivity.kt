@@ -314,7 +314,9 @@ private fun ManagerApp(
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
+    val isTopLevel = topLevel.any { it.route == route }
     val isMiuix = isMiuixStyle
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(requestedDestination) {
         if (requestedDestination != null) {
@@ -324,46 +326,168 @@ private fun ManagerApp(
     }
     NotificationPermission()
 
-    if (isMiuix) {
-        MiuixManagerApp(
-            navController = navController,
-            viewModel = viewModel,
-            route = route,
-            floatingNavigation = floatingNavigation,
-        )
-    } else {
-        Material3ManagerApp(
-            navController = navController,
-            viewModel = viewModel,
-            route = route,
-        )
+    val navBarBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val contentBottomPadding = when {
+        !isTopLevel -> 16.dp
+        isMiuix && floatingNavigation -> 100.dp
+        isMiuix -> 84.dp + navBarBottomInset
+        else -> 80.dp + navBarBottomInset
     }
-}
 
-/**
- * Standard AndroidX Jetpack Compose Material 3 presentation.
- */
-@Composable
-private fun Material3ManagerApp(
-    navController: NavHostController,
-    viewModel: ManagerViewModel,
-    route: String?,
-) {
-    val isTopLevel = topLevel.any { it.route == route }
-    val snackbar = remember { SnackbarHostState() }
+    val systemDark = isSystemInDarkTheme()
+    val isDark = when (state.currentTheme) {
+        AppSettings.THEME_LIGHT -> false
+        AppSettings.THEME_DARK -> true
+        else -> systemDark
+    }
 
+    val blurSupported = isRuntimeShaderSupported()
+    val canvasBg = MaterialTheme.colorScheme.background
+    val isTranslucent = state.floatingBarTranslucent
+    val backdrop = if (isMiuix && floatingNavigation && blurSupported && isTranslucent) {
+        rememberLayerBackdrop {
+            drawRect(canvasBg)
+            drawContent()
+        }
+    } else null
+
+    val m3Snackbar = remember { SnackbarHostState() }
+    val miuixSnackbar = remember { MiuixSnackbarHostState() }
     LaunchedEffect(Unit) {
-        viewModel.messages.collect { snackbar.showSnackbar(it) }
+        viewModel.messages.collect { msg ->
+            if (isMiuix) {
+                miuixSnackbar.showSnackbar(msg)
+            } else {
+                m3Snackbar.showSnackbar(msg)
+            }
+        }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbar) },
-        bottomBar = {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(canvasBg)
+    ) {
+        // Content container hosting a single persistent NavHost that never resets across theme or design changes
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = MainActivity.DESTINATION_HOME,
+                enterTransition = navEnterTransition,
+                exitTransition = navExitTransition,
+                popEnterTransition = navEnterTransition,
+                popExitTransition = navExitTransition,
+            ) {
+                composable(MainActivity.DESTINATION_HOME) {
+                    HomeScreen(viewModel, navController, PaddingValues(bottom = contentBottomPadding))
+                }
+                composable(MainActivity.DESTINATION_PATCHES) {
+                    PatchesScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
+                }
+                composable(MainActivity.DESTINATION_SETTINGS) {
+                    SettingsScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
+                }
+                composable(
+                    "${MainActivity.DESTINATION_APP}/{packageName}",
+                    arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+                ) { entry ->
+                    AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
+                }
+            }
+
+            if (isMiuix) {
+                MiuixSnackbarHost(
+                    state = miuixSnackbar,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = contentBottomPadding),
+                )
+            } else {
+                SnackbarHost(
+                    hostState = m3Snackbar,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = contentBottomPadding),
+                )
+            }
+        }
+
+        if (isMiuix) {
+            if (floatingNavigation) {
+                AnimatedVisibility(
+                    visible = isTopLevel,
+                    enter = slideInVertically(
+                        animationSpec = tween(320, easing = FastOutSlowInEasing),
+                        initialOffsetY = { it },
+                    ) + fadeIn(animationSpec = tween(220)),
+                    exit = slideOutVertically(
+                        animationSpec = tween(220),
+                        targetOffsetY = { it / 2 },
+                    ) + fadeOut(animationSpec = tween(160)),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                        .padding(bottom = 12.dp + navBarBottomInset),
+                ) {
+                    val fluidTabs = remember(state.sourcesWithUpdates.size, state.appUpdate) {
+                        topLevel.map { item ->
+                            val badge = when (item.route) {
+                                MainActivity.DESTINATION_PATCHES -> state.sourcesWithUpdates.size
+                                MainActivity.DESTINATION_SETTINGS -> if (state.appUpdate != null) 1 else 0
+                                else -> 0
+                            }
+                            FluidTabItem(
+                                route = item.route,
+                                label = item.label,
+                                selectedIcon = item.selectedIcon,
+                                unselectedIcon = item.unselectedIcon,
+                                badgeCount = badge,
+                            )
+                        }
+                    }
+                    val selectedIndex = topLevel.indexOfFirst { it.route == route }.coerceAtLeast(0)
+                    FluidFloatingBottomBar(
+                        selectedIndex = selectedIndex,
+                        onSelected = { index ->
+                            val target = topLevel.getOrNull(index) ?: topLevel[0]
+                            navController.navigateTopLevel(target.route)
+                        },
+                        tabs = fluidTabs,
+                        isTranslucent = state.floatingBarTranslucent,
+                        isDark = isDark,
+                        backdrop = backdrop,
+                    )
+                }
+            } else {
+                AnimatedVisibility(
+                    visible = isTopLevel,
+                    enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
+                    exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                ) {
+                    MiuixNavigationBar {
+                        topLevel.forEach { item ->
+                            val selected = route == item.route
+                            MiuixNavigationBarItem(
+                                selected = selected,
+                                onClick = { navController.navigateTopLevel(item.route) },
+                                icon = if (selected) item.selectedIcon else item.unselectedIcon,
+                                label = stringResource(item.label),
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
             AnimatedVisibility(
                 visible = isTopLevel,
                 enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
                 exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
+                modifier = Modifier.align(Alignment.BottomCenter),
             ) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -384,257 +508,6 @@ private fun Material3ManagerApp(
                     }
                 }
             }
-        },
-    ) { padding ->
-        NavHost(
-            navController,
-            startDestination = MainActivity.DESTINATION_HOME,
-            enterTransition = navEnterTransition,
-            exitTransition = navExitTransition,
-            popEnterTransition = navEnterTransition,
-            popExitTransition = navExitTransition,
-        ) {
-            composable(MainActivity.DESTINATION_HOME) {
-                HomeScreen(viewModel, navController, padding)
-            }
-            composable(MainActivity.DESTINATION_PATCHES) {
-                PatchesScreen(viewModel, padding)
-            }
-            composable(MainActivity.DESTINATION_SETTINGS) {
-                SettingsScreen(viewModel, padding)
-            }
-            composable(
-                "${MainActivity.DESTINATION_APP}/{packageName}",
-                arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-            ) { entry ->
-                AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
-            }
-        }
-    }
-}
-
-/**
- * Official Miuix (Xiaomi HyperOS) presentation.
- *
- * The floating navigation bar is an opt-in preference and disabled by default; the standard
- * Miuix [NavigationBar] is the default arrangement. Blur is only used when the runtime shader
- * support check passes, with an opaque surface fallback otherwise.
- */
-@Composable
-private fun MiuixManagerApp(
-    navController: NavHostController,
-    viewModel: ManagerViewModel,
-    route: String?,
-    floatingNavigation: Boolean,
-) {
-    val isTopLevel = topLevel.any { it.route == route }
-
-    val snackbar = remember { MiuixSnackbarHostState() }
-    LaunchedEffect(Unit) {
-        viewModel.messages.collect { snackbar.showSnackbar(it) }
-    }
-
-    // The window background follows the *system* night mode while the app can force its own
-    // light/dark preference, so the Miuix presentation paints the page itself: the same
-    // charcoal/off-white tones the window otherwise provides (see values/themes.xml and
-    // values-night/themes.xml), resolved from the app's own mode.
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val isDark = when (state.currentTheme) {
-        AppSettings.THEME_LIGHT -> false
-        AppSettings.THEME_DARK -> true
-        else -> isSystemInDarkTheme()
-    }
-    val canvasBg = MaterialTheme.colorScheme.background
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(canvasBg),
-    ) {
-        if (floatingNavigation) {
-            MiuixFloatingNavigationApp(navController, viewModel, isTopLevel, snackbar)
-        } else {
-            MiuixStandardNavigationApp(navController, viewModel, route, isTopLevel, snackbar)
-        }
-    }
-}
-
-@Composable
-private fun MiuixNavHost(
-    navController: NavHostController,
-    viewModel: ManagerViewModel,
-    contentPadding: PaddingValues,
-) {
-    NavHost(
-        navController = navController,
-        startDestination = MainActivity.DESTINATION_HOME,
-        enterTransition = navEnterTransition,
-        exitTransition = navExitTransition,
-        popEnterTransition = navEnterTransition,
-        popExitTransition = navExitTransition,
-    ) {
-        composable(MainActivity.DESTINATION_HOME) {
-            HomeScreen(viewModel, navController, contentPadding)
-        }
-        composable(MainActivity.DESTINATION_PATCHES) {
-            PatchesScreen(viewModel, contentPadding)
-        }
-        composable(MainActivity.DESTINATION_SETTINGS) {
-            SettingsScreen(viewModel, contentPadding)
-        }
-        composable(
-            "${MainActivity.DESTINATION_APP}/{packageName}",
-            arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-        ) { entry ->
-            AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
-        }
-    }
-}
-
-/**
- * Default Miuix arrangement: a standard navigation bar that occupies layout space, so no
- * content is ever hidden behind it.
- */
-@Composable
-private fun MiuixStandardNavigationApp(
-    navController: NavHostController,
-    viewModel: ManagerViewModel,
-    route: String?,
-    isTopLevel: Boolean,
-    snackbar: MiuixSnackbarHostState,
-) {
-    val navBarHeight = 84.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    Box(modifier = Modifier.fillMaxSize()) {
-        MiuixNavHost(
-            navController = navController,
-            viewModel = viewModel,
-            contentPadding = PaddingValues(bottom = if (isTopLevel) navBarHeight else 16.dp),
-        )
-        MiuixSnackbarHost(
-            state = snackbar,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = if (isTopLevel) navBarHeight else 16.dp),
-        )
-        AnimatedVisibility(
-            visible = isTopLevel,
-            enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
-            exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
-            modifier = Modifier.align(Alignment.BottomCenter),
-        ) {
-            MiuixNavigationBar {
-                topLevel.forEach { item ->
-                    val selected = route == item.route
-                    MiuixNavigationBarItem(
-                        selected = selected,
-                        onClick = { navController.navigateTopLevel(item.route) },
-                        icon = if (selected) item.selectedIcon else item.unselectedIcon,
-                        label = stringResource(item.label),
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Opt-in floating navigation bar with an official blur backdrop when runtime shader support is
- * available, and an opaque surface otherwise.
- */
-@Composable
-private fun MiuixFloatingNavigationApp(
-    navController: NavHostController,
-    viewModel: ManagerViewModel,
-    isTopLevel: Boolean,
-    snackbar: MiuixSnackbarHostState,
-) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val systemDark = isSystemInDarkTheme()
-    val isDark = when (state.currentTheme) {
-        AppSettings.THEME_LIGHT -> false
-        AppSettings.THEME_DARK -> true
-        else -> systemDark
-    }
-    val route = navController.currentBackStackEntryAsState().value?.destination?.route
-
-    val blurSupported = isRuntimeShaderSupported()
-    val canvasBg = MaterialTheme.colorScheme.background
-    val isTranslucent = state.floatingBarTranslucent
-    val backdrop = if (blurSupported && isTranslucent) {
-        rememberLayerBackdrop {
-            drawRect(canvasBg)
-            drawContent()
-        }
-    } else null
-    val blurActive = backdrop != null
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Main content container with layerBackdrop attached to capture scrolling content
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(canvasBg)
-                .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
-        ) {
-            // Give 96dp bottom clearance on top-level screens so the floating bar never covers content
-            val bottomPadding = if (isTopLevel) 100.dp else 16.dp
-            MiuixNavHost(
-                navController = navController,
-                viewModel = viewModel,
-                contentPadding = PaddingValues(bottom = bottomPadding),
-            )
-            MiuixSnackbarHost(
-                state = snackbar,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = bottomPadding),
-            )
-        }
-
-        // Liquid glass floating navigation bar with fluid spring physics, touch drag navigation,
-        // and realtime backdrop blur.
-        AnimatedVisibility(
-            visible = isTopLevel,
-            enter = slideInVertically(
-                animationSpec = tween(320, easing = FastOutSlowInEasing),
-                initialOffsetY = { it },
-            ) + fadeIn(animationSpec = tween(220)),
-            exit = slideOutVertically(
-                animationSpec = tween(220),
-                targetOffsetY = { it / 2 },
-            ) + fadeOut(animationSpec = tween(160)),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
-                .padding(bottom = 12.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
-        ) {
-            val fluidTabs = remember(state.sourcesWithUpdates.size, state.appUpdate) {
-                topLevel.map { item ->
-                    val badge = when (item.route) {
-                        MainActivity.DESTINATION_PATCHES -> state.sourcesWithUpdates.size
-                        MainActivity.DESTINATION_SETTINGS -> if (state.appUpdate != null) 1 else 0
-                        else -> 0
-                    }
-                    FluidTabItem(
-                        route = item.route,
-                        label = item.label,
-                        selectedIcon = item.selectedIcon,
-                        unselectedIcon = item.unselectedIcon,
-                        badgeCount = badge,
-                    )
-                }
-            }
-            val selectedIndex = topLevel.indexOfFirst { it.route == route }.coerceAtLeast(0)
-            FluidFloatingBottomBar(
-                selectedIndex = selectedIndex,
-                onSelected = { index ->
-                    val target = topLevel.getOrNull(index) ?: topLevel[0]
-                    navController.navigateTopLevel(target.route)
-                },
-                tabs = fluidTabs,
-                isTranslucent = state.floatingBarTranslucent,
-                isDark = isDark,
-                backdrop = backdrop,
-            )
         }
     }
 }
