@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.4.1-beta1
+
+- **Patcher & Module Synchronization:**
+  * Synchronized patch execution with NexFusion Patches v4.4.1-beta1.
+  * Verified direct toggle application and settings persistence across all supported targets.
+
 ## 4.4.0
 
 - **Navigation & Settings:**
