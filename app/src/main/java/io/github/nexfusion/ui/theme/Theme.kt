@@ -15,7 +15,10 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -216,6 +219,13 @@ fun NexFusionTheme(
     val context = LocalContext.current
     val accent = schemeSeed(colorScheme)
 
+    val currentContent by rememberUpdatedState(content)
+    val movableContent = remember {
+        movableContentOf {
+            currentContent()
+        }
+    }
+
     if (style == ThemeStyle.MIUIX) {
         val colorSchemeMode = if (isDark) ColorSchemeMode.MonetDark else ColorSchemeMode.MonetLight
         val controller = remember(colorSchemeMode, accent, isDark) {
@@ -239,15 +249,10 @@ fun NexFusionTheme(
         ) {
             MiuixTheme(controller = controller) {
                 MaterialTheme(colorScheme = m3Equivalent) {
-                    // Miuix components only provide their own content colour, so Material
-                    // building blocks in this branch (bare Text/Icon without an explicit
-                    // colour) would otherwise fall back to Color.Black - unreadable on the
-                    // dark Miuix surfaces. Keep AndroidX's content colour aligned with the
-                    // Material role equivalent used while Miuix is active.
                     CompositionLocalProvider(
                         LocalContentColor provides m3Equivalent.onBackground,
                     ) {
-                        content()
+                        movableContent()
                     }
                 }
             }
@@ -265,7 +270,9 @@ fun NexFusionTheme(
             LocalThemeStyle provides ThemeStyle.MATERIAL3,
             LocalNexFusionThemeConfig provides themeConfig,
         ) {
-            MaterialTheme(colorScheme = m3Colors, content = content)
+            MaterialTheme(colorScheme = m3Colors) {
+                movableContent()
+            }
         }
     }
 }

@@ -137,12 +137,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: ManagerViewModel = viewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
+            val navController = rememberNavController()
             NexFusionTheme(
                 themeModeRaw = state.currentTheme,
                 themeStyle = state.currentThemeStyle,
                 colorSchemeRaw = state.currentColorScheme,
             ) {
                 ManagerApp(
+                    navController = navController,
                     viewModel = viewModel,
                     requestedDestination = requestedDestination,
                     floatingNavigation = state.floatingNavigation,
@@ -306,12 +308,12 @@ private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>
 
 @Composable
 private fun ManagerApp(
+    navController: NavHostController,
     viewModel: ManagerViewModel,
     requestedDestination: String?,
     floatingNavigation: Boolean,
     onDestinationHandled: () -> Unit,
 ) {
-    val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     val isTopLevel = topLevel.any { it.route == route }
