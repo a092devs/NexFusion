@@ -5,6 +5,15 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.4.2
+
+- **Target Application Catalog & Maintenance:**
+  * Deprecated and removed Facebook, Kick, and Twitch from known supported applications, discovery catalogs, and matrix documentation to align with NexFusion Patches 4.4.4.
+  * Replaced deprecated apps with Spotify in popular recommendation queues and unit test coverage.
+- **Patcher & Module Synchronization:**
+  * Synchronized patch execution and compatibility engine with NexFusion Patches v4.4.4.
+  * Streamlined CI pipeline duplicate push checks on beta branches to complete cleanly without cancelling.
+
 ## 4.4.1
 
 - **Navigation & Settings:**

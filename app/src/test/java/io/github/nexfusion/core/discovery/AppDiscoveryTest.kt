@@ -9,12 +9,12 @@ class AppDiscoveryTest {
     fun bundleCardsListOnlyAppsInstalledOnThisDevice() {
         val apps = mapOf(
             "com.instagram.android" to "Instagram",
-            "tv.twitch.android.app" to "Twitch",
+            "com.spotify.music" to "Spotify",
             "com.google.android.youtube" to "YouTube",
         )
         assertEquals(
             listOf("Instagram", "YouTube"),
-            AppDiscovery.installedAppNames(apps) { it != "tv.twitch.android.app" },
+            AppDiscovery.installedAppNames(apps) { it != "com.spotify.music" },
         )
     }
 
@@ -32,7 +32,7 @@ class AppDiscoveryTest {
     fun aBundleWithNoInstalledAppsHasNoNames() {
         assertEquals(
             emptyList(),
-            AppDiscovery.installedAppNames(mapOf("tv.twitch.android.app" to "Twitch")) { false },
+            AppDiscovery.installedAppNames(mapOf("com.spotify.music" to "Spotify")) { false },
         )
     }
 }

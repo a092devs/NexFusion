@@ -46,7 +46,7 @@ Unlike traditional ahead-of-time (AOT) patchers that decompile, modify, re-sign,
 ## 🚀 Getting Started
 
 1. **📥 Install NexFusion:** Download the signed release APK from [Releases](https://github.com/a092devs/NexFusion/releases).
-2. **🛡️ Configure LSPosed Scope:** Enable the **NexFusion** module in LSPosed and check the scope for your target apps (e.g. YouTube, Reddit, Instagram, Facebook, X, Maps).
+2. **🛡️ Configure LSPosed Scope:** Enable the **NexFusion** module in LSPosed and check the scope for your target apps (e.g. YouTube, Reddit, Instagram, Spotify, X, Maps).
 3. **📦 Install Patch Bundles:** Open NexFusion → **Patches** tab. The official companion repository (`a092devs/Nexfusion-Patches`) is pre-configured; tap **Install** on `NexFusion Patches`.
 4. **⚙️ Toggle Desired Patches:** Open the **Home** tab, tap any supported application card, and enable your preferred runtime hooks.
 5. **🔄 Apply & Restart:** Tap **Force Stop** or use the 1-tap **App Info** shortcut to restart the target application and let LSPosed attach the updated bytecode hooks.
@@ -124,25 +124,23 @@ The official companion patch repository is maintained at:
 - 🔗 **[a092devs/Nexfusion-Patches](https://github.com/a092devs/Nexfusion-Patches)**
 
 ### Included Bundles:
-- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **20 supported application targets**:
-  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch, VLC, Stremio
-  - 💬 **Social & Communication:** Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn
-  - 🛠️ **System & Productivity:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN
+- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering **17 supported application targets**:
+  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, VLC, Stremio
+  - 💬 **Social & Communication:** Instagram, X (Twitter), Reddit, Discord, LinkedIn
+  - 🛠️ **System, Productivity & Audio:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN, Spotify
 
 ---
 
 ## 📱 Supported Applications Matrix
 
 <details>
-<summary><b>🎥 Video, Audio & Streaming (7 Targets)</b> — <i>YouTube, YouTube Music, Kick, Twitch, Crunchyroll, VLC, Stremio</i></summary>
+<summary><b>🎥 Video, Audio & Streaming (5 Targets)</b> — <i>YouTube, YouTube Music, Crunchyroll, VLC, Stremio</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
 |---|---|---|
 | **YouTube** | `com.google.android.youtube` | Ad-free playback, SponsorBlock, background audio, DeArrow replacement, custom speed/quality dialogs, swipe volume/brightness, miniplayer, ambient mode, Litho node bypass, channel search fix. |
 | **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners, SoundProof AI blocker, Playlist tags, offline fullscreen player, mark downloaded songs, third-party lyrics enhancement. |
-| **Kick** | `com.kick.mobile` | Live stream & VOD ad blocking, background playback, custom chat emotes (7TV, BTTV, FFZ), telemetry suppression, AMOLED black theme. |
-| **Twitch** | `tv.twitch.android.app` | Stream and display ad blocking, 7TV / BTTV / FFZ chat emotes, background playback, telemetry suppression, AMOLED black theme. |
 | **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
 | **VLC** | `org.videolan.vlc` | AMOLED pure black theme; suppress What's New changelog dialog on updates; unlock experimental feature flags; force bitstream audio passthrough (digital output); force AAudio low-latency output; raise network cache to 3000ms; disable audio time-stretch for artifact-free 1x speed playback; force ReplayGain track normalization with peak protection; verbose libVLC logging. |
 | **Stremio** | `com.stremio.one` | Auto & manual intro/credits skipping using embedded chapters and stream metadata; auto-pick best stream (resolves 4K/cached stream on tap); hide episode spoilers (synopses & thumbnails); avoid SDH subtitles; audio & subtitle track language memory; smoother playback buffer expansion (120s); seamless binge watching; external player progress & subtitle hand-off (VLC, Vimu). |
@@ -150,13 +148,12 @@ The official companion patch repository is maintained at:
 </details>
 
 <details>
-<summary><b>💬 Social Networks & Messaging (6 Targets)</b> — <i>Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn</i></summary>
+<summary><b>💬 Social Networks & Messaging (5 Targets)</b> — <i>Instagram, X (Twitter), Reddit, Discord, LinkedIn</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
 |---|---|---|
 | **Instagram** | `com.instagram.android` | Media downloader for feed posts, Reels, Stories, Highlights, and profile pictures; remove sponsored feed posts, Reels, and Story ads; anonymous Story and Live viewing; strip tracking parameters; ghost mode. |
-| **Facebook** | `com.facebook.katana` | Media downloader for videos, photos, Reels, and Stories with DASH stream audio muxing; sponsored post and Reel ad removal; bypass screenshot and screen recording restrictions; telemetry blocking. |
 | **X (Twitter)** | `com.twitter.android` | Promoted post and ad removal; video and GIF media downloader; bypass Compose sensitive media blur interstitials without tap-to-reveal; block forced updates; telemetry blackholing. |
 | **Reddit** | `com.reddit.frontpage` | Feed and comment ad removal; guest browsing mode; sanitize shared URLs; suppress screenshot sharing bottom sheet; unmute Redgifs streams; custom feed sorting. |
 | **Discord** | `com.discord` | Suppress crash telemetry, analytics, touch logging, and advertising identifiers; native system font typography support across chat and UI surfaces. |

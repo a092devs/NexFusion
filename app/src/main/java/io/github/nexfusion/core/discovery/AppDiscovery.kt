@@ -254,12 +254,6 @@ object AppDiscovery {
             appIconColor = 0x34A853,
         ),
         KnownSupportedApp(
-            packageName = "com.facebook.katana",
-            appName = "Facebook",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x0866FF,
-        ),
-        KnownSupportedApp(
             packageName = "com.crunchyroll.crunchyroid",
             appName = "Crunchyroll",
             defaultBundleName = "NexFusion Patches",
@@ -288,18 +282,6 @@ object AppDiscovery {
             appName = "X",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x000000,
-        ),
-        KnownSupportedApp(
-            packageName = "com.kick.mobile",
-            appName = "Kick",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x53FC18,
-        ),
-        KnownSupportedApp(
-            packageName = "tv.twitch.android.app",
-            appName = "Twitch",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x9146FF,
         ),
         KnownSupportedApp(
             packageName = "org.videolan.vlc",

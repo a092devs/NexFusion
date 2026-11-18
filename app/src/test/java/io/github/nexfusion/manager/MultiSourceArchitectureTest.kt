@@ -127,7 +127,7 @@ class MultiSourceArchitectureTest {
             fileName = "bundle2.apk",
             enabled = true,
             sourceId = "src2",
-            apps = mapOf("tv.twitch.android.app" to "Twitch"),
+            apps = mapOf("com.spotify.music" to "Spotify"),
         )
 
         val enabledSourceIds = sources.filter { it.enabled }.map { it.id }.toSet()
