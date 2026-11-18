@@ -7,6 +7,8 @@ the release notes, falling back to generated commit notes when no section exists
 
 ## 4.4.1-beta1
 
+- **Navigation & Settings:**
+  * Hoisted NavController and wrapped content in movableContentOf to preserve active destination and full backstack across design system switches (Material 3 / Miuix) without resetting to home.
 - **Patcher & Module Synchronization:**
   * Synchronized patch execution with NexFusion Patches v4.4.1-beta1.
   * Verified direct toggle application and settings persistence across all supported targets.
