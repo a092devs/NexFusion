@@ -771,7 +771,7 @@ private fun BundleCard(
                 var expanded by remember { mutableStateOf(false) }
                 val maxInitial = 4
                 val popularOrder = remember {
-                    listOf("YouTube", "YouTube Music", "Reddit", "X", "Discord", "Instagram", "Telegram", "Google Maps", "Google Photos", "Twitch")
+                    listOf("YouTube", "YouTube Music", "Reddit", "X", "Discord", "Instagram", "Google Maps", "Google Photos", "Twitch")
                 }
                 val sortedApps = remember(appNames) {
                     appNames.sortedWith(

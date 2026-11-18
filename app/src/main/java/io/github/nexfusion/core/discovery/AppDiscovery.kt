@@ -290,18 +290,6 @@ object AppDiscovery {
             appIconColor = 0x000000,
         ),
         KnownSupportedApp(
-            packageName = "org.telegram.messenger",
-            appName = "Telegram",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x2AABEE,
-        ),
-        KnownSupportedApp(
-            packageName = "org.telegram.messenger.web",
-            appName = "Telegram (Web)",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x2AABEE,
-        ),
-        KnownSupportedApp(
             packageName = "com.kick.mobile",
             appName = "Kick",
             defaultBundleName = "NexFusion Patches",

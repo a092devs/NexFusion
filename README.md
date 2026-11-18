@@ -46,7 +46,7 @@ Unlike traditional ahead-of-time (AOT) patchers that decompile, modify, re-sign,
 ## 🚀 Getting Started
 
 1. **📥 Install NexFusion:** Download the signed release APK from [Releases](https://github.com/a092devs/NexFusion/releases).
-2. **🛡️ Configure LSPosed Scope:** Enable the **NexFusion** module in LSPosed and check the scope for your target apps (e.g. YouTube, Reddit, Instagram, Facebook, Telegram, X, Maps).
+2. **🛡️ Configure LSPosed Scope:** Enable the **NexFusion** module in LSPosed and check the scope for your target apps (e.g. YouTube, Reddit, Instagram, Facebook, X, Maps).
 3. **📦 Install Patch Bundles:** Open NexFusion → **Patches** tab. The official companion repository (`a092devs/Nexfusion-Patches`) is pre-configured; tap **Install** on `NexFusion Patches`.
 4. **⚙️ Toggle Desired Patches:** Open the **Home** tab, tap any supported application card, and enable your preferred runtime hooks.
 5. **🔄 Apply & Restart:** Tap **Force Stop** or use the 1-tap **App Info** shortcut to restart the target application and let LSPosed attach the updated bytecode hooks.
@@ -124,9 +124,9 @@ The official companion patch repository is maintained at:
 - 🔗 **[a092devs/Nexfusion-Patches](https://github.com/a092devs/Nexfusion-Patches)**
 
 ### Included Bundles:
-- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **22 supported application targets**:
+- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering all **20 supported application targets**:
   - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Kick, Twitch, VLC, Stremio
-  - 💬 **Social & Communication:** Telegram, Telegram (Web), Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn
+  - 💬 **Social & Communication:** Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn
   - 🛠️ **System & Productivity:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN
 
 ---
@@ -150,13 +150,11 @@ The official companion patch repository is maintained at:
 </details>
 
 <details>
-<summary><b>💬 Social Networks & Messaging (8 Targets)</b> — <i>Telegram, Telegram (Web), Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn</i></summary>
+<summary><b>💬 Social Networks & Messaging (6 Targets)</b> — <i>Instagram, Facebook, X (Twitter), Reddit, Discord, LinkedIn</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
 |---|---|---|
-| **Telegram** | `org.telegram.messenger` | Remove channel sponsored messages, bot ads, and video promotions; hide Story bar and avatar story rings; keep deleted messages locally; exact unrounded counts; 512 KB fast multi-connection downloads; block update dialogs; disable telemetry; auto-reveal spoilers; pure black AMOLED dark theme. |
-| **Telegram (Web)** | `org.telegram.messenger.web` | Identical full-suite runtime patches as official Telegram for web-distributed standalone builds. |
 | **Instagram** | `com.instagram.android` | Media downloader for feed posts, Reels, Stories, Highlights, and profile pictures; remove sponsored feed posts, Reels, and Story ads; anonymous Story and Live viewing; strip tracking parameters; ghost mode. |
 | **Facebook** | `com.facebook.katana` | Media downloader for videos, photos, Reels, and Stories with DASH stream audio muxing; sponsored post and Reel ad removal; bypass screenshot and screen recording restrictions; telemetry blocking. |
 | **X (Twitter)** | `com.twitter.android` | Promoted post and ad removal; video and GIF media downloader; bypass Compose sensitive media blur interstitials without tap-to-reveal; block forced updates; telemetry blackholing. |
