@@ -127,7 +127,7 @@ The official companion patch repository is maintained at:
 - **`Nexfusion-Patches`:** Unified community runtime patch distribution covering **17 supported application targets**:
   - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, VLC, Stremio
   - 💬 **Social & Communication:** Instagram, X (Twitter), Reddit, Discord, LinkedIn
-  - 🛠️ **System, Productivity & Audio:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN, Spotify
+  - 🛠️ **System, Productivity & Audio:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN, 1.1.1.1, Spotify
 
 ---
 
@@ -162,7 +162,7 @@ The official companion patch repository is maintained at:
 </details>
 
 <details>
-<summary><b>🛠️ System, Productivity & Utilities (6 Targets)</b> — <i>Google Photos, Google Maps, Gboard, Gmail, Google App (Discover), Proton VPN</i></summary>
+<summary><b>🛠️ System, Productivity & Utilities (7 Targets)</b> — <i>Google Photos, Google Maps, Gboard, Gmail, Google App (Discover), Proton VPN, 1.1.1.1</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
@@ -173,6 +173,7 @@ The official companion patch repository is maintained at:
 | **Gmail** | `com.google.android.gm` | Suppress sponsored promotional and advertising cards in personal inboxes. |
 | **Google App (Discover)** | `com.google.android.googlequicksearchbox` | Filter sponsored cards, shopping ads, and promotional recommendations in the Discover feed. |
 | **Proton VPN** | `ch.protonvpn.android` | Suppress upgrade banners and nag dialogs; unlock NetShield UI toggles; disable telemetry and background observability workers. |
+| **1.1.1.1** | `com.cloudflare.onedotonedotonedotone` | Spoof WARP+ Unlimited account tier in UI, disable telemetry, and optionally bypass SSL certificate pinning. |
 
 </details>
 

@@ -230,6 +230,12 @@ object AppDiscovery {
             appIconColor = 0x6D4AFF,
         ),
         KnownSupportedApp(
+            packageName = "com.cloudflare.onedotonedotonedotone",
+            appName = "1.1.1.1",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0xF48120,
+        ),
+        KnownSupportedApp(
             packageName = "com.google.android.inputmethod.latin",
             appName = "Gboard",
             defaultBundleName = "NexFusion Patches",
