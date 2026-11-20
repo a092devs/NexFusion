@@ -132,27 +132,46 @@ private const val LIGHT_REF_Y = 0.7f
 private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f
 private const val GRAVITY_ANGLE_STEP_RAD = (3.0 * PI / 180.0).toFloat()
 
+/** Tracks gravity for a `dualPeak` highlight's primary light, with an extra UV-clockwise offset on top. */
+@Composable
+private fun rememberQuantizedGravityAngle(): State<Float> {
+    val tiltState = rememberDeviceTilt()
+    return remember(tiltState) {
+        derivedStateOf {
+            val tilt = tiltState.value
+            val magnitudeSquared = tilt.gravityX * tilt.gravityX + tilt.gravityY * tilt.gravityY
+            if (magnitudeSquared > GRAVITY_DIR_THRESHOLD_SQ) {
+                (atan2(tilt.gravityY, tilt.gravityX) / GRAVITY_ANGLE_STEP_RAD).roundToInt() * GRAVITY_ANGLE_STEP_RAD
+            } else {
+                (-PI / 2).toFloat()
+            }
+        }
+    }
+}
+
 @Composable
 private fun rememberGravityRotatedHighlight(
     base: Highlight,
     extraDegrees: Float = 0f,
 ): State<Highlight> {
     val baseStyle = base.style as BloomStroke
-    return remember(base, extraDegrees) {
-        val basePrimary = baseStyle.primaryLight
-        val rad = (-PI / 2 + (extraDegrees * PI / 180.0)).toFloat()
-        val staticHighlight = base.copy(
-            style = baseStyle.copy(
-                primaryLight = basePrimary.copy(
-                    position = LightPosition(
-                        x = LIGHT_REF_X + cos(rad),
-                        y = LIGHT_REF_Y + sin(rad),
-                        z = basePrimary.position.z,
+    val angle = rememberQuantizedGravityAngle()
+    return remember(angle, base, extraDegrees) {
+        derivedStateOf {
+            val basePrimary = baseStyle.primaryLight
+            val rad = angle.value + (extraDegrees * PI / 180.0).toFloat()
+            base.copy(
+                style = baseStyle.copy(
+                    primaryLight = basePrimary.copy(
+                        position = LightPosition(
+                            x = LIGHT_REF_X + cos(rad),
+                            y = LIGHT_REF_Y + sin(rad),
+                            z = basePrimary.position.z,
+                        ),
                     ),
                 ),
-            ),
-        )
-        androidx.compose.runtime.mutableStateOf(staticHighlight)
+            )
+        }
     }
 }
 
@@ -237,6 +256,7 @@ fun FluidFloatingBottomBar(
     }
 
     val effectiveBackdrop: Backdrop = backdrop ?: rememberLayerBackdrop()
+    val tabsBackdrop = rememberLayerBackdrop()
     val density = LocalDensity.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val animationScope = rememberCoroutineScope()
@@ -349,110 +369,76 @@ fun FluidFloatingBottomBar(
     val baseHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = -45f)
     val pillHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = 90f)
 
+    val combinedBackdrop = rememberCombinedBackdrop(effectiveBackdrop, tabsBackdrop)
+
     Box(
-        modifier = modifier
-            .width(IntrinsicSize.Min)
-            .height(64.dp)
-            .onGloballyPositioned { coords ->
-                totalWidthPx = coords.size.width.toFloat()
-                val contentWidthPx = totalWidthPx - with(density) { 8.dp.toPx() }
-                tabWidthPx = (contentWidthPx / tabsCount).coerceAtLeast(0f)
-            }
-            .graphicsLayer { translationX = panelOffset }
-            .shadow(
-                elevation = 12.dp,
-                shape = pillShape,
-                spotColor = Color.Black.copy(alpha = if (isDark) 0.35f else 0.15f),
-                ambientColor = Color.Black.copy(alpha = if (isDark) 0.20f else 0.08f),
-            )
-            .then(
-                if (isBlurEffective) {
-                    Modifier.drawBackdrop(
-                        backdrop = effectiveBackdrop,
-                        shape = { pillShape },
-                        effects = {
-                            padding = maxOf(padding, 40.dp.toPx())
-                            vibrancy()
-                            blur(4.dp.toPx(), 4.dp.toPx())
-                            lens(
-                                refractionHeight = 24.dp.toPx(),
-                                refractionAmount = 24.dp.toPx(),
-                            )
-                        },
-                        highlight = { baseHighlight.value.copy(alpha = 0.75f) },
-                        layerBlock = {
-                            val width = size.width.coerceAtLeast(1f)
-                            val s = lerp(
-                                1f,
-                                1f + 16.dp.toPx() / width,
-                                dampedDragAnimation.pressProgress,
-                            )
-                            scaleX = s
-                            scaleY = s
-                        },
-                        onDrawSurface = { drawRect(containerColor) },
-                    )
-                } else {
-                    Modifier
-                        .clip(pillShape)
-                        .background(containerColor, pillShape)
-                        .border(
-                            width = 1.dp,
-                            color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f),
-                            shape = pillShape,
-                        )
-                },
-            )
-            .then(
-                if (isBlurEffective) {
-                    interactiveHighlight.modifier.then(interactiveHighlight.gestureModifier)
-                } else {
-                    Modifier
-                },
-            )
-            .then(dampedDragAnimation.modifier)
-            .padding(4.dp),
+        modifier = modifier.width(IntrinsicSize.Min),
         contentAlignment = Alignment.CenterStart,
     ) {
-        // Dynamic Spring-Sliding Indicator Pill (rendered behind tab items for zero jitter or clipping tearing)
-        if (tabWidthPx > 0f) {
-            val tabWidthDp = with(density) { tabWidthPx.toDp() }
-            val pillBg = if (isBlurEffective) {
-                accentColor.copy(alpha = if (isDark) 0.28f else 0.18f)
-            } else {
-                primaryContainer
-            }
-            Box(
-                Modifier
-                    .graphicsLayer {
-                        val progressOffset = dampedDragAnimation.value * tabWidthPx
-                        translationX = if (isLtr) progressOffset else -progressOffset
-                        scaleX = dampedDragAnimation.scaleX
-                        scaleY = dampedDragAnimation.scaleY
-                    }
-                    .clip(pillShape)
-                    .background(pillBg, pillShape)
-                    .then(
-                        if (isBlurEffective) {
-                            Modifier.border(
-                                width = 1.dp,
-                                color = accentColor.copy(alpha = if (isDark) 0.35f else 0.22f),
-                                shape = pillShape,
-                            )
-                        } else {
-                            Modifier
-                        }
-                    )
-                    .height(56.dp)
-                    .width(tabWidthDp),
-            )
-        }
-
-        // Tab Items Row (single clean layer, perfectly centered, zero text overlap)
+        // Base Navigation Bar Container
         Row(
             Modifier
+                .onGloballyPositioned { coords ->
+                    totalWidthPx = coords.size.width.toFloat()
+                    val contentWidthPx = totalWidthPx - with(density) { 8.dp.toPx() }
+                    tabWidthPx = (contentWidthPx / tabsCount).coerceAtLeast(0f)
+                }
                 .selectableGroup()
-                .fillMaxHeight(),
+                .graphicsLayer { translationX = panelOffset }
+                .shadow(
+                    elevation = 12.dp,
+                    shape = pillShape,
+                    spotColor = Color.Black.copy(alpha = if (isDark) 0.35f else 0.15f),
+                    ambientColor = Color.Black.copy(alpha = if (isDark) 0.20f else 0.08f),
+                )
+                .then(
+                    if (isBlurEffective) {
+                        Modifier.drawBackdrop(
+                            backdrop = effectiveBackdrop,
+                            shape = { pillShape },
+                            effects = {
+                                padding = maxOf(padding, 40.dp.toPx())
+                                vibrancy()
+                                blur(4.dp.toPx(), 4.dp.toPx())
+                                lens(
+                                    refractionHeight = 24.dp.toPx(),
+                                    refractionAmount = 24.dp.toPx(),
+                                )
+                            },
+                            highlight = { baseHighlight.value.copy(alpha = 0.75f) },
+                            layerBlock = {
+                                val width = size.width.coerceAtLeast(1f)
+                                val s = lerp(
+                                    1f,
+                                    1f + 16.dp.toPx() / width,
+                                    dampedDragAnimation.pressProgress,
+                                )
+                                scaleX = s
+                                scaleY = s
+                            },
+                            onDrawSurface = { drawRect(containerColor) },
+                        )
+                    } else {
+                        Modifier
+                            .clip(pillShape)
+                            .background(containerColor, pillShape)
+                            .border(
+                                width = 1.dp,
+                                color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.06f),
+                                shape = pillShape,
+                            )
+                    },
+                )
+                .then(
+                    if (isBlurEffective) {
+                        interactiveHighlight.modifier.then(interactiveHighlight.gestureModifier)
+                    } else {
+                        Modifier
+                    },
+                )
+                .then(dampedDragAnimation.modifier)
+                .height(64.dp)
+                .padding(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CompositionLocalProvider(LocalContentColor provides tabContentColor) {
@@ -460,10 +446,11 @@ fun FluidFloatingBottomBar(
                     val isSelected = index == currentIndex
                     val distance = abs(dampedDragAnimation.value - index)
                     val proximity = (1f - distance).coerceIn(0f, 1f)
-
-                    val activeColor = if (isBlurEffective) accentColor else onPrimaryContainer
-                    val inactiveColor = tabContentColor.copy(alpha = 0.60f)
-                    val itemTint = lerp(inactiveColor, activeColor, proximity)
+                    val itemTint = if (isBlurEffective) {
+                        lerp(tabContentColor.copy(alpha = 0.65f), accentColor, proximity)
+                    } else {
+                        tabContentColor.copy(alpha = 0.70f)
+                    }
 
                     FloatingBottomBarItem(
                         selected = isSelected,
@@ -509,6 +496,175 @@ fun FluidFloatingBottomBar(
                             softWrap = false,
                             overflow = TextOverflow.Visible,
                         )
+                    }
+                }
+            }
+        }
+
+        // Secondary Tabs Backdrop Layer (for real-time refraction behind the sliding pill)
+        if (isBlurEffective) {
+            CompositionLocalProvider(
+                LocalFloatingBottomBarTabScale provides {
+                    lerp(1f, 1.2f, dampedDragAnimation.pressProgress)
+                },
+                LocalContentColor provides accentColor,
+            ) {
+                Row(
+                    Modifier
+                        .clearAndSetSemantics {}
+                        .alpha(0f)
+                        .layerBackdrop(tabsBackdrop)
+                        .graphicsLayer { translationX = panelOffset }
+                        .drawBackdrop(
+                            backdrop = effectiveBackdrop,
+                            shape = { pillShape },
+                            effects = {
+                                vibrancy()
+                                blur(4.dp.toPx(), 4.dp.toPx())
+                                lens(
+                                    refractionHeight = 24.dp.toPx(),
+                                    refractionAmount = 24.dp.toPx(),
+                                )
+                            },
+                            onDrawSurface = { drawRect(containerColor) },
+                        )
+                        .then(interactiveHighlight.modifier)
+                        .height(56.dp)
+                        .padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    tabs.forEachIndexed { index, item ->
+                        FloatingBottomBarItem(
+                            selected = index == currentIndex,
+                            onClick = { activateTab(index) },
+                            modifier = Modifier.defaultMinSize(minWidth = 76.dp),
+                        ) {
+                            Icon(
+                                imageVector = item.selectedIcon,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Text(
+                                text = stringResource(item.label),
+                                fontSize = 11.sp,
+                                lineHeight = 13.sp,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Dynamic Spring-Sliding Indicator Pill
+        if (tabWidthPx > 0f) {
+            val tabWidthDp = with(density) { tabWidthPx.toDp() }
+            if (isBlurEffective) {
+                Box(
+                    Modifier
+                        .padding(horizontal = 4.dp)
+                        .graphicsLayer {
+                            val progressOffset = dampedDragAnimation.value * tabWidthPx
+                            translationX = if (isLtr) progressOffset + panelOffset else -progressOffset + panelOffset
+                        }
+                        .drawBackdrop(
+                            backdrop = combinedBackdrop,
+                            shape = { pillShape },
+                            effects = {
+                                val progress = lerp(0.55f, 1f, dampedDragAnimation.pressProgress)
+                                lens(
+                                    refractionHeight = 10.dp.toPx() * progress,
+                                    refractionAmount = 14.dp.toPx() * progress,
+                                    depthEffect = true,
+                                    chromaticAberration = 0.5f,
+                                )
+                            },
+                            highlight = { pillHighlight.value.copy(alpha = lerp(0.65f, 1f, dampedDragAnimation.pressProgress)) },
+                            layerBlock = {
+                                scaleX = dampedDragAnimation.scaleX
+                                scaleY = dampedDragAnimation.scaleY
+                                val vel = dampedDragAnimation.velocity / 10f
+                                scaleX /= 1f - (vel * 0.75f).fastCoerceIn(-0.2f, 0.2f)
+                                scaleY *= 1f - (vel * 0.25f).fastCoerceIn(-0.2f, 0.2f)
+                            },
+                            onDrawSurface = {
+                                val progress = dampedDragAnimation.pressProgress
+                                drawRect(
+                                    color = if (!isDark) {
+                                        Color.Black.copy(alpha = 0.10f)
+                                    } else {
+                                        Color.White.copy(alpha = 0.12f)
+                                    },
+                                    alpha = 1f - progress,
+                                )
+                                drawRect(accentColor.copy(alpha = if (isDark) 0.22f else 0.14f))
+                            },
+                        )
+                        .innerShadow(shape = pillShape) {
+                            val shadowProgress = lerp(0.40f, 1f, dampedDragAnimation.pressProgress)
+                            InnerShadow(
+                                radius = 8.dp * shadowProgress,
+                                color = Color.Black.copy(alpha = 0.15f),
+                                alpha = shadowProgress,
+                            )
+                        }
+                        .height(56.dp)
+                        .width(tabWidthDp),
+                )
+            } else {
+                val opaquePillBg = primaryContainer.copy(alpha = 1.0f)
+                val opaquePillContent = onPrimaryContainer
+                Box(
+                    Modifier
+                        .padding(horizontal = 4.dp)
+                        .graphicsLayer {
+                            val progressOffset = dampedDragAnimation.value * tabWidthPx
+                            translationX = if (isLtr) progressOffset + panelOffset else -progressOffset + panelOffset
+                            scaleX = dampedDragAnimation.scaleX
+                            scaleY = dampedDragAnimation.scaleY
+                        }
+                        .clip(pillShape)
+                        .background(opaquePillBg, pillShape)
+                        .height(56.dp)
+                        .width(tabWidthDp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    CompositionLocalProvider(LocalContentColor provides opaquePillContent) {
+                        Row(
+                            Modifier
+                                .clearAndSetSemantics {}
+                                .wrapContentWidth(align = Alignment.Start, unbounded = true)
+                                .requiredWidth(with(density) { (totalWidthPx - 8.dp.toPx()).toDp() })
+                                .height(56.dp)
+                                .graphicsLayer {
+                                    val progressOffset = dampedDragAnimation.value * tabWidthPx
+                                    translationX = if (isLtr) -progressOffset else progressOffset
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            tabs.forEachIndexed { index, item ->
+                                FloatingBottomBarItem(
+                                    selected = index == currentIndex,
+                                    onClick = { activateTab(index) },
+                                    modifier = Modifier.defaultMinSize(minWidth = 76.dp),
+                                ) {
+                                    Icon(
+                                        imageVector = item.selectedIcon,
+                                        contentDescription = null,
+                                        tint = opaquePillContent,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                    Text(
+                                        text = stringResource(item.label),
+                                        color = opaquePillContent,
+                                        fontSize = 11.sp,
+                                        lineHeight = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

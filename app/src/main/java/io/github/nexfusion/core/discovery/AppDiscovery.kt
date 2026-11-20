@@ -177,18 +177,25 @@ object AppDiscovery {
         )
     }
 
+    private val iconCache = java.util.concurrent.ConcurrentHashMap<String, ImageBitmap>()
+
     /**
      * Loads the application icon as an ImageBitmap, or null if uninstalled/unavailable.
      */
-    fun loadAppIcon(context: Context, packageName: String): ImageBitmap? = runCatching {
-        val pm = context.packageManager
-        val drawable = pm.getApplicationIcon(packageName)
-        val bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, 192, 192)
-        drawable.draw(canvas)
-        bitmap.asImageBitmap()
-    }.getOrNull()
+    fun loadAppIcon(context: Context, packageName: String): ImageBitmap? {
+        iconCache[packageName]?.let { return it }
+        return runCatching {
+            val pm = context.packageManager
+            val drawable = pm.getApplicationIcon(packageName)
+            val bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, 192, 192)
+            drawable.draw(canvas)
+            val imageBitmap = bitmap.asImageBitmap()
+            iconCache[packageName] = imageBitmap
+            imageBitmap
+        }.getOrNull()
+    }
 
     data class KnownSupportedApp(
         val packageName: String,

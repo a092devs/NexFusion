@@ -257,23 +257,9 @@ private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry
             fadeIn(animationSpec = tween(200, easing = LinearOutSlowInEasing)) +
                 scaleIn(initialScale = 0.96f, animationSpec = tween(200, easing = FastOutSlowInEasing))
         }
-        // Between peer top-level tabs:
+        // Between peer top-level tabs: instant smooth crossfade to keep bottom bar animation silky at 120Hz
         else -> {
-            val initialIdx = destinationIndex(initialRoute)
-            val targetIdx = destinationIndex(targetRoute)
-            val direction = when {
-                targetIdx > initialIdx -> 1
-                targetIdx < initialIdx -> -1
-                else -> 0
-            }
-            if (direction == 0) {
-                fadeIn(animationSpec = tween(200))
-            } else {
-                slideInHorizontally(
-                    initialOffsetX = { (it * 0.20f * direction).toInt() },
-                    animationSpec = tween(260, easing = FastOutSlowInEasing),
-                ) + fadeIn(animationSpec = tween(200, easing = LinearOutSlowInEasing))
-            }
+            fadeIn(animationSpec = tween(140, easing = LinearOutSlowInEasing))
         }
     }
 }
@@ -297,21 +283,7 @@ private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>
         }
         // Between peer top-level tabs:
         else -> {
-            val initialIdx = destinationIndex(initialRoute)
-            val targetIdx = destinationIndex(targetRoute)
-            val direction = when {
-                targetIdx > initialIdx -> -1
-                targetIdx < initialIdx -> 1
-                else -> 0
-            }
-            if (direction == 0) {
-                fadeOut(animationSpec = tween(180))
-            } else {
-                slideOutHorizontally(
-                    targetOffsetX = { (it * 0.20f * direction).toInt() },
-                    animationSpec = tween(260, easing = FastOutSlowInEasing),
-                ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
-            }
+            fadeOut(animationSpec = tween(90, easing = FastOutLinearInEasing))
         }
     }
 }

@@ -135,7 +135,7 @@ class DampedDragAnimation(
             launch {
                 valueAnimation.animateTo(
                     targetValue,
-                    spring(dampingRatio = 0.82f, stiffness = 420f, visibilityThreshold = visibilityThreshold)
+                    spring(dampingRatio = 0.82f, stiffness = 380f, visibilityThreshold = visibilityThreshold)
                 )
             }
             if (velocity != 0f) {
