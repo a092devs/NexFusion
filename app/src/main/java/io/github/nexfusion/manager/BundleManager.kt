@@ -130,7 +130,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
         val fileMissing = !existingFile.exists() || existingFile.length() == 0L
         val sysIsNewer = sysVersionCode > existing.versionCode
         val apkUpdated = sysVersionCode == existing.versionCode && existingFile.exists() &&
-            (sysApk.lastModified() > existingFile.lastModified() && sysApk.length() != existingFile.length())
+            (sysApk.lastModified() > existingFile.lastModified() || sysApk.length() != existingFile.length())
 
         if (fileMissing || sysIsNewer || apkUpdated) {
             return runCatching {

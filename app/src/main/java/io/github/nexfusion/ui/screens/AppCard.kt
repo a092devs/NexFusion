@@ -70,7 +70,9 @@ fun AppCard(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val icon = remember(app.packageName) { AppDiscovery.loadAppIcon(context, app.packageName) }
+    val icon = if (app.isInstalled) {
+        remember(app.packageName) { AppDiscovery.loadAppIcon(context, app.packageName) }
+    } else null
 
     val isMiuix = isMiuixStyle
     val baseContainer = if (app.isInstalled) {

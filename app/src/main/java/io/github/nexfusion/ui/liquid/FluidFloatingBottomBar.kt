@@ -571,7 +571,7 @@ fun FluidFloatingBottomBar(
                             backdrop = combinedBackdrop,
                             shape = { pillShape },
                             effects = {
-                                val progress = lerp(0.55f, 1f, dampedDragAnimation.pressProgress)
+                                val progress = dampedDragAnimation.pressProgress
                                 lens(
                                     refractionHeight = 10.dp.toPx() * progress,
                                     refractionAmount = 14.dp.toPx() * progress,
@@ -579,7 +579,7 @@ fun FluidFloatingBottomBar(
                                     chromaticAberration = 0.5f,
                                 )
                             },
-                            highlight = { pillHighlight.value.copy(alpha = lerp(0.65f, 1f, dampedDragAnimation.pressProgress)) },
+                            highlight = { pillHighlight.value.copy(alpha = dampedDragAnimation.pressProgress) },
                             layerBlock = {
                                 scaleX = dampedDragAnimation.scaleX
                                 scaleY = dampedDragAnimation.scaleY
@@ -601,11 +601,10 @@ fun FluidFloatingBottomBar(
                             },
                         )
                         .innerShadow(shape = pillShape) {
-                            val shadowProgress = lerp(0.40f, 1f, dampedDragAnimation.pressProgress)
                             InnerShadow(
-                                radius = 8.dp * shadowProgress,
+                                radius = 8.dp * dampedDragAnimation.pressProgress,
                                 color = Color.Black.copy(alpha = 0.15f),
-                                alpha = shadowProgress,
+                                alpha = dampedDragAnimation.pressProgress,
                             )
                         }
                         .height(56.dp)

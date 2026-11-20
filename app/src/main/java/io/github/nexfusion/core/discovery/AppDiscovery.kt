@@ -187,9 +187,9 @@ object AppDiscovery {
         return runCatching {
             val pm = context.packageManager
             val drawable = pm.getApplicationIcon(packageName)
-            val bitmap = Bitmap.createBitmap(192, 192, Bitmap.Config.ARGB_8888)
+            val bitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            drawable.setBounds(0, 0, 192, 192)
+            drawable.setBounds(0, 0, 128, 128)
             drawable.draw(canvas)
             val imageBitmap = bitmap.asImageBitmap()
             iconCache[packageName] = imageBitmap
@@ -313,6 +313,18 @@ object AppDiscovery {
             appName = "Spotify",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x1ED760,
+        ),
+        KnownSupportedApp(
+            packageName = "org.telegram.messenger",
+            appName = "Telegram",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x2AABEE,
+        ),
+        KnownSupportedApp(
+            packageName = "org.telegram.messenger.web",
+            appName = "Telegram Web",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x2AABEE,
         ),
     )
 
