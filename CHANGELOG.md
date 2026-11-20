@@ -5,6 +5,19 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.4.3
+
+- **Target Application Catalog & Discovery:**
+  * Added experimental preview support for Telegram and Telegram Web with dedicated branding.
+  * Optimized app icon loading and memory footprint, eliminating frame drops and UI stutter during list scrolling.
+- **Navigation & Fluid Bottom Bar:**
+  * Restored natural directional slide transitions between top-level tabs synchronized with navigation bar actions.
+  * Restored fluid spring physics and responsive touch feedback on the floating navigation bar.
+- **Bundle Management:**
+  * Enabled bundle upgrades whenever file size or timestamp changes.
+- **Ecosystem Synchronization:**
+  * Synchronized compatibility engine with NexFusion Patches v4.4.7.
+
 ## 4.4.2
 
 - **Target Application Catalog & Maintenance:**
