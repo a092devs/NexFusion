@@ -133,6 +133,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val maxMode = display?.supportedModes?.maxByOrNull { it.refreshRate }
+            if (maxMode != null) {
+                val lp = window.attributes
+                lp.preferredDisplayModeId = maxMode.modeId
+                window.attributes = lp
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.attributes.preferredRefreshRate = 120f
+        }
         requestedDestination = intent.getStringExtra(EXTRA_DESTINATION)
         setContent {
             val viewModel: ManagerViewModel = viewModel()

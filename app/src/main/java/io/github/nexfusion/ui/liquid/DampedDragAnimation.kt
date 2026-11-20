@@ -131,14 +131,15 @@ class DampedDragAnimation(
 
     fun animateToValue(value: Float) {
         animationScope.launch {
-            mutatorMutex.mutate {
-                press()
-                val targetValue = value.coerceIn(valueRange)
-                launch { valueAnimation.animateTo(targetValue, valueAnimationSpec) }
-                if (velocity != 0f) {
-                    launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
-                }
-                release()
+            val targetValue = value.coerceIn(valueRange)
+            launch {
+                valueAnimation.animateTo(
+                    targetValue,
+                    spring(dampingRatio = 0.82f, stiffness = 420f, visibilityThreshold = visibilityThreshold)
+                )
+            }
+            if (velocity != 0f) {
+                launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
             }
         }
     }
