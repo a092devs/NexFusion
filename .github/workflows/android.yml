@@ -21,6 +21,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    concurrency:
+      group: android-ci-${{ github.ref }}
+      cancel-in-progress: false
     permissions:
       contents: write
       actions: write
@@ -172,7 +175,7 @@ jobs:
       actions: write
 
     concurrency:
-      group: auto-release
+      group: auto-release-${{ github.ref_name }}
       cancel-in-progress: false
 
     steps:
