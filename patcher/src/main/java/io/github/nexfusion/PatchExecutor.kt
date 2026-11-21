@@ -132,10 +132,16 @@ class PatchExecutor(
             if (appliedPatches.contains(hook)) return@forEach
             val prefKey = patchPreferenceKey(bundle.id, hook.name)
             val isEnabled = runCatching {
-                patchPreferences?.let { remote ->
-                    val remoteVal = remote.getBoolean(prefKey, hook.use)
+                val localTime = localPreferences?.getLong("${prefKey}_timestamp", 0L) ?: 0L
+                val remoteTime = runCatching { patchPreferences?.getLong("${prefKey}_timestamp", 0L) ?: 0L }.getOrDefault(0L)
+                if (localTime > 0L && localTime >= remoteTime) {
+                    localPreferences?.getBoolean(prefKey, hook.use) ?: hook.use
+                } else if (patchPreferences != null && patchPreferences.contains(prefKey)) {
+                    val remoteVal = patchPreferences.getBoolean(prefKey, hook.use)
                     localPreferences?.edit()?.putBoolean(prefKey, remoteVal)?.apply()
                     remoteVal
+                } else {
+                    localPreferences?.getBoolean(prefKey, hook.use) ?: hook.use
                 }
             }.getOrNull() ?: localPreferences?.getBoolean(prefKey, hook.use) ?: hook.use
 
