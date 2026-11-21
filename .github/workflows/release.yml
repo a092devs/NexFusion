@@ -46,6 +46,11 @@ jobs:
                   distribution: temurin
                   cache: gradle
 
+            - name: Set up Android SDK
+              uses: android-actions/setup-android@v4
+              with:
+                  packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
+
             - name: Grant execute permission for gradlew
               run: chmod +x gradlew
 
@@ -220,11 +225,6 @@ jobs:
                     RELEASE_ASSETS+=("release/NexFusion-${RELEASE_TAG}-debug.apk")
                   fi
 
-                  if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-                    echo "::error::Release $RELEASE_TAG already exists. Choose a new tag."
-                    exit 1
-                  fi
-
                   RELEASE_ARGS=(
                     "$RELEASE_TAG"
                     "${RELEASE_ASSETS[@]}"
@@ -237,7 +237,12 @@ jobs:
                     RELEASE_ARGS+=(--prerelease)
                   fi
 
-                  gh release create "${RELEASE_ARGS[@]}"
+                  if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+                    echo "Release $RELEASE_TAG already exists; uploading assets."
+                    gh release upload "$RELEASE_TAG" "${RELEASE_ASSETS[@]}" --clobber
+                  else
+                    gh release create "${RELEASE_ARGS[@]}"
+                  fi
 
             # External patch bundles use:
             # https://raw.githubusercontent.com/<owner>/<repo>/maven
