@@ -53,6 +53,9 @@ class SettingApplication : Application(), XposedServiceHelper.OnServiceListener 
         XposedServiceHelper.registerListener(this)
         UpdateNotifications.createChannels(this)
         UpdateWorker.schedule(this)
+        if (io.github.a092devs.nexfusion.updates.AppSettings(this).autoUpdatePatches) {
+            UpdateWorker.checkNow(this)
+        }
         CacheManager.sanitizeAndPruneAsync(this)
     }
 

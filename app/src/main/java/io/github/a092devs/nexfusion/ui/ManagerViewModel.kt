@@ -361,6 +361,15 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     checkingUpdates = false,
                 )
             }
+            if (settings.autoUpdatePatches) {
+                for (source in store.all()) {
+                    if (!source.enabled || source.installedVersion == null) continue
+                    val rel = currentReleases[source.id]?.getOrNull() ?: continue
+                    if (rel.version != source.installedVersion) {
+                        install(source)
+                    }
+                }
+            }
             if (userInitiated) {
                 val state = _state.value
                 val update = state.appUpdate
@@ -428,6 +437,9 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     )
                 }
                 message(R.string.source_refreshed, source.name)
+                if (settings.autoUpdatePatches && source.installedVersion != null && release.version != source.installedVersion) {
+                    install(source)
+                }
             }.onFailure { err ->
                 store.updateStatus(source.id, source.lastRefreshTime, err.message)
                 val cached = releaseCache.get(source.id)

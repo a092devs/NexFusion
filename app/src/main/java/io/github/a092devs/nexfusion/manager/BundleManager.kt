@@ -230,12 +230,13 @@ class BundleManager(private val context: Context, private val service: XposedSer
                 it.id != manifest.id && manifest.resourcePackageId != 0 && it.resourcePackageId == manifest.resourcePackageId
             }
             var migratedClash: InstalledBundle? = null
-            // A source that renamed its bundle, or seamless migration from a092devs / nexfusion to modern bundle ID:
+            // A source that renamed its bundle, or seamless migration from legacy/modern bundle IDs:
             val isRenamedMigration = clash != null && (
-                (clash.id == "io.github.a092devs.nexfusion.patches.a092devs" && (manifest.id == "io.github.a092devs.nexfusion.patches" || manifest.id == "io.github.a092devs.nexfusion" || manifest.id == "io.github.a092devs.nexfusion.patches")) ||
-                (clash.id == "io.github.a092devs.nexfusion.patches" && (manifest.id == "io.github.a092devs.nexfusion" || manifest.id == "io.github.a092devs.nexfusion.patches")) ||
-                (clash.id == "io.github.a092devs.nexfusion.patches" && manifest.id == "io.github.a092devs.nexfusion") ||
-                (sourceId != null && clash.sourceId == sourceId)
+                clash.name.equals(manifest.name, ignoreCase = true) ||
+                (clash.id.startsWith("io.github.nexfusion") && manifest.id.startsWith("io.github.a092devs.nexfusion")) ||
+                (clash.id.startsWith("io.github.a092devs.nexfusion") && manifest.id.startsWith("io.github.nexfusion")) ||
+                (sourceId != null && (clash.sourceId == sourceId || clash.sourceId == null || clash.sourceId == "default")) ||
+                (clash.sourceId == "default" || sourceId == "default")
             )
             if (isRenamedMigration) {
                 migratedClash = clash

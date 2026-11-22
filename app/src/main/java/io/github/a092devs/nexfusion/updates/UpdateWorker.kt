@@ -68,6 +68,11 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         }
 
         if (autoUpdated.isNotEmpty()) {
+            runCatching {
+                io.github.a092devs.nexfusion.activity.SettingApplication.mService?.let {
+                    bundleManager.syncToService()
+                }
+            }
             UpdateNotifications.patchesAutoUpdated(context, autoUpdated)
         } else if (notified.isNotEmpty()) {
             UpdateNotifications.patchUpdates(context, notified)
@@ -89,6 +94,14 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 .build()
             WorkManager.getInstance(context)
                 .enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, request)
+        }
+
+        fun checkNow(context: Context) {
+            val request = androidx.work.OneTimeWorkRequestBuilder<UpdateWorker>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .build()
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork("update_check_now", androidx.work.ExistingWorkPolicy.REPLACE, request)
         }
     }
 }

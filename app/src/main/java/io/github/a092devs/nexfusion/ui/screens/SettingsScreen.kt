@@ -148,7 +148,14 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             title = stringResource(R.string.setting_auto_update_patches),
                             summary = stringResource(R.string.setting_auto_update_patches_summary),
                             checked = autoUpdatePatches,
-                            onCheckedChange = { autoUpdatePatches = it; settings.autoUpdatePatches = it },
+                            onCheckedChange = {
+                                autoUpdatePatches = it
+                                settings.autoUpdatePatches = it
+                                if (it) {
+                                    io.github.a092devs.nexfusion.updates.UpdateWorker.checkNow(context)
+                                    viewModel.checkUpdates(userInitiated = true)
+                                }
+                            },
                         )
                         ArrowPreference(
                             title = stringResource(R.string.update_channel_title),
@@ -305,10 +312,24 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         headlineContent = { Text(stringResource(R.string.setting_auto_update_patches)) },
                         supportingContent = { Text(stringResource(R.string.setting_auto_update_patches_summary)) },
                         trailingContent = {
-                            Switch(autoUpdatePatches, { autoUpdatePatches = it; settings.autoUpdatePatches = it })
+                            Switch(autoUpdatePatches, {
+                                autoUpdatePatches = it
+                                settings.autoUpdatePatches = it
+                                if (it) {
+                                    io.github.a092devs.nexfusion.updates.UpdateWorker.checkNow(context)
+                                    viewModel.checkUpdates(userInitiated = true)
+                                }
+                            })
                         },
                         colors = transparent,
-                        modifier = Modifier.clickable { autoUpdatePatches = !autoUpdatePatches; settings.autoUpdatePatches = autoUpdatePatches },
+                        modifier = Modifier.clickable {
+                            autoUpdatePatches = !autoUpdatePatches
+                            settings.autoUpdatePatches = autoUpdatePatches
+                            if (autoUpdatePatches) {
+                                io.github.a092devs.nexfusion.updates.UpdateWorker.checkNow(context)
+                                viewModel.checkUpdates(userInitiated = true)
+                            }
+                        },
                     )
                 }
                 item {
