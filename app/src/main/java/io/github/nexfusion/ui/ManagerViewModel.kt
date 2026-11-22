@@ -281,7 +281,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val syncedSources = sources.map { source ->
                 val matchingBundle = bundles.find { it.sourceId == source.id }
                     ?: if (source.id == "default" || source.url.contains("Nexfusion-Patches", ignoreCase = true)) {
-                        bundles.find { it.id == "io.github.nexfusion.patches" }
+                        bundles.find { isDefaultPatchesBundleId(it.id) }
                     } else null
                 if (matchingBundle != null && matchingBundle.version != source.installedVersion) {
                     val updated = source.copy(installedVersion = matchingBundle.version)
@@ -582,7 +582,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                         val installed = mgr.install(stream, null)
                         val matchingSource = store.all().find { s ->
                             s.id == installed.sourceId ||
-                            (installed.id == "io.github.nexfusion.patches" && (s.id == "default" || s.url.contains("Nexfusion-Patches", ignoreCase = true)))
+                            (isDefaultPatchesBundleId(installed.id) && (s.id == "default" || s.url.contains("Nexfusion-Patches", ignoreCase = true)))
                         }
                         if (matchingSource != null) {
                             if (installed.sourceId == null) {
@@ -621,9 +621,9 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             mgr.uninstall(bundle)
             store.all().find {
                 it.id == bundle.sourceId ||
-                (bundle.id == "io.github.nexfusion.patches" && (it.id == "default" || it.url.contains("Nexfusion-Patches", ignoreCase = true)))
+                (isDefaultPatchesBundleId(bundle.id) && (it.id == "default" || it.url.contains("Nexfusion-Patches", ignoreCase = true)))
             }?.let { source ->
-                if (mgr.installed.none { it.sourceId == source.id || (source.id == "default" && it.id == "io.github.nexfusion.patches") }) {
+                if (mgr.installed.none { it.sourceId == source.id || (source.id == "default" && isDefaultPatchesBundleId(it.id)) }) {
                     store.save(source.copy(installedVersion = null))
                 }
             }
@@ -826,4 +826,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         }
 
     // endregion
+
+    private fun isDefaultPatchesBundleId(id: String): Boolean =
+        id == "io.github.a092devs.nexfusion" || id == "io.github.a092devs.nexfusion.patches" || id == "io.github.nexfusion.patches"
 }

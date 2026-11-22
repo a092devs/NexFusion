@@ -48,7 +48,7 @@ class CacheManagerTest {
         }
         try {
             // Simulate rogue nested cache/data/user/0/... directory
-            val rogueDataDir = File(tempCache, "data/user/0/io.github.nexfusion").apply { mkdirs() }
+            val rogueDataDir = File(tempCache, "data/user/0/io.github.a092devs.nexfusion").apply { mkdirs() }
             val dummyFile = File(rogueDataDir, "dummy.txt").apply { writeText("leak") }
             assertTrue(rogueDataDir.exists())
 

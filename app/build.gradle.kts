@@ -19,7 +19,7 @@ android {
     namespace = "io.github.nexfusion.core"
 
     defaultConfig {
-        applicationId = "io.github.nexfusion"
+        applicationId = "io.github.a092devs.nexfusion"
         versionCode = rootProject.extra["appVersionCode"].toString().toInt()
         versionName = rootProject.extra["appVersionName"].toString()
         buildConfigField("String", "COMMIT_HASH", "\"${gitCommitHashProvider.get()}\"")

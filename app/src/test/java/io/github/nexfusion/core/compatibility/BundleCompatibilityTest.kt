@@ -16,7 +16,7 @@ class BundleCompatibilityTest {
         minManager: String = "",
         maxManager: String = "",
     ) = BundleManifest(
-        id = "io.github.nexfusion.patches",
+        id = "io.github.a092devs.nexfusion",
         name = "NexFusion Patches",
         version = version,
         versionCode = 13L,
@@ -85,7 +85,7 @@ class BundleCompatibilityTest {
     @Test
     fun installedBundleCompatibilitySerialization() {
         val bundle = InstalledBundle(
-            id = "io.github.nexfusion.patches",
+            id = "io.github.a092devs.nexfusion",
             name = "NexFusion Patches",
             version = "3.2.0",
             versionCode = 13L,

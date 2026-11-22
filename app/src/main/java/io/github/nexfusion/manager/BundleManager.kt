@@ -88,56 +88,69 @@ class BundleManager(private val context: Context, private val service: XposedSer
     }
 
     /**
-     * Checks if io.github.nexfusion.patches is installed on the system as an APK with a strictly
+     * Checks if a NexFusion patches bundle is installed on the system as an APK with a strictly
      * newer versionCode or if it is missing from installed bundles and has not been explicitly uninstalled.
      */
     fun syncInstalledSystemPackage(): InstalledBundle? {
-        val sysPkg = runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo("io.github.nexfusion.patches", PackageManager.PackageInfoFlags.of(0))
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo("io.github.nexfusion.patches", 0)
-            }
-        }.getOrNull() ?: return null
-
-        val appInfo = sysPkg.applicationInfo ?: return null
-        val sourceDir = appInfo.publicSourceDir ?: appInfo.sourceDir ?: return null
-        val sysApk = File(sourceDir)
-        if (!sysApk.exists()) return null
-
-        val sysVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) sysPkg.longVersionCode else @Suppress("DEPRECATION") sysPkg.versionCode.toLong()
-        val currentList = installed
-        val existing = currentList.find { it.id == "io.github.nexfusion.patches" }
-
-        // If the bundle is not currently installed, verify if the user explicitly uninstalled it
-        if (existing == null) {
-            val uninstalledCode = localPrefs.getLong("uninstalled_${sysPkg.packageName}_code", -1L)
-            val uninstalledTime = localPrefs.getLong("uninstalled_${sysPkg.packageName}_time", -1L)
-            if (uninstalledCode != -1L && sysVersionCode <= uninstalledCode && sysApk.lastModified() <= uninstalledTime) {
-                return null
-            }
-            return runCatching {
-                sysApk.inputStream().use { stream ->
-                    install(stream, "default")
+        val candidates = listOf(
+            "io.github.a092devs.nexfusion.patches",
+            "io.github.a092devs.nexfusion",
+            "io.github.nexfusion.patches",
+        )
+        for (pkgName in candidates) {
+            val sysPkg = runCatching {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.packageManager.getPackageInfo(pkgName, PackageManager.PackageInfoFlags.of(PackageManager.GET_META_DATA.toLong()))
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.packageManager.getPackageInfo(pkgName, PackageManager.GET_META_DATA)
                 }
-            }.getOrNull()
-        }
+            }.getOrNull() ?: continue
 
-        // Bundle is already installed: only upgrade from system package if the system APK is strictly NEWER,
-        // or if the existing local file is missing/empty, or if reinstalled with newer modification time and different size.
-        val existingFile = File(localDir, existing.fileName)
-        val fileMissing = !existingFile.exists() || existingFile.length() == 0L
-        val sysIsNewer = sysVersionCode > existing.versionCode
-        val apkUpdated = sysVersionCode == existing.versionCode && existingFile.exists() &&
-            (sysApk.lastModified() > existingFile.lastModified() || sysApk.length() != existingFile.length())
+            val appInfo = sysPkg.applicationInfo ?: continue
+            val meta = appInfo.metaData
+            if (meta == null || !meta.containsKey(BundleManifest.META_ENTRY)) continue
 
-        if (fileMissing || sysIsNewer || apkUpdated) {
-            return runCatching {
-                sysApk.inputStream().use { stream ->
-                    install(stream, existing.sourceId ?: "default")
+            val sourceDir = appInfo.publicSourceDir ?: appInfo.sourceDir ?: continue
+            val sysApk = File(sourceDir)
+            if (!sysApk.exists()) continue
+
+            val sysVersionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) sysPkg.longVersionCode else @Suppress("DEPRECATION") sysPkg.versionCode.toLong()
+            val currentList = installed
+            val existing = currentList.find { it.id == pkgName }
+
+            // If the bundle is not currently installed, verify if the user explicitly uninstalled it
+            if (existing == null) {
+                val uninstalledCode = localPrefs.getLong("uninstalled_${sysPkg.packageName}_code", -1L)
+                val uninstalledTime = localPrefs.getLong("uninstalled_${sysPkg.packageName}_time", -1L)
+                if (uninstalledCode != -1L && sysVersionCode <= uninstalledCode && sysApk.lastModified() <= uninstalledTime) {
+                    continue
                 }
-            }.getOrNull()
+                val installed = runCatching {
+                    sysApk.inputStream().use { stream ->
+                        install(stream, "default")
+                    }
+                }.getOrNull()
+                if (installed != null) return installed
+                continue
+            }
+
+            // Bundle is already installed: only upgrade from system package if the system APK is strictly NEWER,
+            // or if the existing local file is missing/empty, or if reinstalled with newer modification time and different size.
+            val existingFile = File(localDir, existing.fileName)
+            val fileMissing = !existingFile.exists() || existingFile.length() == 0L
+            val sysIsNewer = sysVersionCode > existing.versionCode
+            val apkUpdated = sysVersionCode == existing.versionCode && existingFile.exists() &&
+                (sysApk.lastModified() > existingFile.lastModified() || sysApk.length() != existingFile.length())
+
+            if (fileMissing || sysIsNewer || apkUpdated) {
+                val updated = runCatching {
+                    sysApk.inputStream().use { stream ->
+                        install(stream, existing.sourceId ?: "default")
+                    }
+                }.getOrNull()
+                if (updated != null) return updated
+            }
         }
         return null
     }
@@ -207,15 +220,20 @@ class BundleManager(private val context: Context, private val service: XposedSer
             val hash = digest.digest().joinToString("") { "%02x".format(it) }.take(16)
 
             val manifest = BundleManifest.read(context.packageManager, tmp)
+            if (manifest.id.contains("..") || manifest.id.contains("/") || manifest.id.contains("\\") || !manifest.id.matches(Regex("^[a-zA-Z0-9_.]+$"))) {
+                throw InvalidBundleException("Invalid bundle ID: ${manifest.id}")
+            }
             val compatibilityWarning = manifest.checkCompatibilityWarning()
 
             var clash = installed.find {
                 it.id != manifest.id && manifest.resourcePackageId != 0 && it.resourcePackageId == manifest.resourcePackageId
             }
             var migratedClash: InstalledBundle? = null
-            // A source that renamed its bundle, or seamless migration from a092devs to nexfusion:
+            // A source that renamed its bundle, or seamless migration from a092devs / nexfusion to modern bundle ID:
             val isRenamedMigration = clash != null && (
-                (clash.id == "io.github.nexfusion.patches.a092devs" && manifest.id == "io.github.nexfusion.patches") ||
+                (clash.id == "io.github.nexfusion.patches.a092devs" && (manifest.id == "io.github.nexfusion.patches" || manifest.id == "io.github.a092devs.nexfusion" || manifest.id == "io.github.a092devs.nexfusion.patches")) ||
+                (clash.id == "io.github.nexfusion.patches" && (manifest.id == "io.github.a092devs.nexfusion" || manifest.id == "io.github.a092devs.nexfusion.patches")) ||
+                (clash.id == "io.github.a092devs.nexfusion.patches" && manifest.id == "io.github.a092devs.nexfusion") ||
                 (sourceId != null && clash.sourceId == sourceId)
             )
             if (isRenamedMigration) {
@@ -302,9 +320,11 @@ class BundleManager(private val context: Context, private val service: XposedSer
         pruneOrphanBundles()
 
         // If the uninstalled bundle is also installed on the system as an APK, remove it via root if available
-        if (bundle.id == "io.github.nexfusion.patches") {
-            runCatching {
-                Runtime.getRuntime().exec(arrayOf("su", "-c", "pm uninstall ${bundle.id}")).waitFor()
+        if (bundle.id == "io.github.a092devs.nexfusion.patches" || bundle.id == "io.github.nexfusion.patches") {
+            if (bundle.id.matches(Regex("^[a-zA-Z0-9_.]+$"))) {
+                runCatching {
+                    Runtime.getRuntime().exec(arrayOf("su", "-c", "pm uninstall ${bundle.id}")).waitFor()
+                }
             }
         }
     }
@@ -396,13 +416,16 @@ class BundleManager(private val context: Context, private val service: XposedSer
         }
 
     private fun deleteFiles(fileName: String) {
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) return
         service?.let { runCatching { it.deleteRemoteFile(fileName) } }
         val f = File(localDir, fileName)
+        if (f.canonicalFile.parentFile != localDir.canonicalFile) return
         if (f.exists()) {
             f.setWritable(true)
             if (!f.delete()) {
+                val safePath = f.canonicalFile.absolutePath.replace("'", "\\'")
                 runCatching {
-                    Runtime.getRuntime().exec(arrayOf("su", "-c", "rm -f '${f.absolutePath}'")).waitFor()
+                    Runtime.getRuntime().exec(arrayOf("su", "-c", "rm -f '$safePath'")).waitFor()
                 }
             }
         }

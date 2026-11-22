@@ -5,6 +5,20 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.5.0-beta1
+
+- **LSPosed Repository Alignment & Package Identity:**
+  * Migrated application package ID to `io.github.a092devs.nexfusion` across core build configurations and Xposed scope descriptors for native LSPosed repository listing and compatibility.
+  * Added backwards-compatible bundle migration handling for `io.github.nexfusion.patches` and `io.github.a092devs.nexfusion.patches`.
+  * Updated shared classloader prefixes to encompass `io.github.a092devs.*`.
+- **Cybersecurity & Hardening:**
+  * Hardened `StealthCloak` with multi-variant package shielding, cloaking all historical and modern package identifiers (`io.github.a092devs.nexfusion`, `io.github.nexfusion`, and associated patch packages).
+  * Extended anti-detection cloaking to intercept `getPackageUid` and `getPackageGids` inquiries.
+  * Implemented defensive path sanitization and regex validation on bundle identifiers and file management routines to prevent directory traversal.
+  * Enforced strict parameter validation for root-assisted package uninstallation routines.
+- **Ecosystem Synchronization:**
+  * Aligned manager architecture and compatibility matrices with NexFusion Patches bundle v4.5.0-beta1.
+
 ## 4.4.3
 
 - **Target Application Catalog & Discovery:**

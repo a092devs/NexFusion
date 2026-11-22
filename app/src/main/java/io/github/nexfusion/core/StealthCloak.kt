@@ -13,16 +13,24 @@ import io.github.libxposed.api.XposedInterface
  */
 object StealthCloak {
 
+    private val HIDDEN_PACKAGES = setOf(
+        "io.github.a092devs.nexfusion",
+        "io.github.a092devs.nexfusion.patches",
+        "io.github.nexfusion",
+        "io.github.nexfusion.patches",
+    )
+
     fun install(app: Application, modulePackage: String, xposed: XposedInterface) {
         runCatching {
+            val allHidden = HIDDEN_PACKAGES + modulePackage
             val pmClass = Class.forName("android.app.ApplicationPackageManager", false, app.classLoader)
 
             // Intercept getPackageInfo to throw NameNotFoundException if module is queried
             pmClass.declaredMethods.filter { it.name == "getPackageInfo" }.forEach { method ->
                 xposed.hook(method).intercept { chain ->
                     val pkg = chain.args.getOrNull(0) as? String
-                    if (pkg == modulePackage) {
-                        throw PackageManager.NameNotFoundException(modulePackage)
+                    if (pkg in allHidden) {
+                        throw PackageManager.NameNotFoundException(pkg)
                     }
                     chain.proceed()
                 }
@@ -32,8 +40,30 @@ object StealthCloak {
             pmClass.declaredMethods.filter { it.name == "getApplicationInfo" }.forEach { method ->
                 xposed.hook(method).intercept { chain ->
                     val pkg = chain.args.getOrNull(0) as? String
-                    if (pkg == modulePackage) {
-                        throw PackageManager.NameNotFoundException(modulePackage)
+                    if (pkg in allHidden) {
+                        throw PackageManager.NameNotFoundException(pkg)
+                    }
+                    chain.proceed()
+                }
+            }
+
+            // Intercept getPackageUid to throw NameNotFoundException if module is queried
+            pmClass.declaredMethods.filter { it.name == "getPackageUid" }.forEach { method ->
+                xposed.hook(method).intercept { chain ->
+                    val pkg = chain.args.getOrNull(0) as? String
+                    if (pkg in allHidden) {
+                        throw PackageManager.NameNotFoundException(pkg)
+                    }
+                    chain.proceed()
+                }
+            }
+
+            // Intercept getPackageGids to throw NameNotFoundException if module is queried
+            pmClass.declaredMethods.filter { it.name == "getPackageGids" }.forEach { method ->
+                xposed.hook(method).intercept { chain ->
+                    val pkg = chain.args.getOrNull(0) as? String
+                    if (pkg in allHidden) {
+                        throw PackageManager.NameNotFoundException(pkg)
                     }
                     chain.proceed()
                 }
@@ -48,7 +78,7 @@ object StealthCloak {
                     val iterator = list.iterator()
                     while (iterator.hasNext()) {
                         val item = iterator.next() as? PackageInfo
-                        if (item?.packageName == modulePackage) {
+                        if (item?.packageName in allHidden) {
                             iterator.remove()
                             modified = true
                         }
@@ -66,7 +96,7 @@ object StealthCloak {
                     val iterator = list.iterator()
                     while (iterator.hasNext()) {
                         val item = iterator.next() as? ApplicationInfo
-                        if (item?.packageName == modulePackage) {
+                        if (item?.packageName in allHidden) {
                             iterator.remove()
                             modified = true
                         }
@@ -84,7 +114,7 @@ object StealthCloak {
                     val iterator = list.iterator()
                     while (iterator.hasNext()) {
                         val item = iterator.next() as? ResolveInfo
-                        if (item?.activityInfo?.packageName == modulePackage) {
+                        if (item?.activityInfo?.packageName in allHidden) {
                             iterator.remove()
                             modified = true
                         }
@@ -98,9 +128,10 @@ object StealthCloak {
                 xposed.hook(method).intercept { chain ->
                     val result = chain.proceed()
                     val pkgs = result as? Array<*> ?: return@intercept result
-                    if (pkgs.contains(modulePackage)) {
+                    val hasMatch = pkgs.any { it in allHidden }
+                    if (hasMatch) {
                         @Suppress("UNCHECKED_CAST")
-                        (pkgs as Array<String>).filter { it != modulePackage }.toTypedArray()
+                        (pkgs as Array<String>).filter { it !in allHidden }.toTypedArray()
                     } else {
                         result
                     }

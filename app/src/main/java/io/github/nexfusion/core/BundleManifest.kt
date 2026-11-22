@@ -153,6 +153,7 @@ class BundleParentClassLoader(
     private val sharedPrefixes = listOf(
         "kotlin.",
         "io.github.nexfusion.",
+        "io.github.a092devs.",
         "org.luckypray.dexkit.",
         "com.google.flatbuffers.",
         "androidx.annotation.",
