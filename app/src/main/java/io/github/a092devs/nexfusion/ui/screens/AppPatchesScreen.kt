@@ -24,8 +24,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -159,7 +159,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Icon(
-                    Icons.Filled.Warning,
+                    Icons.Rounded.Warning,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(DesignTokens.iconSizeXl),
@@ -200,7 +200,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                             modifier = Modifier.weight(1f, fill = false),
                                         ) {
                                             Icon(
-                                                Icons.Outlined.Block,
+                                                Icons.Rounded.Block,
                                                 contentDescription = null,
                                                 tint = MaterialTheme.colorScheme.error,
                                             )
@@ -349,7 +349,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                     if (liveInfo.isInstalled && packageName in state.missingScope) {
                         item {
                             ActionCard(
-                                icon = Icons.Filled.Warning,
+                                icon = Icons.Rounded.Warning,
                                 title = stringResource(R.string.scope_missing_title),
                                 text = "This application is not in the module scope. Patches will not take effect until added.",
                                 primary = stringResource(R.string.action_request) to {

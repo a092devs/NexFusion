@@ -17,15 +17,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.AutoFixHigh
-import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Science
-import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.ArrowUpward
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.AutoFixHigh
+import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Science
+import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -186,7 +186,7 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
             if (app.isExcluded) {
                 StatusChip(
                     label = "Excluded",
-                    icon = Icons.Outlined.Block,
+                    icon = Icons.Rounded.Block,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -197,7 +197,7 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
             if (app.hasConflicts) {
                 StatusChip(
                     label = "Dual Bundle",
-                    icon = Icons.Outlined.WarningAmber,
+                    icon = Icons.Rounded.WarningAmber,
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
@@ -215,7 +215,7 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
             if (app.isInstalled && !app.inScope) {
                 StatusChip(
                     label = stringResource(R.string.badge_not_in_scope),
-                    icon = Icons.Outlined.WarningAmber,
+                    icon = Icons.Rounded.WarningAmber,
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer,
                 )
@@ -267,35 +267,35 @@ fun CompatibilityChip(status: CompatibilityStatus) {
             } else {
                 stringResource(R.string.status_compatible)
             },
-            icon = if (status.isExperimental) Icons.Outlined.Science else Icons.Outlined.CheckCircle,
+            icon = if (status.isExperimental) Icons.Rounded.Science else Icons.Rounded.CheckCircle,
             containerColor = if (isDark) Color(0xFF10B981).copy(alpha = 0.22f) else Color(0xFF10B981).copy(alpha = 0.12f),
             contentColor = if (isDark) Color(0xFF34D399) else Color(0xFF065F46),
         )
 
         is CompatibilityStatus.Dynamic -> StatusChip(
             label = stringResource(R.string.status_dynamic),
-            icon = Icons.Outlined.AutoAwesome,
+            icon = Icons.Rounded.AutoAwesome,
             containerColor = if (isDark) Color(0xFF0284C7).copy(alpha = 0.22f) else Color(0xFF0284C7).copy(alpha = 0.12f),
             contentColor = if (isDark) Color(0xFF38BDF8) else Color(0xFF075985),
         )
 
         is CompatibilityStatus.CompatibleUntested -> StatusChip(
             label = stringResource(R.string.status_untested, status.installedVersion),
-            icon = Icons.AutoMirrored.Outlined.HelpOutline,
+            icon = Icons.AutoMirrored.Rounded.HelpOutline,
             containerColor = if (isDark) Color(0xFFF59E0B).copy(alpha = 0.22f) else Color(0xFFF59E0B).copy(alpha = 0.14f),
             contentColor = if (isDark) Color(0xFFFCD34D) else Color(0xFF92400E),
         )
 
         is CompatibilityStatus.Incompatible -> StatusChip(
             label = stringResource(R.string.status_incompatible),
-            icon = Icons.Outlined.ErrorOutline,
+            icon = Icons.Rounded.ErrorOutline,
             containerColor = MaterialTheme.colorScheme.errorContainer,
             contentColor = MaterialTheme.colorScheme.onErrorContainer,
         )
 
         is CompatibilityStatus.MissingBundle -> StatusChip(
             label = stringResource(R.string.status_missing_bundle),
-            icon = Icons.Outlined.WarningAmber,
+            icon = Icons.Rounded.WarningAmber,
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -309,7 +309,7 @@ fun CompatibilityChip(status: CompatibilityStatus) {
 
         is CompatibilityStatus.Unknown -> StatusChip(
             label = status.reason,
-            icon = Icons.AutoMirrored.Outlined.HelpOutline,
+            icon = Icons.AutoMirrored.Rounded.HelpOutline,
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -2,10 +2,13 @@ package io.github.a092devs.nexfusion.ui.screens
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,20 +32,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.CloudDownload
-import androidx.compose.material.icons.outlined.FolderZip
-import androidx.compose.material.icons.outlined.SystemUpdateAlt
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.rounded.CloudDownload
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.FolderZip
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.SystemUpdateAlt
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -62,12 +67,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -140,8 +151,7 @@ data class AppIcons(
     val check: ImageVector,
     val bundle: ImageVector,
     val security: ImageVector,
-    /** Kept from the Material set in both themes; the official Miuix set has no warning glyph. */
-    val warning: ImageVector = Icons.Filled.Warning,
+    val warning: ImageVector = Icons.Rounded.Warning,
 )
 
 @Composable
@@ -150,37 +160,111 @@ fun appIcons(): AppIcons {
     return remember(isMiuix) {
         if (isMiuix) {
             AppIcons(
-                search = MiuixIcons.MiuixSearchIcon,
-                clear = MiuixIcons.MiuixClearIcon,
-                add = MiuixIcons.MiuixAddIcon,
-                delete = MiuixIcons.MiuixDeleteIcon,
-                refresh = MiuixIcons.MiuixRefreshIcon,
-                more = MiuixIcons.MiuixMoreIcon,
-                back = MiuixIcons.MiuixBackIcon,
-                install = MiuixIcons.MiuixDownloadIcon,
-                update = MiuixIcons.MiuixUpdateIcon,
-                info = MiuixIcons.MiuixInfoIcon,
-                check = MiuixIcons.MiuixOkIcon,
-                bundle = MiuixIcons.MiuixFileIcon,
-                security = MiuixIcons.MiuixLockIcon,
+                search = Icons.Rounded.Search,
+                clear = Icons.Rounded.Clear,
+                add = Icons.Rounded.Add,
+                delete = Icons.Rounded.Delete,
+                refresh = Icons.Rounded.Refresh,
+                more = Icons.Rounded.MoreVert,
+                back = Icons.AutoMirrored.Rounded.ArrowBack,
+                install = Icons.Rounded.Download,
+                update = Icons.Rounded.SystemUpdateAlt,
+                info = Icons.Rounded.Info,
+                check = Icons.Rounded.CheckCircle,
+                bundle = Icons.Rounded.FolderZip,
+                security = Icons.Rounded.Security,
+                warning = Icons.Rounded.Warning,
             )
         } else {
             AppIcons(
-                search = Icons.Filled.Search,
-                clear = Icons.Filled.Clear,
-                add = Icons.Filled.Add,
-                delete = Icons.Filled.Delete,
-                refresh = Icons.Filled.Refresh,
-                more = Icons.Filled.MoreVert,
-                back = Icons.AutoMirrored.Filled.ArrowBack,
-                install = Icons.Outlined.CloudDownload,
-                update = Icons.Outlined.SystemUpdateAlt,
-                info = Icons.Filled.Info,
-                check = Icons.Filled.CheckCircle,
-                bundle = Icons.Outlined.FolderZip,
-                security = Icons.Filled.Security,
+                search = Icons.Rounded.Search,
+                clear = Icons.Rounded.Clear,
+                add = Icons.Rounded.Add,
+                delete = Icons.Rounded.Delete,
+                refresh = Icons.Rounded.Refresh,
+                more = Icons.Rounded.MoreVert,
+                back = Icons.AutoMirrored.Rounded.ArrowBack,
+                install = Icons.Rounded.Download,
+                update = Icons.Rounded.SystemUpdateAlt,
+                info = Icons.Rounded.Info,
+                check = Icons.Rounded.CheckCircle,
+                bundle = Icons.Rounded.FolderZip,
+                security = Icons.Rounded.Security,
+                warning = Icons.Rounded.Warning,
             )
         }
+    }
+}
+
+/**
+ * Modern floating action button matching NexFusion's rounded squircle aesthetic.
+ * Features ambient glow drop-shadow, subtle lighting gradient, glass highlight outline,
+ * and tactile spring press physics.
+ */
+@Composable
+fun ThemedFloatingActionButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Rounded.Add,
+    contentDescription: String? = null,
+) {
+    val isMiuix = isMiuixStyle
+    val fabBg = if (isMiuix) MiuixTheme.colorScheme.primary else MaterialTheme.colorScheme.primary
+    val fabFg = if (fabBg.luminance() > 0.5f) Color(0xFF0F172A) else Color.White
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow),
+        label = "fab_press_scale",
+    )
+    val shape = RoundedCornerShape(22.dp)
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .shadow(
+                elevation = 10.dp,
+                shape = shape,
+                ambientColor = fabBg.copy(alpha = 0.35f),
+                spotColor = fabBg.copy(alpha = 0.50f),
+            )
+            .clip(shape)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        fabBg,
+                        lerp(fabBg, Color.Black, 0.08f),
+                    ),
+                ),
+            )
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.40f),
+                        Color.White.copy(alpha = 0.10f),
+                    ),
+                ),
+                shape = shape,
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick,
+            )
+            .size(56.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = fabFg,
+            modifier = Modifier.size(28.dp),
+        )
     }
 }
 

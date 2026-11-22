@@ -25,11 +25,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -163,7 +163,7 @@ fun HomeContent(
                 if (state.missingScope.isNotEmpty()) {
                     item {
                         ActionCard(
-                            icon = Icons.Filled.Warning,
+                            icon = Icons.Rounded.Warning,
                             title = stringResource(R.string.scope_missing_title),
                             text = stringResource(
                                 R.string.scope_missing_text,
@@ -224,7 +224,7 @@ fun HomeContent(
                             Column(Modifier.padding(18.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        Icons.Filled.Notifications,
+                                        Icons.Rounded.Notifications,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(24.dp),
@@ -284,7 +284,7 @@ fun HomeContent(
                                     ThemedCompactFilledButton(
                                         label = primaryLabel,
                                         icon = if (downloadState is UpdateDownloadState.ReadyToInstall) icons.install else icons.update,
-                                        enabled = !isDownloading || downloadState is UpdateDownloadState.ReadyToInstall,
+                                        enabled = !isDownloading,
                                         onClick = {
                                             if (downloadState is UpdateDownloadState.ReadyToInstall) {
                                                 AppInstaller.installApk(context, downloadState.apkFile)
@@ -333,7 +333,7 @@ fun HomeContent(
                             Column(Modifier.padding(18.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        Icons.Filled.Notifications,
+                                        Icons.Rounded.Notifications,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(24.dp),
@@ -570,7 +570,7 @@ fun HomeContent(
                 actions = {
                     ThemedIconButton(onClick = onToggleHideUninstalled) {
                         Icon(
-                            imageVector = if (state.hideUninstalledApps) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            imageVector = if (state.hideUninstalledApps) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
                             contentDescription = if (state.hideUninstalledApps) {
                                 stringResource(R.string.action_show_all_apps)
                             } else {
@@ -596,7 +596,7 @@ fun HomeContent(
                     actions = {
                         ThemedIconButton(onClick = onToggleHideUninstalled) {
                             Icon(
-                                imageVector = if (state.hideUninstalledApps) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                imageVector = if (state.hideUninstalledApps) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
                                 contentDescription = if (state.hideUninstalledApps) {
                                     stringResource(R.string.action_show_all_apps)
                                 } else {
@@ -745,7 +745,7 @@ private fun StatusCard(active: Boolean, title: String, text: String) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = if (active) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                    imageVector = if (active) Icons.Rounded.CheckCircle else Icons.Rounded.Warning,
                     contentDescription = null,
                     tint = palette.icon,
                     modifier = Modifier.size(DesignTokens.iconSizeLg),

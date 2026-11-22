@@ -25,17 +25,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.FolderZip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -77,7 +70,6 @@ import io.github.a092devs.nexfusion.ui.ManagerState
 import io.github.a092devs.nexfusion.ui.ManagerViewModel
 import io.github.a092devs.nexfusion.ui.theme.isMiuixStyle
 import io.github.a092devs.nexfusion.updates.AppSettings
-import top.yukonga.miuix.kmp.basic.FloatingActionButton as MiuixFloatingActionButton
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -179,7 +171,7 @@ fun PatchesContent(
                                 ActionCard(
                                     title = stringResource(R.string.module_inactive_title),
                                     text = stringResource(R.string.module_inactive_summary),
-                                    icon = Icons.Filled.Warning,
+                                    icon = icons.warning,
                                     containerColor = MaterialTheme.colorScheme.errorContainer,
                                 )
                             }
@@ -216,7 +208,7 @@ fun PatchesContent(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     Icon(
-                                        Icons.Outlined.FolderZip,
+                                        icons.bundle,
                                         contentDescription = null,
                                         modifier = Modifier.size(56.dp),
                                         tint = MaterialTheme.colorScheme.outline,
@@ -258,8 +250,10 @@ fun PatchesContent(
                     title = stringResource(R.string.nav_patches),
                     color = MaterialTheme.colorScheme.background,
                     actions = {
-                        ThemedIconButton(onClick = { addSource = true }) {
-                            Icon(icons.add, contentDescription = stringResource(R.string.add_source_title))
+                        if (isLandscape && selectedTab == 0) {
+                            ThemedIconButton(onClick = { addSource = true }) {
+                                Icon(icons.add, contentDescription = stringResource(R.string.add_source_title))
+                            }
                         }
                         ThemedIconButton(onClick = { menu = true }) {
                             Icon(icons.more, contentDescription = null)
@@ -280,21 +274,14 @@ fun PatchesContent(
                 bodyContent(PaddingValues(0.dp))
             }
             if (selectedTab == 0 && !isLandscape) {
-                val fabBg = MiuixTheme.colorScheme.primary
-                val fabFg = if (fabBg.luminance() > 0.5f) Color(0xFF0F172A) else Color.White
-                MiuixFloatingActionButton(
+                ThemedFloatingActionButton(
                     onClick = { addSource = true },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 16.dp + outerPadding.calculateBottomPadding()),
-                ) {
-                    Icon(
-                        icons.add,
-                        contentDescription = stringResource(R.string.add_source_title),
-                        tint = fabFg,
-                        modifier = Modifier.size(26.dp),
-                    )
-                }
+                        .padding(end = 20.dp, bottom = 20.dp + outerPadding.calculateBottomPadding()),
+                    icon = icons.add,
+                    contentDescription = stringResource(R.string.add_source_title),
+                )
             }
         }
     } else {
@@ -309,14 +296,16 @@ fun PatchesContent(
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
                     actions = {
-                        IconButton(onClick = { addSource = true }) {
-                            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_source_title))
+                        if (isLandscape && selectedTab == 0) {
+                            IconButton(onClick = { addSource = true }) {
+                                Icon(icons.add, contentDescription = stringResource(R.string.add_source_title))
+                            }
                         }
-                        IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, contentDescription = null) }
+                        IconButton(onClick = { menu = true }) { Icon(icons.more, contentDescription = null) }
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.import_bundle_title)) },
-                                leadingIcon = { Icon(Icons.Outlined.FolderZip, contentDescription = null) },
+                                leadingIcon = { Icon(icons.bundle, contentDescription = null) },
                                 onClick = { menu = false; importer.launch(arrayOf("*/*")) },
                             )
                         }
@@ -326,12 +315,11 @@ fun PatchesContent(
             },
             floatingActionButton = {
                 if (selectedTab == 0 && !isLandscape) {
-                    ExtendedFloatingActionButton(
+                    ThemedFloatingActionButton(
                         onClick = { addSource = true },
-                        icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                        text = { Text(stringResource(R.string.add_source_title)) },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(bottom = outerPadding.calculateBottomPadding()),
+                        icon = icons.add,
+                        contentDescription = stringResource(R.string.add_source_title),
                     )
                 }
             },
@@ -550,7 +538,7 @@ private fun SourceCard(
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Icon(
-                        Icons.Outlined.ErrorOutline,
+                        icons.warning,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.size(16.dp),
@@ -683,6 +671,7 @@ private fun BundleCard(
     val source = sources.find { it.id == bundle.sourceId }
 
     val isMiuix = isMiuixStyle
+    val icons = appIcons()
     val baseContainer = if (bundle.enabled) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceContainerLowest
     val containerColor = if (isMiuix) baseContainer.copy(alpha = 0.82f) else baseContainer
 
@@ -750,7 +739,7 @@ private fun BundleCard(
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Warning,
+                        imageVector = icons.warning,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(16.dp),
