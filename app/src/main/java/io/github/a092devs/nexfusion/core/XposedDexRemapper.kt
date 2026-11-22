@@ -82,6 +82,7 @@ class XposedDexRemapper(
     private fun isRenamed(type: String?) = type != null && rename(type) != type
 
     private fun usesRenamedApi(classDef: ClassDef): Boolean {
+        if (isRenamed(classDef.type)) return true
         if (isRenamed(classDef.superclass) || classDef.interfaces.any(::isRenamed)) return true
         if (classDef.fields.any { isRenamed(it.type) }) return true
         return classDef.methods.any { method ->

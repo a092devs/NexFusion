@@ -3,6 +3,7 @@
 -dontobfuscate
 -dontoptimize
 -keep class io.github.a092devs.nexfusion.** { *; }
+-keep class io.github.nexfusion.** { *; }
 -keep class kotlin.** { *; }
 -keep class org.luckypray.dexkit.** { *; }
 -keep class com.google.flatbuffers.** { *; }

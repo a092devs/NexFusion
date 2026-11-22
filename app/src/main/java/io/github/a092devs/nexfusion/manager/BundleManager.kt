@@ -12,6 +12,7 @@ import io.github.a092devs.nexfusion.core.BundleRegistry
 import io.github.a092devs.nexfusion.core.InstalledBundle
 import io.github.a092devs.nexfusion.core.InvalidBundleException
 import io.github.a092devs.nexfusion.core.PrefKeys
+import io.github.a092devs.nexfusion.core.XposedDexRemapper
 import io.github.a092devs.nexfusion.core.getOrDefault
 import java.io.File
 import java.io.FileInputStream
@@ -407,13 +408,60 @@ class BundleManager(private val context: Context, private val service: XposedSer
             }
         }
         val manifest = BundleManifest.read(context.packageManager, local)
-        return loadApps(local, manifest.entryClass)
+        val apps = loadApps(local, manifest.entryClass)
+        // If the bundle on disk has targets or apps that were missing when registered, backfill them
+        if ((bundle.targets.isEmpty() || bundle.apps.isEmpty()) && apps.isNotEmpty()) {
+            val updatedTargets = if (bundle.targets.isEmpty()) {
+                apps.filter { it.targets.isNotEmpty() }.associate { it.packageName to it.targets }
+            } else bundle.targets
+            val updatedApps = if (bundle.apps.isEmpty()) {
+                apps.associate { it.packageName to it.appName }
+            } else bundle.apps
+            val updatedBundle = bundle.copy(targets = updatedTargets, apps = updatedApps)
+            val updated = installed.filter { it.id != bundle.id } + updatedBundle
+            registryPrefs?.let { BundleRegistry.write(it, updated) }
+            BundleRegistry.write(localPrefs, updated)
+        }
+        return apps
     }
 
-    private fun loadApps(apk: File, entryClass: String): List<AppPatchInfo> =
-        loadedApps.getOrPut(apk.name) {
-            BundleClassLoader.load(apk, entryClass, BundleParentClassLoader(BundleManager::class.java.classLoader!!)).second
+    private val remapper by lazy {
+        XposedDexRemapper(mapOf(
+            "Lio/github/nexfusion/" to "Lio/github/a092devs/nexfusion/",
+            "Lde/robv/android/xposed/" to "Lio/github/a092devs/nexfusion/compat/",
+        ))
+    }
+
+    private fun remappedDex(apk: File): File? {
+        val dir = File(context.cacheDir, "remapped").apply { mkdirs() }
+        val dex = File(dir, "${apk.name}-${remapper.key}.dex")
+        val none = File(dir, "${apk.name}-${remapper.key}.none")
+        if (dex.exists()) return dex
+        if (none.exists()) return null
+        return runCatching {
+            val remapped = remapper.remap(apk, dex)
+            if (!remapped) none.createNewFile()
+            dex.takeIf { remapped }
+        }.getOrNull()
+    }
+
+    private fun loadApps(apk: File, entryClass: String): List<AppPatchInfo> {
+        val cached = loadedApps[apk.name]
+        if (cached != null && cached.any { it.patches.isNotEmpty() }) {
+            return cached
         }
+        val prepended = remappedDex(apk)
+        val loaded = BundleClassLoader.load(
+            apk = apk,
+            entryClass = entryClass,
+            parent = BundleParentClassLoader(BundleManager::class.java.classLoader!!),
+            prependedDex = prepended,
+        ).second
+        if (loaded.isNotEmpty()) {
+            loadedApps[apk.name] = loaded
+        }
+        return loaded
+    }
 
     private fun deleteFiles(fileName: String) {
         if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) return

@@ -8,7 +8,9 @@ import android.os.Build
 import io.github.a092devs.nexfusion.AppPatchInfo
 import io.github.a092devs.nexfusion.AppTarget
 import io.github.a092devs.nexfusion.PATCHER_API_VERSION
+import io.github.a092devs.nexfusion.Patch
 import io.github.a092devs.nexfusion.PatchBundle
+import io.github.a092devs.nexfusion.PatchExecutor
 import java.io.File
 
 import io.github.a092devs.nexfusion.core.compatibility.VersionComparator
@@ -169,7 +171,13 @@ class BundleParentClassLoader(
                 return module.loadClass(name)
             } catch (e: ClassNotFoundException) {
                 if (name.startsWith("io.github.nexfusion.")) {
-                    val modernName = "io.github.a092devs." + name
+                    val modernName = name.replaceFirst("io.github.nexfusion.", "io.github.a092devs.nexfusion.")
+                    try {
+                        return module.loadClass(modernName)
+                    } catch (_: ClassNotFoundException) {}
+                }
+                if (name.startsWith("io.github.morphe.")) {
+                    val modernName = name.replaceFirst("io.github.morphe.", "io.github.a092devs.nexfusion.")
                     try {
                         return module.loadClass(modernName)
                     } catch (_: ClassNotFoundException) {}
@@ -197,20 +205,45 @@ object BundleClassLoader {
         prependedDex?.setReadOnly()
         val path = listOfNotNull(prependedDex, apk).joinToString(File.pathSeparator) { it.path }
         val loader = DexClassLoader(path, null, null, parent)
+        android.util.Log.d("NexFusionDebug", "BundleClassLoader.load: apk=$apk entryClass=$entryClass prependedDex=$prependedDex")
         var fallbackApps: List<AppPatchInfo>? = null
+        val targetClass = if (prependedDex != null && entryClass.startsWith("io.github.nexfusion.")) {
+            entryClass.replaceFirst("io.github.nexfusion.", "io.github.a092devs.nexfusion.")
+        } else {
+            entryClass
+        }
         val entry = try {
-            val clazz = loader.loadClass(entryClass)
+            val clazz = try {
+                loader.loadClass(targetClass)
+            } catch (e: ClassNotFoundException) {
+                if (targetClass != entryClass) {
+                    loader.loadClass(entryClass)
+                } else {
+                    val alt = if (entryClass.startsWith("io.github.nexfusion.")) {
+                        entryClass.replaceFirst("io.github.nexfusion.", "io.github.a092devs.nexfusion.")
+                    } else if (entryClass.startsWith("io.github.a092devs.nexfusion.")) {
+                        entryClass.replaceFirst("io.github.a092devs.nexfusion.", "io.github.nexfusion.")
+                    } else null
+                    if (alt != null) {
+                        runCatching { loader.loadClass(alt) }.getOrNull() ?: throw e
+                    } else {
+                        throw e
+                    }
+                }
+            }
             // A Kotlin object exposes its instance as INSTANCE.
-            runCatching { clazz.getField("INSTANCE").get(null) }.getOrNull()
+            val obj = runCatching { clazz.getField("INSTANCE").get(null) }.getOrNull()
                 ?: clazz.getDeclaredConstructor().newInstance()
+            android.util.Log.d("NexFusionDebug", "Instantiated entry=$obj, isPatchBundle=${obj is PatchBundle}")
+            obj
         } catch (e: Throwable) {
-            android.util.Log.w("NexFusionBundle", "Cannot instantiate bundle entry $entryClass, attempting DEX parsing fallback", e)
+            android.util.Log.w("NexFusionDebug", "Cannot instantiate bundle entry $entryClass, attempting DEX parsing fallback: ${e.message}", e)
             val extracted = extractAppsFromDex(apk)
             if (extracted.isNotEmpty()) {
                 fallbackApps = extracted
                 null
             } else {
-                android.util.Log.e("NexFusionBundle", "Cannot instantiate bundle entry $entryClass and DEX parsing found no apps", e)
+                android.util.Log.e("NexFusionDebug", "Cannot instantiate bundle entry $entryClass and DEX parsing found no apps", e)
                 throw InvalidBundleException("Cannot instantiate bundle entry $entryClass: ${e.message ?: e.javaClass.simpleName}", e)
             }
         }
@@ -236,10 +269,38 @@ object BundleClassLoader {
                                     val exp = runCatching { t.javaClass.getMethod("getExperimental").invoke(t) as? Boolean }.getOrNull() ?: false
                                     AppTarget(v, exp)
                                 }
+                                val rawPatches = runCatching {
+                                    val getter = item.javaClass.getMethod("getPatches")
+                                    when (val res = getter.invoke(item)) {
+                                        is Array<*> -> res.filterNotNull()
+                                        is Iterable<*> -> res.filterNotNull()
+                                        else -> emptyList<Any>()
+                                    }
+                                }.getOrNull().orEmpty()
+
+                                val convertedPatches = rawPatches.mapNotNull { p ->
+                                    if (p is Patch) return@mapNotNull p
+                                    val pName = runCatching { p.javaClass.getMethod("getName").invoke(p) as? String }.getOrNull()
+                                        ?: runCatching { p.javaClass.getField("name").get(p) as? String }.getOrNull()
+                                        ?: return@mapNotNull null
+                                    val pDesc = runCatching { p.javaClass.getMethod("getDescription").invoke(p) as? String }.getOrNull()
+                                        ?: runCatching { p.javaClass.getField("description").get(p) as? String }.getOrNull()
+                                        ?: ""
+                                    val pUse = runCatching { p.javaClass.getMethod("getUse").invoke(p) as? Boolean }.getOrNull()
+                                        ?: runCatching { p.javaClass.getField("use").get(p) as? Boolean }.getOrNull()
+                                        ?: true
+                                    val pRun = runCatching {
+                                        val m = p.javaClass.getMethod("getRun")
+                                        @Suppress("UNCHECKED_CAST")
+                                        m.invoke(p) as? (io.github.a092devs.nexfusion.PatchExecutor.() -> Unit)
+                                    }.getOrNull() ?: {}
+                                    Patch(name = pName, description = pDesc, use = pUse, run = pRun)
+                                }.toTypedArray()
+
                                 AppPatchInfo(
                                     appName = appName,
                                     packageName = packageName,
-                                    patches = emptyArray(),
+                                    patches = convertedPatches,
                                     targets = convertedTargets,
                                     appIconColor = iconColor,
                                 )
@@ -251,6 +312,7 @@ object BundleClassLoader {
                 }
             }
         }
+        android.util.Log.d("NexFusionDebug", "Loaded ${apps.size} apps from bundle: ${apps.map { "${it.packageName}:${it.patches.size}" }}")
         return loader to apps
     }
 

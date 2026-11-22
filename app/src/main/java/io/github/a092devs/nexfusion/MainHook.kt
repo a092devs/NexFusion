@@ -185,6 +185,7 @@ class MainHook : XposedModule() {
         fun slash(vararg parts: String) = "L" + parts.joinToString("/") + "/"
         fun classDesc(vararg parts: String) = "L" + parts.joinToString("/") + ";"
         val extraMappings = mapOf(
+            "Lio/github/nexfusion/" to "Lio/github/a092devs/nexfusion/",
             slash("de", "robv", "android", "xposed") to "Lio/github/a092devs/nexfusion/compat/",
             classDesc("android", "app", "AndroidAppHelper") to "Lio/github/a092devs/nexfusion/compat/AndroidAppHelper;",
         )
