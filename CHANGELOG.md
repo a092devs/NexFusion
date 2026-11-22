@@ -5,6 +5,30 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.0
+
+- **Major Package Identity & LSPosed Repository Listing:**
+  * Fully modernized package hierarchy and namespace to `io.github.a092devs.nexfusion` across core manager, patcher API, AndroidManifest declarations, Xposed init bindings, and resources.
+  * Optimized metadata and scope declarations for official LSPosed repository indexing and module distribution.
+  * Preserved full backwards compatibility: integrated real-time `XposedDexRemapper` bytecode rewriting and fallback stubs to seamlessly run legacy `io.github.nexfusion.*` patch bundles.
+- **Cybersecurity & Root Hardening:**
+  * Hardened `StealthCloak` with multi-variant package shielding, cloaking all legacy and modern package identifiers (`io.github.nexfusion`, `io.github.a092devs.nexfusion`, and associated patch packages).
+  * Extended anti-detection cloaking to intercept and sanitize `getPackageUid` and `getPackageGids` inquiries.
+  * Implemented defensive path sanitization and strict regex validation across bundle identifiers and file management routines to prevent path traversal.
+  * Enforced strict parameter validation for root-assisted package uninstallation routines.
+- **Modular App Discovery & Modernized UI:**
+  * Decoupled target application detection from hardcoded app lists: apps are discovered dynamically only when provided by installed patch bundles.
+  * Added empty-state guidance with theme-consistent styling when no patch bundles are installed.
+  * Redesigned update notification cards on the Home tab with rounded contours matching the Patches tab, featuring inline changelog view and direct install actions.
+  * Introduced horizontal swipe gestures to seamlessly glide between Home, Patches, and Settings tabs.
+  * Optimized adaptive layout for landscape and wide screens, introducing responsive max-width containers and eliminating UI stretching.
+  * Refined Floating Action Button (FAB) layout, positioning, and spacing to prevent element overlap across portrait and landscape orientations.
+- **Background Patch Bundle Auto-Updates:**
+  * Added background WorkManager service to periodically check for and install patch bundle updates automatically without user intervention.
+  * Provided user-configurable toggle in Settings for automatic background bundle updates while preserving modular patch sources.
+- **Ecosystem Synchronization:**
+  * Fully synchronized with NexFusion Patches bundle v5.0.0.
+
 ## 4.5.0-beta2
 
 - **Complete Namespace & Package Migration:**
