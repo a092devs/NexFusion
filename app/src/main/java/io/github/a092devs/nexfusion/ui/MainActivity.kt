@@ -57,6 +57,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -86,12 +87,14 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -120,8 +123,6 @@ import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.basic.NavigationBar as MiuixNavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem as MiuixNavigationBarItem
-import top.yukonga.miuix.kmp.basic.SnackbarHost as MiuixSnackbarHost
-import top.yukonga.miuix.kmp.basic.SnackbarHostState as MiuixSnackbarHostState
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
@@ -135,6 +136,8 @@ class MainActivity : ComponentActivity() {
 
     /** Destination requested by a notification, consumed by the navigation. */
     private var requestedDestination by mutableStateOf<String?>(null)
+    /** Message requested externally or via test intent. */
+    private var requestedMessage by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -150,6 +153,7 @@ class MainActivity : ComponentActivity() {
             window.attributes.preferredRefreshRate = 120f
         }
         requestedDestination = intent.getStringExtra(EXTRA_DESTINATION)
+        requestedMessage = intent.getStringExtra("message")
         setContent {
             val viewModel: ManagerViewModel = viewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
@@ -163,8 +167,11 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     viewModel = viewModel,
                     requestedDestination = requestedDestination,
+                    requestedMessage = requestedMessage,
                     floatingNavigation = state.floatingNavigation,
-                ) { requestedDestination = null }
+                    onDestinationHandled = { requestedDestination = null },
+                    onMessageHandled = { requestedMessage = null },
+                )
             }
         }
     }
@@ -172,6 +179,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         requestedDestination = intent.getStringExtra(EXTRA_DESTINATION)
+        intent.getStringExtra("message")?.let { requestedMessage = it }
     }
 
     companion object {
@@ -327,8 +335,10 @@ private fun ManagerApp(
     navController: NavHostController,
     viewModel: ManagerViewModel,
     requestedDestination: String?,
+    requestedMessage: String?,
     floatingNavigation: Boolean,
     onDestinationHandled: () -> Unit,
+    onMessageHandled: () -> Unit,
 ) {
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
@@ -355,6 +365,24 @@ private fun ManagerApp(
                 coroutineScope.launch { pagerState.animateScrollToPage(targetIdx, animationSpec = navAnimSpec) }
             }
             onDestinationHandled()
+        }
+    }
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { msg ->
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
+
+    LaunchedEffect(requestedMessage) {
+        val msg = requestedMessage
+        if (msg != null) {
+            onMessageHandled()
+            coroutineScope.launch {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(msg)
+            }
         }
     }
     NotificationPermission()
@@ -388,17 +416,6 @@ private fun ManagerApp(
         }
     } else null
 
-    val m3Snackbar = remember { SnackbarHostState() }
-    val miuixSnackbar = remember { MiuixSnackbarHostState() }
-    LaunchedEffect(Unit) {
-        viewModel.messages.collect { msg ->
-            if (isMiuix) {
-                miuixSnackbar.showSnackbar(msg)
-            } else {
-                m3Snackbar.showSnackbar(msg)
-            }
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -463,22 +480,6 @@ private fun ManagerApp(
                     ) { entry ->
                         AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
                     }
-                }
-
-                if (isMiuix) {
-                    MiuixSnackbarHost(
-                        state = miuixSnackbar,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = contentBottomPadding),
-                    )
-                } else {
-                    SnackbarHost(
-                        hostState = m3Snackbar,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(bottom = contentBottomPadding),
-                    )
                 }
             }
         }
@@ -582,6 +583,58 @@ private fun ManagerApp(
                         )
                     }
                 }
+            }
+        }
+
+        // Themed floating snackbar positioned safely above navigation bar / insets
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                .padding(bottom = contentBottomPadding + 8.dp)
+                .padding(horizontal = 24.dp)
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .widthIn(max = 560.dp),
+        ) { data ->
+            val containerBg = if (isDark) {
+                Color(0xFF23272D)
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            }
+            val textColor = if (isDark) {
+                Color(0xFFE6EDF3)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
+            val borderColor = if (isDark) {
+                Color.White.copy(alpha = 0.12f)
+            } else {
+                Color.Black.copy(alpha = 0.08f)
+            }
+
+            Box(
+                modifier = Modifier
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(22.dp),
+                        spotColor = Color.Black.copy(alpha = if (isDark) 0.45f else 0.18f),
+                        ambientColor = Color.Black.copy(alpha = if (isDark) 0.30f else 0.10f),
+                    )
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(containerBg)
+                    .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(22.dp))
+                    .padding(horizontal = 22.dp, vertical = 13.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = data.visuals.message,
+                    color = textColor,
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp,
+                )
             }
         }
     }

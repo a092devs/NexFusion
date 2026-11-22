@@ -5,6 +5,13 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.2
+
+- **Themed Floating Notification Snackbar:**
+  * Replaced top-screen notification banners with a unified floating bottom snackbar safely elevated above the navigation bar and window insets.
+  * Designed theme-adaptive dark mode surfaces with rounded geometry, subtle borders, and ambient drop shadows, eliminating harsh white top banners in dark mode.
+  * Refined snackbar message handling to instantly present new status and error notifications.
+
 ## 5.0.1
 
 - **Fluid Navigation Bar & Tab Transition Optimization:**
