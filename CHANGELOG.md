@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.1
+
+- **Fluid Navigation Bar & Tab Transition Optimization:**
+  * Synchronized floating bottom bar selection with target pager state, eliminating animation hitch and intermediate tab reversal when skipping non-adjacent tabs (e.g., Home to Settings).
+  * Enabled pre-composed viewport page caching across top-level screens (`beyondViewportPageCount = 2`) to ensure 60/120fps stutter-free horizontal swipe transitions.
+  * Harmonized pager scroll physics and bottom bar indicator spring trajectories for fluid, unified tab navigation.
+- **Auto-Update Reliability:**
+  * Enhanced patch bundle migration routines to seamlessly resolve resource ID collisions across package namespaces.
+  * Integrated automatic bundle downloads directly into update check cycles.
+
 ## 5.0.0
 
 - **Major Package Identity & LSPosed Repository Listing:**

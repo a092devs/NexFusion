@@ -337,6 +337,13 @@ private fun ManagerApp(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
+    val navAnimSpec = remember {
+        spring(
+            dampingRatio = 0.95f,
+            stiffness = 750f,
+            visibilityThreshold = 0.001f,
+        )
+    }
 
     LaunchedEffect(requestedDestination) {
         if (requestedDestination != null) {
@@ -345,15 +352,15 @@ private fun ManagerApp(
                 if (route != MainActivity.DESTINATION_HOME) {
                     navController.popBackStack(MainActivity.DESTINATION_HOME, inclusive = false)
                 }
-                coroutineScope.launch { pagerState.animateScrollToPage(targetIdx) }
+                coroutineScope.launch { pagerState.animateScrollToPage(targetIdx, animationSpec = navAnimSpec) }
             }
             onDestinationHandled()
         }
     }
     NotificationPermission()
 
-    BackHandler(enabled = isTopLevel && pagerState.currentPage != 0) {
-        coroutineScope.launch { pagerState.animateScrollToPage(0) }
+    BackHandler(enabled = isTopLevel && (pagerState.targetPage != 0 || pagerState.currentPage != 0)) {
+        coroutineScope.launch { pagerState.animateScrollToPage(0, animationSpec = navAnimSpec) }
     }
 
     val navBarBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -423,13 +430,15 @@ private fun ManagerApp(
                         HorizontalPager(
                             state = pagerState,
                             modifier = Modifier.fillMaxSize(),
+                            beyondViewportPageCount = 2,
+                            key = { page -> page },
                         ) { page ->
                             when (page) {
                                 0 -> HomeScreen(
                                     viewModel = viewModel,
                                     navController = navController,
                                     outerPadding = PaddingValues(bottom = contentBottomPadding),
-                                    onOpenPatches = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                                    onOpenPatches = { coroutineScope.launch { pagerState.animateScrollToPage(1, animationSpec = navAnimSpec) } },
                                 )
                                 1 -> PatchesScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
                                 2 -> SettingsScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
@@ -439,13 +448,13 @@ private fun ManagerApp(
                     composable(MainActivity.DESTINATION_PATCHES) {
                         LaunchedEffect(Unit) {
                             navController.popBackStack(MainActivity.DESTINATION_HOME, inclusive = false)
-                            pagerState.animateScrollToPage(1)
+                            pagerState.animateScrollToPage(1, animationSpec = navAnimSpec)
                         }
                     }
                     composable(MainActivity.DESTINATION_SETTINGS) {
                         LaunchedEffect(Unit) {
                             navController.popBackStack(MainActivity.DESTINATION_HOME, inclusive = false)
-                            pagerState.animateScrollToPage(2)
+                            pagerState.animateScrollToPage(2, animationSpec = navAnimSpec)
                         }
                     }
                     composable(
@@ -474,7 +483,7 @@ private fun ManagerApp(
             }
         }
 
-        val selectedIndex = if (isTopLevel) pagerState.currentPage else 0
+        val selectedIndex = if (isTopLevel) pagerState.targetPage else 0
 
         if (isMiuix) {
             if (floatingNavigation) {
@@ -512,7 +521,7 @@ private fun ManagerApp(
                     FluidFloatingBottomBar(
                         selectedIndex = selectedIndex,
                         onSelected = { index ->
-                            coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                            coroutineScope.launch { pagerState.animateScrollToPage(index, animationSpec = navAnimSpec) }
                         },
                         tabs = fluidTabs,
                         isTranslucent = state.floatingBarTranslucent,
@@ -536,7 +545,7 @@ private fun ManagerApp(
                             val selected = selectedIndex == index
                             MiuixNavigationBarItem(
                                 selected = selected,
-                                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index, animationSpec = navAnimSpec) } },
                                 icon = if (selected) item.selectedIcon else item.unselectedIcon,
                                 label = stringResource(item.label),
                             )
@@ -562,7 +571,7 @@ private fun ManagerApp(
                         val selected = selectedIndex == index
                         NavigationBarItem(
                             selected = selected,
-                            onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
+                            onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index, animationSpec = navAnimSpec) } },
                             icon = {
                                 Icon(
                                     imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
