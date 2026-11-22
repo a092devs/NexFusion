@@ -209,19 +209,88 @@ fun HomeContent(
                             stringResource(R.string.app_update_text)
                         }
 
-                        ActionCard(
-                            icon = Icons.Filled.Notifications,
-                            title = updateTitle,
-                            text = updateText,
-                            primary = primaryLabel to {
-                                if (downloadState is UpdateDownloadState.ReadyToInstall) {
-                                    AppInstaller.installApk(context, downloadState.apkFile)
-                                } else if (!isDownloading) {
-                                    onDownloadUpdate(release)
+                        val icons = appIcons()
+                        ThemedCard(
+                            containerColor = if (isMiuix) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.82f) else MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                        ) {
+                            Column(Modifier.padding(18.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Filled.Notifications,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            updateTitle,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        if (updateText.isNotBlank()) {
+                                            Spacer(Modifier.height(2.dp))
+                                            Text(
+                                                updateText,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
                                 }
-                            },
-                            secondary = stringResource(R.string.action_changelog) to { changelog = release.tag to release.notes },
-                        )
+
+                                if (isDownloading) {
+                                    Spacer(Modifier.height(10.dp))
+                                    if (downloadProgress != null) {
+                                        androidx.compose.material3.LinearProgressIndicator(
+                                            progress = { (downloadState as UpdateDownloadState.Downloading).progress },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp)),
+                                        )
+                                    } else {
+                                        androidx.compose.material3.LinearProgressIndicator(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp)),
+                                        )
+                                    }
+                                }
+
+                                Spacer(Modifier.height(12.dp))
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    if (release.notes.isNotBlank()) {
+                                        ThemedCompactTonalButton(
+                                            label = stringResource(R.string.action_changelog),
+                                            onClick = { changelog = release.tag to release.notes },
+                                        )
+                                    }
+                                    ThemedCompactFilledButton(
+                                        label = primaryLabel,
+                                        icon = if (downloadState is UpdateDownloadState.ReadyToInstall) icons.install else icons.update,
+                                        enabled = !isDownloading || downloadState is UpdateDownloadState.ReadyToInstall,
+                                        onClick = {
+                                            if (downloadState is UpdateDownloadState.ReadyToInstall) {
+                                                AppInstaller.installApk(context, downloadState.apkFile)
+                                            } else if (!isDownloading) {
+                                                onDownloadUpdate(release)
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -249,40 +318,125 @@ fun HomeContent(
                             {}
                         } else onUpdateAll
 
-                        ActionCard(
-                            icon = Icons.Filled.Notifications,
-                            title = stringResource(R.string.patch_updates_title),
-                            text = updates.joinToString { "${it.name} ${state.releases[it.id]?.getOrNull()?.version}" },
-                            primary = primaryLabel to primaryAction,
-                            secondary = stringResource(R.string.nav_patches) to onOpenPatches,
-                        )
+                        val icons = appIcons()
+                        ThemedCard(
+                            containerColor = if (isMiuix) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.82f) else MaterialTheme.colorScheme.secondaryContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                        ) {
+                            Column(Modifier.padding(18.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Filled.Notifications,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            stringResource(R.string.patch_updates_title),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                        )
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            updates.joinToString { "${it.name} ${state.releases[it.id]?.getOrNull()?.version}" },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(12.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    ThemedCompactTonalButton(
+                                        label = stringResource(R.string.nav_patches),
+                                        onClick = onOpenPatches,
+                                    )
+                                    ThemedCompactFilledButton(
+                                        label = primaryLabel,
+                                        icon = icons.update,
+                                        enabled = !isDownloadingPatches && state.busySources.isEmpty(),
+                                        onClick = primaryAction,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
                 // Empty State when no bundles installed
                 if (state.bundles.isEmpty()) {
                     item {
-                        ActionCard(
-                            title = stringResource(R.string.no_bundles_title),
-                            text = stringResource(R.string.no_bundles_text),
-                            primary = stringResource(R.string.action_browse_sources) to onOpenPatches,
+                        ThemedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = appIcons().bundle,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(28.dp),
+                                    )
+                                }
+                                Spacer(Modifier.height(16.dp))
+                                Text(
+                                    text = stringResource(R.string.no_bundles_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "Install a patch bundle to discover supported applications. Once a bundle is installed, applications will appear here and NexFusion will prompt LSPosed to add them to scope.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                )
+                                Spacer(Modifier.height(20.dp))
+                                ThemedCompactFilledButton(
+                                    label = "Install Bundle",
+                                    icon = appIcons().install,
+                                    onClick = onOpenPatches,
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Live Search Bar
+                    item {
+                        ThemedSearchField(
+                            value = state.searchQuery,
+                            onValueChange = onSearchQueryChange,
+                            placeholder = stringResource(R.string.search_apps_hint),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
                         )
                     }
-                }
 
-                // Live Search Bar
-                item {
-                    ThemedSearchField(
-                        value = state.searchQuery,
-                        onValueChange = onSearchQueryChange,
-                        placeholder = stringResource(R.string.search_apps_hint),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                    )
-                }
-
-                // Filter Chips
+                    // Filter Chips
                 item {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
@@ -396,6 +550,7 @@ fun HomeContent(
                 }
             }
         }
+    }
     }
 
     if (isMiuix) {

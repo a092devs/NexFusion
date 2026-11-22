@@ -16,7 +16,7 @@ const val PATCHER_API_VERSION = 1
  *
  * @param experimental The patches may work, but are not known to fully support this version.
  */
-class AppTarget @JvmOverloads constructor(val version: String, val experimental: Boolean = false)
+open class AppTarget @JvmOverloads constructor(val version: String, val experimental: Boolean = false)
 
 /**
  * The patches a bundle provides for one app.
@@ -26,7 +26,7 @@ class AppTarget @JvmOverloads constructor(val version: String, val experimental:
  * @param appIconColor Brand color of the app as 0xRRGGBB, like Morphe's `appIconColor`; the app's card starts with
  *   it. Null for the default card colors.
  */
-class AppPatchInfo @JvmOverloads constructor(
+open class AppPatchInfo @JvmOverloads constructor(
     val appName: String,
     val packageName: String,
     val patches: Array<Patch>,

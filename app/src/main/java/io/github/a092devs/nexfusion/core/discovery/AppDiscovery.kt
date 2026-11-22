@@ -353,6 +353,11 @@ object AppDiscovery {
             bundle.enabled && (bundle.sourceId == null || sources.isEmpty() || bundle.sourceId in enabledSourceIds)
         }
 
+        // True modularity: if no bundles are active, do not display any apps.
+        if (activeBundles.isEmpty()) {
+            return emptyList()
+        }
+
         // Aggregate all target package names declared by active bundles
         val packageMap = mutableMapOf<String, String>()
         for (bundle in activeBundles) {
@@ -360,13 +365,6 @@ object AppDiscovery {
                 if (!packageMap.containsKey(pkg) || packageMap[pkg] == pkg) {
                     packageMap[pkg] = name
                 }
-            }
-        }
-
-        // Also ensure all known supported applications are present in the catalog
-        for (known in KNOWN_SUPPORTED_APPS) {
-            if (!packageMap.containsKey(known.packageName)) {
-                packageMap[known.packageName] = known.appName
             }
         }
 

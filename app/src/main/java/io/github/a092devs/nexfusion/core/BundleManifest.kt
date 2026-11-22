@@ -6,6 +6,7 @@ import dalvik.system.DexClassLoader
 import android.content.pm.PackageManager
 import android.os.Build
 import io.github.a092devs.nexfusion.AppPatchInfo
+import io.github.a092devs.nexfusion.AppTarget
 import io.github.a092devs.nexfusion.PATCHER_API_VERSION
 import io.github.a092devs.nexfusion.PatchBundle
 import java.io.File
@@ -154,6 +155,7 @@ class BundleParentClassLoader(
         "kotlin.",
         "io.github.a092devs.nexfusion.",
         "io.github.a092devs.",
+        "io.github.nexfusion.",
         "org.luckypray.dexkit.",
         "com.google.flatbuffers.",
         "androidx.annotation.",
@@ -189,9 +191,46 @@ object BundleClassLoader {
             runCatching { clazz.getField("INSTANCE").get(null) }.getOrNull()
                 ?: clazz.getDeclaredConstructor().newInstance()
         } catch (e: Throwable) {
-            throw InvalidBundleException("Cannot instantiate bundle entry $entryClass", e)
+            android.util.Log.e("NexFusionBundle", "Cannot instantiate bundle entry $entryClass", e)
+            throw InvalidBundleException("Cannot instantiate bundle entry $entryClass: ${e.message ?: e.javaClass.simpleName}", e)
         }
-        if (entry !is PatchBundle) throw InvalidBundleException("$entryClass does not implement PatchBundle")
-        return loader to entry.apps
+        val apps: List<AppPatchInfo> = when (entry) {
+            is PatchBundle -> entry.apps
+            else -> {
+                // Compatibility fallback: extract apps via reflection if entry implements legacy or foreign PatchBundle
+                val getApps = runCatching { entry.javaClass.getMethod("getApps") }.getOrNull()
+                if (getApps != null) {
+                    val rawList = getApps.invoke(entry) as? List<*>
+                    rawList?.mapNotNull { item ->
+                        when (item) {
+                            is AppPatchInfo -> item
+                            null -> null
+                            else -> {
+                                val appName = runCatching { item.javaClass.getMethod("getAppName").invoke(item) as? String }.getOrNull() ?: ""
+                                val packageName = runCatching { item.javaClass.getMethod("getPackageName").invoke(item) as? String }.getOrNull() ?: ""
+                                val targets = runCatching { item.javaClass.getMethod("getTargets").invoke(item) as? List<*> }.getOrNull().orEmpty()
+                                val iconColor = runCatching { item.javaClass.getMethod("getAppIconColor").invoke(item) as? Int }.getOrNull()
+                                val convertedTargets = targets.mapNotNull { t ->
+                                    if (t == null) return@mapNotNull null
+                                    val v = runCatching { t.javaClass.getMethod("getVersion").invoke(t) as? String }.getOrNull() ?: return@mapNotNull null
+                                    val exp = runCatching { t.javaClass.getMethod("getExperimental").invoke(t) as? Boolean }.getOrNull() ?: false
+                                    AppTarget(v, exp)
+                                }
+                                AppPatchInfo(
+                                    appName = appName,
+                                    packageName = packageName,
+                                    patches = emptyArray(),
+                                    targets = convertedTargets,
+                                    appIconColor = iconColor,
+                                )
+                            }
+                        }
+                    } ?: throw InvalidBundleException("$entryClass does not implement PatchBundle")
+                } else {
+                    throw InvalidBundleException("$entryClass does not implement PatchBundle")
+                }
+            }
+        }
+        return loader to apps
     }
 }
