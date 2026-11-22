@@ -5,11 +5,11 @@ plugins {
     `maven-publish`
 }
 
-group = "io.github.nexfusion"
+group = "io.github.a092devs.nexfusion"
 version = providers.gradleProperty("patcherVersion").get()
 
 android {
-    namespace = "io.github.nexfusion.patcher"
+    namespace = "io.github.a092devs.nexfusion.patcher"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

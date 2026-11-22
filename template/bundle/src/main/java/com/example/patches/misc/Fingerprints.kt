@@ -1,6 +1,6 @@
 package com.example.patches.misc
 
-import io.github.nexfusion.morphe.Fingerprint
+import io.github.a092devs.nexfusion.morphe.Fingerprint
 
 /** Matches `boolean isPro()`, the only method returning a boolean that uses the string "pro_status". */
 object IsProFingerprint : Fingerprint(

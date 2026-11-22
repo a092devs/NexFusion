@@ -1,7 +1,7 @@
 import org.gradle.api.provider.Property
 
 interface NexFusionBundleExtension {
-    /** Fully qualified name of the class implementing `io.github.nexfusion.PatchBundle`. */
+    /** Fully qualified name of the class implementing `io.github.a092devs.nexfusion.PatchBundle`. */
     val entry: Property<String>
 
     /** Shown in the NexFusion manager. */

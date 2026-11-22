@@ -25,5 +25,5 @@ nexfusionBundle {
 
 dependencies {
     // Provided by NexFusion at runtime: never `implementation`.
-    compileOnly("io.github.nexfusion:patcher:${providers.gradleProperty("patcherVersion").get()}")
+    compileOnly("io.github.a092devs.nexfusion:patcher:${providers.gradleProperty("patcherVersion").get()}")
 }

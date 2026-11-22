@@ -16,7 +16,7 @@ val gitCommitHashProvider = gitOutput("rev-parse", "--short", "HEAD").map { it.i
 val gitCommitDateProvider = gitOutput("log", "-1", "--format=%ct").map { it.ifEmpty { "0" } }
 
 android {
-    namespace = "io.github.nexfusion.core"
+    namespace = "io.github.a092devs.nexfusion.core"
 
     defaultConfig {
         applicationId = "io.github.a092devs.nexfusion"

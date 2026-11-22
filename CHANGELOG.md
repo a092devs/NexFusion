@@ -5,14 +5,23 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 4.5.0-beta2
+
+- **Complete Namespace & Package Migration:**
+  * Fully migrated codebase, package hierarchy, and namespace definitions from `io.github.nexfusion` to `io.github.a092devs.nexfusion` across core manager, patcher API, AndroidManifest declarations, Xposed init bindings, and resources.
+  * Published modernized patcher API under artifact coordinates `io.github.a092devs.nexfusion:patcher:2.1.2`.
+- **Ecosystem Synchronization & Testing:**
+  * Synchronized manager architecture and runtime class loader delegation with NexFusion Patches bundle v4.5.0-beta2.
+  * Upgraded version code to 90 and staged release candidate for connected device validation.
+
 ## 4.5.0-beta1
 
 - **LSPosed Repository Alignment & Package Identity:**
   * Migrated application package ID to `io.github.a092devs.nexfusion` across core build configurations and Xposed scope descriptors for native LSPosed repository listing and compatibility.
-  * Added backwards-compatible bundle migration handling for `io.github.nexfusion.patches` and `io.github.a092devs.nexfusion.patches`.
+  * Added backwards-compatible bundle migration handling for `io.github.a092devs.nexfusion.patches` and `io.github.a092devs.nexfusion.patches`.
   * Updated shared classloader prefixes to encompass `io.github.a092devs.*`.
 - **Cybersecurity & Hardening:**
-  * Hardened `StealthCloak` with multi-variant package shielding, cloaking all historical and modern package identifiers (`io.github.a092devs.nexfusion`, `io.github.nexfusion`, and associated patch packages).
+  * Hardened `StealthCloak` with multi-variant package shielding, cloaking all historical and modern package identifiers (`io.github.a092devs.nexfusion`, `io.github.a092devs.nexfusion`, and associated patch packages).
   * Extended anti-detection cloaking to intercept `getPackageUid` and `getPackageGids` inquiries.
   * Implemented defensive path sanitization and regex validation on bundle identifiers and file management routines to prevent directory traversal.
   * Enforced strict parameter validation for root-assisted package uninstallation routines.
@@ -113,7 +122,7 @@ the release notes, falling back to generated commit notes when no section exists
 
 - **libxposed API 101 & 102 Compatibility:**
   * Added compatibility supporting both **libxposed API 101** and **API 102** (`minApiVersion=101, targetApiVersion=102`).
-  * Runtime hooking bridge isolated into `io.github.nexfusion.compat.*`.
+  * Runtime hooking bridge isolated into `io.github.a092devs.nexfusion.compat.*`.
   * Configured `XposedDexRemapper` with smali bytecode remapping for backward compatibility.
 
 - **In-App Build Variant Selection (Release vs Debug):**
@@ -176,7 +185,7 @@ the release notes, falling back to generated commit notes when no section exists
   * Disabled floating navigation and translucent blur by default to eliminate navigation frame drops on Xiaomi HyperOS.
   * Restricted floating navigation exclusively to Miuix mode; Material 3 mode now strictly renders standard Material 3 Scaffold navigation without floating bar overhead.
 - Anti-Detection & Stealth Hiding:
-  * Introduced `StealthCloak`: automatically intercepts `ApplicationPackageManager` in all hooked target processes to mask `io.github.nexfusion` from package queries (`getPackageInfo`, `getApplicationInfo`, `getInstalledPackages`, `getInstalledApplications`, `queryIntentActivities`, and `getPackagesForUid`), completely shielding the module from in-app Google Play Services and security scanners.
+  * Introduced `StealthCloak`: automatically intercepts `ApplicationPackageManager` in all hooked target processes to mask `io.github.a092devs.nexfusion` from package queries (`getPackageInfo`, `getApplicationInfo`, `getInstalledPackages`, `getInstalledApplications`, `queryIntentActivities`, and `getPackagesForUid`), completely shielding the module from in-app Google Play Services and security scanners.
   * Decoupled `de.robv.android.xposed.category.MODULE_SETTINGS` into a dedicated `<activity-alias>` (`ModuleSettingsAlias`) so it can be disabled when hiding the launcher icon, preventing package scanners searching for Xposed categories from detecting NexFusion.
 
 - Bundle Card & UI Refinement:
@@ -242,8 +251,8 @@ the release notes, falling back to generated commit notes when no section exists
 
 - Inaugural NexFusion Rebranding & Package Migration:
   * Renamed the project to NexFusion across the manager application, patcher engine, build logic, and automation workflows.
-  * Migrated all internal packages and components directly to `io.github.nexfusion.*` with application package ID `io.github.nexfusion`.
-  * Updated bundle plugin to `nexfusion.bundle` and Maven coordinates to `io.github.nexfusion`.
+  * Migrated all internal packages and components directly to `io.github.a092devs.nexfusion.*` with application package ID `io.github.a092devs.nexfusion`.
+  * Updated bundle plugin to `nexfusion.bundle` and Maven coordinates to `io.github.a092devs.nexfusion`.
   * Refined visual identity with fluid Material design and modern theme token architecture.
 - Release Artifact Distribution:
   * Prioritized production release builds (`NexFusion-<tag>.apk`) over standalone debug builds in update resolution.
@@ -420,7 +429,7 @@ the release notes, falling back to generated commit notes when no section exists
 
 - Coordinated Versioning Architecture: introduced coordinated release series `3.2`, establishing the manager version as the major compatibility series while enabling independent patch-only updates (`3.2.0`, `3.2.1`...) without requiring a new manager build.
 - Bundle Compatibility Validation: `BundleManifest` now validates bundle compatibility metadata (`compatibilitySeries`, `minManagerVersion`, `maxManagerVersion`) using semantic version comparison, cleanly rejecting incompatible bundles with explicit user feedback while preserving full backwards compatibility for legacy and third-party bundles.
-- Seamless Bundle Migration: added automated migration when updating from the legacy `a092devs` bundle to `NexFusion Patches` (`io.github.nexfusion.patches`), automatically replacing previous installations without resource package ID conflicts while preserving user toggle states and source tracking.
+- Seamless Bundle Migration: added automated migration when updating from the legacy `a092devs` bundle to `NexFusion Patches` (`io.github.a092devs.nexfusion.patches`), automatically replacing previous installations without resource package ID conflicts while preserving user toggle states and source tracking.
 - Smart Release Discovery: `SourceClient` now discovers and prioritizes releases compatible with the running manager's compatibility series, preventing accidental installation of breaking future series releases during patch-only update checks.
 - Supported App Catalog: updated default bundle associations across all community-ported applications (Instagram, Spotify, Reddit, Discord, X, Gboard, LinkedIn, Proton VPN, MiXplorer) to `NexFusion Patches`.
 

@@ -1,0 +1,233 @@
+package io.github.a092devs.nexfusion.updates
+
+import io.github.a092devs.nexfusion.core.BuildConfig
+import io.github.a092devs.nexfusion.core.compatibility.VersionComparator
+import io.github.a092devs.nexfusion.manager.SourceClient
+import org.json.JSONArray
+
+private fun parseIsoDate(iso: String): Long = runCatching {
+    if (iso.isBlank()) return@runCatching 0L
+    val clean = iso.trim()
+    val format = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
+        timeZone = java.util.TimeZone.getTimeZone("UTC")
+    }
+    format.parse(clean)?.time ?: 0L
+}.getOrDefault(0L)
+
+/** A release of NexFusion itself. */
+class AppRelease(
+    val tag: String,
+    val versionCode: Int,
+    val notes: String,
+    val pageUrl: String,
+    /** Download URL of the APK asset, if the release has one. */
+    val apkUrl: String?,
+    val isPrerelease: Boolean = false,
+    val targetCommitish: String = "",
+    val publishedAt: Long = 0L,
+    val isDebugAsset: Boolean = apkUrl?.contains("-debug.apk", ignoreCase = true) == true,
+) {
+    fun isAvailable(targetBuildType: String = AppSettings.BUILD_TYPE_RELEASE): Boolean {
+        val currentIsDebug = BuildConfig.DEBUG
+        val targetIsDebug = targetBuildType == AppSettings.BUILD_TYPE_DEBUG
+        val isDifferentVariant = currentIsDebug != targetIsDebug
+        return isNewer || isDifferentVariant
+    }
+
+    val isNewer: Boolean
+        get() {
+            if (tag.equals("beta", ignoreCase = true) || tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || isPrerelease) {
+                // If running app is already built from this exact commit, it's not newer
+                if (targetCommitish.isNotBlank() && BuildConfig.COMMIT_HASH.isNotBlank() && BuildConfig.COMMIT_HASH != "unknown") {
+                    if (BuildConfig.COMMIT_HASH.startsWith(targetCommitish, ignoreCase = true) ||
+                        targetCommitish.startsWith(BuildConfig.COMMIT_HASH, ignoreCase = true)
+                    ) {
+                        return false
+                    }
+                }
+                // If published date is at or before this app's commit date, it's not newer
+                val commitDateMs = BuildConfig.COMMIT_DATE * 1000L
+                if (publishedAt > 0L && commitDateMs > 0L) {
+                    if (publishedAt <= commitDateMs) {
+                        return false
+                    }
+                }
+                // Compare tag version directly (not from notes which may contain previous version in changelog link)
+                val cmp = VersionComparator.compare(tag, BuildConfig.VERSION_NAME)
+                if (cmp > 0) return true
+                if (cmp < 0) return false
+                // Same version: use versionCode or publishedAt as tiebreaker
+                if (versionCode > BuildConfig.VERSION_CODE) return true
+                if (publishedAt > 0L && commitDateMs > 0L && publishedAt > commitDateMs) return true
+                return false
+            }
+            return VersionComparator.compare(tag, BuildConfig.VERSION_NAME) > 0 || (versionCode > BuildConfig.VERSION_CODE)
+        }
+}
+
+/** Checks the GitHub releases of NexFusion for updates. Blocking; call off the main thread. */
+object AppUpdateChecker {
+    /** The version code a release tag `X.Y.Z` or `X.Y.Z-suffix` stands for, Z. 0 for other tags, e.g. nightly builds. */
+    fun versionCodeOf(tag: String): Int =
+        Regex("""v?\d+\.\d+\.(\d+)(-.*)?""").matchEntire(tag)?.groupValues?.get(1)?.toInt() ?: 0
+
+    /** The latest release, respecting the selected channel (stable vs beta pre-releases) and build type (release vs debug). */
+    fun latest(includePrerelease: Boolean = false, buildType: String = AppSettings.BUILD_TYPE_RELEASE): AppRelease? {
+        val repo = BuildConfig.UPDATE_REPOSITORY
+        // Try the GitHub REST API first
+        val apiResult = runCatching {
+            val response = SourceClient.get("https://api.github.com/repos/$repo/releases?per_page=20")
+            parseApiResponse(response, includePrerelease, buildType)
+        }
+        if (apiResult.isSuccess && apiResult.getOrNull() != null) {
+            return apiResult.getOrNull()
+        }
+
+        // Fallback: parse releases.atom directly from github.com (immune to GitHub API rate limits)
+        return runCatching {
+            val atomXml = SourceClient.get("https://github.com/$repo/releases.atom")
+            parseAtomFeed(atomXml, repo, includePrerelease, buildType)
+        }.getOrElse { fallbackError ->
+            throw apiResult.exceptionOrNull() ?: fallbackError
+        }
+    }
+
+    internal fun parseApiResponse(
+        jsonText: String,
+        includePrerelease: Boolean = false,
+        buildType: String = AppSettings.BUILD_TYPE_RELEASE,
+    ): AppRelease? {
+        val releases = JSONArray(jsonText)
+        val candidates = (0 until releases.length()).map { releases.getJSONObject(it) }
+            .filter { !it.optBoolean("draft") }
+            .filter {
+                val tag = it.optString("tag_name", "")
+                tag.isNotBlank() && (tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || tag.equals("beta", ignoreCase = true) || VersionComparator.compare(tag, "0.0.0") > 0)
+            }
+        val allowed = if (includePrerelease) {
+            candidates
+        } else {
+            val stable = candidates.filter {
+                !it.optBoolean("prerelease") &&
+                    !it.optString("tag_name", "").equals("beta", ignoreCase = true) &&
+                    !it.optString("tag_name", "").equals("autobuild", ignoreCase = true) &&
+                    !it.optString("tag_name", "").equals("nightly", ignoreCase = true)
+            }
+            stable.ifEmpty { candidates }
+        }
+        val release = allowed.maxWithOrNull { a, b ->
+            val tagA = a.optString("tag_name", "")
+            val tagB = b.optString("tag_name", "")
+            val isPreA = a.optBoolean("prerelease") || tagA.equals("autobuild", ignoreCase = true) || tagA.equals("nightly", ignoreCase = true) || tagA.equals("beta", ignoreCase = true)
+            val isPreB = b.optBoolean("prerelease") || tagB.equals("autobuild", ignoreCase = true) || tagB.equals("nightly", ignoreCase = true) || tagB.equals("beta", ignoreCase = true)
+            if (isPreA && !isPreB) 1
+            else if (isPreB && !isPreA) -1
+            else VersionComparator.compare(tagA, tagB)
+        } ?: return null
+        val assets = release.getJSONArray("assets")
+        val allApks = (0 until assets.length()).map { assets.getJSONObject(it) }
+            .filter { it.getString("name").endsWith(".apk") }
+        val apk = if (buildType == AppSettings.BUILD_TYPE_DEBUG) {
+            allApks.firstOrNull { it.getString("name").contains("-debug.apk", ignoreCase = true) }
+                ?: allApks.firstOrNull()
+        } else {
+            allApks.firstOrNull { !it.getString("name").contains("-debug.apk", ignoreCase = true) }
+                ?: allApks.firstOrNull()
+        }
+        val targetCommitish = release.optString("target_commitish", "")
+        val publishedStr = release.optString("published_at", "").ifEmpty { release.optString("created_at", "") }
+        val publishedAt = parseIsoDate(publishedStr)
+        return AppRelease(
+            tag = release.getString("tag_name"),
+            versionCode = versionCodeOf(release.getString("tag_name")),
+            notes = release.optString("body"),
+            pageUrl = release.getString("html_url"),
+            apkUrl = apk?.getString("browser_download_url"),
+            isPrerelease = release.optBoolean("prerelease") || release.optString("tag_name", "").let {
+                it.equals("beta", ignoreCase = true) || it.equals("autobuild", ignoreCase = true) || it.equals("nightly", ignoreCase = true)
+            },
+            targetCommitish = targetCommitish,
+            publishedAt = publishedAt,
+        )
+    }
+
+    internal fun parseAtomFeed(
+        atomXml: String,
+        repo: String,
+        includePrerelease: Boolean = false,
+        buildType: String = AppSettings.BUILD_TYPE_RELEASE,
+    ): AppRelease? {
+        val entryRegex = Regex("""<entry>([\s\S]*?)</entry>""")
+        val titleRegex = Regex("""<title>([^<]+)</title>""")
+        val linkRegex = Regex("""<link[^>]*href="([^"]+)"""")
+        val contentRegex = Regex("""<content[^>]*>([\s\S]*?)</content>""")
+
+        data class AtomEntry(val tag: String, val pageUrl: String, val content: String, val isPre: Boolean, val publishedAt: Long)
+
+        val entries = entryRegex.findAll(atomXml).mapNotNull { match ->
+            val block = match.groupValues[1]
+            val link = linkRegex.find(block)?.groupValues?.get(1).orEmpty()
+            val tag = link.substringAfterLast("/releases/tag/", "").takeIf { it.isNotEmpty() }
+                ?: titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
+            val isSpecialPre = tag.equals("autobuild", ignoreCase = true) || tag.equals("nightly", ignoreCase = true) || tag.equals("beta", ignoreCase = true)
+            if (tag.isEmpty() || (!isSpecialPre && VersionComparator.compare(tag, "0.0.0") <= 0)) return@mapNotNull null
+            val content = contentRegex.find(block)?.groupValues?.get(1).orEmpty()
+            val isPre = tag.contains('-') || isSpecialPre
+            val updatedStr = Regex("""<updated>([^<]+)</updated>""").find(block)?.groupValues?.get(1).orEmpty()
+            AtomEntry(tag, link, content, isPre, parseIsoDate(updatedStr))
+        }.toList()
+
+        if (entries.isEmpty()) return null
+
+        val chosen = if (includePrerelease) {
+            entries.maxWithOrNull { a, b ->
+                val isPreA = a.isPre || a.tag.equals("autobuild", ignoreCase = true) || a.tag.equals("nightly", ignoreCase = true) || a.tag.equals("beta", ignoreCase = true)
+                val isPreB = b.isPre || b.tag.equals("autobuild", ignoreCase = true) || b.tag.equals("nightly", ignoreCase = true) || b.tag.equals("beta", ignoreCase = true)
+                if (isPreA && !isPreB) 1
+                else if (isPreB && !isPreA) -1
+                else VersionComparator.compare(a.tag, b.tag)
+            }
+        } else {
+            val stable = entries.filter { !it.isPre }
+            (stable.ifEmpty { entries }).maxWithOrNull { a, b ->
+                VersionComparator.compare(a.tag, b.tag)
+            }
+        } ?: return null
+
+        var apkUrl: String? = null
+        val expandedAssets = runCatching {
+            SourceClient.get("https://github.com/$repo/releases/expanded_assets/${chosen.tag}")
+        }.getOrNull()
+
+        if (expandedAssets != null) {
+            val apkMatches = Regex("""href="(/[^"]+/releases/download/[^"]+?\.apk)"""").findAll(expandedAssets)
+                .map { "https://github.com" + it.groupValues[1] }
+                .toList()
+            apkUrl = if (buildType == AppSettings.BUILD_TYPE_DEBUG) {
+                apkMatches.firstOrNull { it.contains("-debug.apk", ignoreCase = true) }
+                    ?: apkMatches.firstOrNull()
+            } else {
+                apkMatches.firstOrNull { !it.contains("-debug.apk", ignoreCase = true) }
+                    ?: apkMatches.firstOrNull()
+            }
+        }
+
+        if (apkUrl == null) {
+            apkUrl = if (buildType == AppSettings.BUILD_TYPE_DEBUG) {
+                "https://github.com/$repo/releases/download/${chosen.tag}/NexFusion-${chosen.tag}-debug.apk"
+            } else {
+                "https://github.com/$repo/releases/download/${chosen.tag}/NexFusion-${chosen.tag}.apk"
+            }
+        }
+
+        return AppRelease(
+            tag = chosen.tag,
+            versionCode = versionCodeOf(chosen.tag),
+            notes = chosen.content,
+            pageUrl = chosen.pageUrl,
+            apkUrl = apkUrl,
+            isPrerelease = chosen.isPre,
+            publishedAt = chosen.publishedAt,
+        )
+    }
+}

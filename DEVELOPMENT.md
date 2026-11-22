@@ -19,7 +19,7 @@ A bundle is an APK with the extension `.nxb`, built by the `nexfusion.bundle` pl
 
 | `<meta-data>` | |
 | --- | --- |
-| `nexfusion.bundle.entry` | Class implementing [`PatchBundle`](patcher/src/main/java/io/github/nexfusion/PatchBundle.kt), a Kotlin `object` or a class with a no-arg constructor |
+| `nexfusion.bundle.entry` | Class implementing [`PatchBundle`](patcher/src/main/java/io/github/a092devs/nexfusion/PatchBundle.kt), a Kotlin `object` or a class with a no-arg constructor |
 | `nexfusion.bundle.apiVersion` | `PATCHER_API_VERSION` the bundle was compiled against |
 | `nexfusion.bundle.author`, `nexfusion.bundle.description` | Shown in the manager |
 
@@ -27,26 +27,26 @@ The package name is the bundle id, the application label its name and `versionNa
 
 ### How a bundle gets into an app
 
-1. The manager downloads the `.nxb` from a [patch source](app/src/main/java/io/github/nexfusion/manager/PatchSource.kt),
+1. The manager downloads the `.nxb` from a [patch source](app/src/main/java/io/github/a092devs/nexfusion/manager/PatchSource.kt),
    loads it once to list its apps and patches, and stores it as a *remote file* of the Xposed service
-   ([BundleManager.kt](app/src/main/java/io/github/nexfusion/manager/BundleManager.kt)). The list of installed bundles
+   ([BundleManager.kt](app/src/main/java/io/github/a092devs/nexfusion/manager/BundleManager.kt)). The list of installed bundles
    and the apps they patch is kept in the `bundles` remote preferences, and LSPosed is asked to add the apps to the
    module scope.
-2. When a scoped app starts, [MainHook.kt](app/src/main/java/io/github/nexfusion/MainHook.kt) reads that list, copies
+2. When a scoped app starts, [MainHook.kt](app/src/main/java/io/github/a092devs/nexfusion/MainHook.kt) reads that list, copies
    the bundles for the app from the remote files into the app's code cache, and loads them with a `DexClassLoader`
    whose parent is the module's class loader.
    Frameworks like LSPosed and Vector rename the Xposed API packages and rewrite only the module's own code. NexFusion
    detects the renaming from its own classes and rewrites the bundle classes that use the API into a separate dex
-   ([XposedDexRemapper.kt](app/src/main/java/io/github/nexfusion/core/XposedDexRemapper.kt)), cached per renaming.
+   ([XposedDexRemapper.kt](app/src/main/java/io/github/a092devs/nexfusion/core/XposedDexRemapper.kt)), cached per renaming.
    The bundle's class loader only sees the module's shared packages (patcher API, DexKit, Kotlin stdlib, Xposed APIs).
 3. Each bundle's resources are registered with `BundleResources`, then
-   [PatchSession](patcher/src/main/java/io/github/nexfusion/PatchSession.kt) runs the enabled patches of each bundle
+   [PatchSession](patcher/src/main/java/io/github/a092devs/nexfusion/PatchSession.kt) runs the enabled patches of each bundle
    with its own DexKit cache.
 
 Because the module's class loader is the parent, **classes the module ships always win over a bundle's copy**.
 The module therefore keeps the whole patcher API, DexKit and the Kotlin stdlib (see
 [proguard-rules.pro](app/proguard-rules.pro)), bundles exclude them, and a bundle must not declare classes in the
-module's packages (`io.github.nexfusion`, `io.github.nexfusion.morphe` and the module's own subpackages).
+module's packages (`io.github.a092devs.nexfusion`, `io.github.a092devs.nexfusion.morphe` and the module's own subpackages).
 
 The APK's [scope.list](app/src/main/resources/META-INF/xposed/scope.list) only requests NexFusion itself. The apps a
 bundle patches are requested when the bundle is installed (installed apps only, see `BundleManager.missingScope`).
@@ -82,7 +82,7 @@ nexfusionBundle {
 }
 
 dependencies {
-    compileOnly("io.github.nexfusion:patcher:1.0.0")
+    compileOnly("io.github.a092devs.nexfusion:patcher:1.0.0")
 }
 ```
 
@@ -139,7 +139,7 @@ Patches follow this structure:
 ```kotlin
 package com.example.patches.contoso.misc.unlock.plus
 
-import io.github.nexfusion.morphe.Fingerprint
+import io.github.a092devs.nexfusion.morphe.Fingerprint
 
 object IsPlusUnlockedFingerprint : Fingerprint(
     returnType = "Z",
@@ -152,7 +152,7 @@ object IsPlusUnlockedFingerprint : Fingerprint(
 package com.example.patches.contoso.misc.unlock.plus
 
 import de.robv.android.xposed.XC_MethodReplacement.returnConstant
-import io.github.nexfusion.patch
+import io.github.a092devs.nexfusion.patch
 
 val UnlockPlus = patch(name = "Unlock Plus") {
     IsPlusUnlockedFingerprint.hookMethod(returnConstant(true))
@@ -163,7 +163,7 @@ Patches named `""` or starting with `<` are internal: they always run and are hi
 
 ### Porting Upstream Patches
 
-The [FingerprintCompat.kt](patcher/src/main/java/io/github/nexfusion/morphe/FingerprintCompat.kt) utility assists in translating ReVanced Patcher API calls to DexKit Matchers. While simple fingerprints can often be directly copied, consider the following translation patterns for complex cases:
+The [FingerprintCompat.kt](patcher/src/main/java/io/github/a092devs/nexfusion/morphe/FingerprintCompat.kt) utility assists in translating ReVanced Patcher API calls to DexKit Matchers. While simple fingerprints can often be directly copied, consider the following translation patterns for complex cases:
 
 1.  **Literal Mapping:**
     If an upstream patch defines a literal within the patch file (e.g., `aLiteral = resourceMappings["id", "aLiteral"]`) for use in a fingerprint, convert it to a getter property in the corresponding `Fingerprints.kt` file.
