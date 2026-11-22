@@ -79,7 +79,7 @@ class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
  *
  * Fingerprint matches are cached per bundle and invalidated whenever the app, NexFusion or the bundle changes.
  */
-class PatchSession(
+open class PatchSession(
     private val app: Application,
     private val lpparam: XposedModuleInterface.PackageReadyParam,
     private val xposed: XposedInterface,

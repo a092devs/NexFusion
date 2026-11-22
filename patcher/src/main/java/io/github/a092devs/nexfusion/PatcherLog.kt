@@ -10,6 +10,22 @@ object PatcherLog {
     @Volatile
     var verbose = false
 
+    fun d(msg: String) {
+        if (verbose) Log.d(TAG, msg)
+    }
+
+    fun i(msg: String) {
+        Log.i(TAG, msg)
+    }
+
+    fun w(msg: String) {
+        Log.w(TAG, msg)
+    }
+
+    fun e(msg: String, throwable: Throwable? = null) {
+        Log.e(TAG, msg, throwable)
+    }
+
     fun info(throwable: Throwable? = null, message: () -> String) {
         if (verbose) Log.i(TAG, message(), throwable)
     }

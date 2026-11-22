@@ -92,7 +92,12 @@ private enum class AppFilter {
 }
 
 @Composable
-fun HomeScreen(viewModel: ManagerViewModel, navController: NavHostController, outerPadding: PaddingValues) {
+fun HomeScreen(
+    viewModel: ManagerViewModel,
+    navController: NavHostController,
+    outerPadding: PaddingValues,
+    onOpenPatches: () -> Unit = { navController.navigateTopLevel(MainActivity.DESTINATION_PATCHES) },
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     HomeContent(
         state = state,
@@ -102,7 +107,7 @@ fun HomeScreen(viewModel: ManagerViewModel, navController: NavHostController, ou
         onUpdateAll = viewModel::updateAll,
         onRequestScope = { viewModel.requestMissingScope() },
         onSetAppIgnored = viewModel::setAppIgnored,
-        onOpenPatches = { navController.navigateTopLevel(MainActivity.DESTINATION_PATCHES) },
+        onOpenPatches = onOpenPatches,
         onOpenApp = { navController.navigate("${MainActivity.DESTINATION_APP}/$it") },
         onDownloadUpdate = viewModel::downloadAndInstallUpdate,
         onToggleHideUninstalled = { viewModel.setHideUninstalledApps(!state.hideUninstalledApps) },

@@ -39,11 +39,11 @@ fun patch(
 ) =
     Patch(name, description, use, func)
 
-class Patch(
-    val name: String,
-    val description: String,
-    val use: Boolean,
-    val run: PatchExecutor.() -> Unit
+open class Patch(
+    open val name: String,
+    open val description: String,
+    open val use: Boolean,
+    open val run: PatchExecutor.() -> Unit
 )
 
 abstract class IHook(val xposed: XposedInterface) : XposedInterface by xposed {
@@ -106,14 +106,14 @@ class FingerprintNotFoundException(key: String, cause: Throwable? = null) :
  *
  * Patches run as extension functions of this class, so everything here is available inside `patch { }`.
  */
-class PatchExecutor(
+open class PatchExecutor(
     val appContext: Application,
     val lpparam: XposedModuleInterface.PackageReadyParam,
     xposed: XposedInterface,
     /** The bundle the executed patches come from. */
     val bundle: BundleInfo,
-    private val dexkit: DexKitCacheBridge.RecyclableBridge,
-    private val sessionAppliedPatches: MutableSet<String>? = null,
+    val dexkit: DexKitCacheBridge.RecyclableBridge,
+    val sessionAppliedPatches: MutableSet<String>? = null,
 ) : IHook(xposed) {
     override val classLoader = lpparam.classLoader
 

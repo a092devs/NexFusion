@@ -75,6 +75,19 @@ class BundleCompatibilityTest {
     }
 
     @Test
+    fun legacyBundleDexParsingExtractsApps() {
+        val bundleFile = java.io.File("../Nexfusion-Patches/bundles/nexfusion/build/outputs/bundle/nexfusion-4.4.9.nxb")
+        if (bundleFile.exists()) {
+            val method = io.github.a092devs.nexfusion.core.BundleClassLoader::class.java.getDeclaredMethod("extractAppsFromDex", java.io.File::class.java)
+            method.isAccessible = true
+            val apps = method.invoke(io.github.a092devs.nexfusion.core.BundleClassLoader, bundleFile) as List<*>
+            assertTrue(apps.isNotEmpty(), "Expected extracted apps to be non-empty")
+            assertTrue(apps.any { (it as io.github.a092devs.nexfusion.AppPatchInfo).packageName == "com.google.android.youtube" })
+            assertTrue(apps.any { (it as io.github.a092devs.nexfusion.AppPatchInfo).packageName == "org.telegram.messenger" })
+        }
+    }
+
+    @Test
     fun emptyCompatibilityMetadataAlwaysPasses() {
         val legacyManifest = createManifest(series = "", minManager = "", maxManager = "")
         assertNull(legacyManifest.checkCompatibilityWarning("3.2.0"))

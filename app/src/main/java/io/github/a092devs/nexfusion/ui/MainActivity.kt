@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,6 +39,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -53,6 +56,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -76,7 +80,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -326,17 +332,29 @@ private fun ManagerApp(
 ) {
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
-    val isTopLevel = topLevel.any { it.route == route }
+    val isTopLevel = route == MainActivity.DESTINATION_HOME
     val isMiuix = isMiuixStyle
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 3 })
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(requestedDestination) {
         if (requestedDestination != null) {
-            navController.navigateTopLevel(requestedDestination)
+            val targetIdx = destinationIndex(requestedDestination)
+            if (targetIdx in 0..2) {
+                if (route != MainActivity.DESTINATION_HOME) {
+                    navController.popBackStack(MainActivity.DESTINATION_HOME, inclusive = false)
+                }
+                coroutineScope.launch { pagerState.animateScrollToPage(targetIdx) }
+            }
             onDestinationHandled()
         }
     }
     NotificationPermission()
+
+    BackHandler(enabled = isTopLevel && pagerState.currentPage != 0) {
+        coroutineScope.launch { pagerState.animateScrollToPage(0) }
+    }
 
     val navBarBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val contentBottomPadding = when {
@@ -384,49 +402,79 @@ private fun ManagerApp(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
+                .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            NavHost(
-                navController = navController,
-                startDestination = MainActivity.DESTINATION_HOME,
-                enterTransition = navEnterTransition,
-                exitTransition = navExitTransition,
-                popEnterTransition = navEnterTransition,
-                popExitTransition = navExitTransition,
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .widthIn(max = 840.dp)
             ) {
-                composable(MainActivity.DESTINATION_HOME) {
-                    HomeScreen(viewModel, navController, PaddingValues(bottom = contentBottomPadding))
+                NavHost(
+                    navController = navController,
+                    startDestination = MainActivity.DESTINATION_HOME,
+                    enterTransition = navEnterTransition,
+                    exitTransition = navExitTransition,
+                    popEnterTransition = navEnterTransition,
+                    popExitTransition = navExitTransition,
+                ) {
+                    composable(MainActivity.DESTINATION_HOME) {
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxSize(),
+                        ) { page ->
+                            when (page) {
+                                0 -> HomeScreen(
+                                    viewModel = viewModel,
+                                    navController = navController,
+                                    outerPadding = PaddingValues(bottom = contentBottomPadding),
+                                    onOpenPatches = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                                )
+                                1 -> PatchesScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
+                                2 -> SettingsScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
+                            }
+                        }
+                    }
+                    composable(MainActivity.DESTINATION_PATCHES) {
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack(MainActivity.DESTINATION_HOME, inclusive = false)
+                            pagerState.animateScrollToPage(1)
+                        }
+                    }
+                    composable(MainActivity.DESTINATION_SETTINGS) {
+                        LaunchedEffect(Unit) {
+                            navController.popBackStack(MainActivity.DESTINATION_HOME, inclusive = false)
+                            pagerState.animateScrollToPage(2)
+                        }
+                    }
+                    composable(
+                        "${MainActivity.DESTINATION_APP}/{packageName}",
+                        arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+                    ) { entry ->
+                        AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
+                    }
                 }
-                composable(MainActivity.DESTINATION_PATCHES) {
-                    PatchesScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
-                }
-                composable(MainActivity.DESTINATION_SETTINGS) {
-                    SettingsScreen(viewModel, PaddingValues(bottom = contentBottomPadding))
-                }
-                composable(
-                    "${MainActivity.DESTINATION_APP}/{packageName}",
-                    arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-                ) { entry ->
-                    AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
-                }
-            }
 
-            if (isMiuix) {
-                MiuixSnackbarHost(
-                    state = miuixSnackbar,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = contentBottomPadding),
-                )
-            } else {
-                SnackbarHost(
-                    hostState = m3Snackbar,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = contentBottomPadding),
-                )
+                if (isMiuix) {
+                    MiuixSnackbarHost(
+                        state = miuixSnackbar,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = contentBottomPadding),
+                    )
+                } else {
+                    SnackbarHost(
+                        hostState = m3Snackbar,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = contentBottomPadding),
+                    )
+                }
             }
         }
+
+        val selectedIndex = if (isTopLevel) pagerState.currentPage else 0
 
         if (isMiuix) {
             if (floatingNavigation) {
@@ -461,12 +509,10 @@ private fun ManagerApp(
                             )
                         }
                     }
-                    val selectedIndex = topLevel.indexOfFirst { it.route == route }.coerceAtLeast(0)
                     FluidFloatingBottomBar(
                         selectedIndex = selectedIndex,
                         onSelected = { index ->
-                            val target = topLevel.getOrNull(index) ?: topLevel[0]
-                            navController.navigateTopLevel(target.route)
+                            coroutineScope.launch { pagerState.animateScrollToPage(index) }
                         },
                         tabs = fluidTabs,
                         isTranslucent = state.floatingBarTranslucent,
@@ -479,14 +525,18 @@ private fun ManagerApp(
                     visible = isTopLevel,
                     enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
                     exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
-                    modifier = Modifier.align(Alignment.BottomCenter),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                        .widthIn(max = 840.dp),
                 ) {
                     MiuixNavigationBar {
-                        topLevel.forEach { item ->
-                            val selected = route == item.route
+                        topLevel.forEachIndexed { index, item ->
+                            val selected = selectedIndex == index
                             MiuixNavigationBarItem(
                                 selected = selected,
-                                onClick = { navController.navigateTopLevel(item.route) },
+                                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
                                 icon = if (selected) item.selectedIcon else item.unselectedIcon,
                                 label = stringResource(item.label),
                             )
@@ -499,16 +549,20 @@ private fun ManagerApp(
                 visible = isTopLevel,
                 enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(280, easing = FastOutSlowInEasing)) + fadeIn(animationSpec = tween(200)),
                 exit = slideOutVertically(targetOffsetY = { it }, animationSpec = tween(220, easing = FastOutSlowInEasing)) + fadeOut(animationSpec = tween(150)),
-                modifier = Modifier.align(Alignment.BottomCenter),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .widthIn(max = 840.dp),
             ) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ) {
-                    topLevel.forEach { item ->
-                        val selected = route == item.route
+                    topLevel.forEachIndexed { index, item ->
+                        val selected = selectedIndex == index
                         NavigationBarItem(
                             selected = selected,
-                            onClick = { navController.navigateTopLevel(item.route) },
+                            onClick = { coroutineScope.launch { pagerState.animateScrollToPage(index) } },
                             icon = {
                                 Icon(
                                     imageVector = if (selected) item.selectedIcon else item.unselectedIcon,

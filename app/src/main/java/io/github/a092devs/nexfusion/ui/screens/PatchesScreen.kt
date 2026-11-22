@@ -167,7 +167,7 @@ fun PatchesContent(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 24.dp + outerPadding.calculateBottomPadding()),
+                    contentPadding = PaddingValues(bottom = 96.dp + outerPadding.calculateBottomPadding()),
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     if (selectedTab == 0) {

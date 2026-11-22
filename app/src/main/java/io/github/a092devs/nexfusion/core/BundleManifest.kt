@@ -164,7 +164,19 @@ class BundleParentClassLoader(
     ) + extraSharedPrefixes
 
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
-        if (sharedPrefixes.any { name.startsWith(it) }) return module.loadClass(name)
+        if (sharedPrefixes.any { name.startsWith(it) }) {
+            try {
+                return module.loadClass(name)
+            } catch (e: ClassNotFoundException) {
+                if (name.startsWith("io.github.nexfusion.")) {
+                    val modernName = "io.github.a092devs." + name
+                    try {
+                        return module.loadClass(modernName)
+                    } catch (_: ClassNotFoundException) {}
+                }
+                return super.loadClass(name, resolve)
+            }
+        }
         return super.loadClass(name, resolve)
     }
 }
@@ -185,20 +197,28 @@ object BundleClassLoader {
         prependedDex?.setReadOnly()
         val path = listOfNotNull(prependedDex, apk).joinToString(File.pathSeparator) { it.path }
         val loader = DexClassLoader(path, null, null, parent)
+        var fallbackApps: List<AppPatchInfo>? = null
         val entry = try {
             val clazz = loader.loadClass(entryClass)
             // A Kotlin object exposes its instance as INSTANCE.
             runCatching { clazz.getField("INSTANCE").get(null) }.getOrNull()
                 ?: clazz.getDeclaredConstructor().newInstance()
         } catch (e: Throwable) {
-            android.util.Log.e("NexFusionBundle", "Cannot instantiate bundle entry $entryClass", e)
-            throw InvalidBundleException("Cannot instantiate bundle entry $entryClass: ${e.message ?: e.javaClass.simpleName}", e)
+            android.util.Log.w("NexFusionBundle", "Cannot instantiate bundle entry $entryClass, attempting DEX parsing fallback", e)
+            val extracted = extractAppsFromDex(apk)
+            if (extracted.isNotEmpty()) {
+                fallbackApps = extracted
+                null
+            } else {
+                android.util.Log.e("NexFusionBundle", "Cannot instantiate bundle entry $entryClass and DEX parsing found no apps", e)
+                throw InvalidBundleException("Cannot instantiate bundle entry $entryClass: ${e.message ?: e.javaClass.simpleName}", e)
+            }
         }
-        val apps: List<AppPatchInfo> = when (entry) {
+        val apps: List<AppPatchInfo> = fallbackApps ?: when (entry) {
             is PatchBundle -> entry.apps
             else -> {
                 // Compatibility fallback: extract apps via reflection if entry implements legacy or foreign PatchBundle
-                val getApps = runCatching { entry.javaClass.getMethod("getApps") }.getOrNull()
+                val getApps = runCatching { entry?.javaClass?.getMethod("getApps") }.getOrNull()
                 if (getApps != null) {
                     val rawList = getApps.invoke(entry) as? List<*>
                     rawList?.mapNotNull { item ->
@@ -232,5 +252,49 @@ object BundleClassLoader {
             }
         }
         return loader to apps
+    }
+
+    private fun extractAppsFromDex(apk: File): List<AppPatchInfo> {
+        val opcodes = com.android.tools.smali.dexlib2.Opcodes.getDefault()
+        val apps = mutableListOf<AppPatchInfo>()
+        val seen = mutableSetOf<String>()
+        runCatching {
+            java.util.zip.ZipFile(apk).use { zip ->
+                zip.entries().asSequence()
+                    .filter { it.name.matches(Regex("classes\\d*\\.dex")) }
+                    .forEach { entry ->
+                        val bytes = zip.getInputStream(entry).use { it.readBytes() }
+                        val dex = com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile(opcodes, bytes)
+                        for (classDef in dex.classes) {
+                            if (classDef.type.contains("NexFusionPatches") || classDef.type.contains("Patches;")) {
+                                for (method in classDef.methods) {
+                                    val instructions = method.implementation?.instructions ?: continue
+                                    var lastString = ""
+                                    for (inst in instructions) {
+                                        if (inst is com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction) {
+                                            val ref = inst.reference
+                                            if (ref is com.android.tools.smali.dexlib2.iface.reference.StringReference) {
+                                                val str = ref.string
+                                                if (str.contains(".") && !str.contains(" ") &&
+                                                    (str.startsWith("com.") || str.startsWith("org.") || str.startsWith("app.") || str.startsWith("ch."))
+                                                ) {
+                                                    val appName = if (lastString.isNotBlank() && !lastString.contains(".")) lastString else str.substringAfterLast('.').replaceFirstChar { it.uppercase() }
+                                                    if (seen.add(str)) {
+                                                        apps.add(AppPatchInfo(appName = appName, packageName = str, patches = emptyArray()))
+                                                    }
+                                                }
+                                                lastString = str
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+            }
+        }.onFailure {
+            android.util.Log.e("NexFusionBundle", "Failed to extract apps from DEX", it)
+        }
+        return apps
     }
 }

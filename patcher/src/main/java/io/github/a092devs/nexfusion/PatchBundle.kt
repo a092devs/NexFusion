@@ -50,7 +50,7 @@ interface PatchBundle {
 }
 
 /** A patch bundle loaded into the current process. */
-class BundleInfo(
+open class BundleInfo(
     /** Package name of the bundle APK, unique per bundle. */
     val id: String,
     val name: String,
