@@ -9,11 +9,12 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import io.github.a092devs.nexfusion.core.CacheManager
+import io.github.a092devs.nexfusion.manager.BundleManager
 import io.github.a092devs.nexfusion.manager.SourceClient
 import io.github.a092devs.nexfusion.manager.SourceStore
 import java.util.concurrent.TimeUnit
 
-/** Checks for updates of NexFusion and of the installed patch sources in the background, and notifies about them. */
+/** Checks for updates of NexFusion and of the installed patch sources in the background, and notifies about or applies them. */
 class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
@@ -30,19 +31,46 @@ class UpdateWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                 }
         }
 
-        if (settings.notifyPatchUpdates) {
-            val updated = SourceStore(context).all()
-                .filter { it.installedVersion != null }
-                .mapNotNull { source ->
-                    val release = runCatching { SourceClient.latestRelease(source, includePrerelease = includeBeta) }.getOrNull() ?: return@mapNotNull null
-                    val key = "source_${source.id}"
-                    if (release.version == source.installedVersion || settings.lastNotified(key) == release.version) {
-                        return@mapNotNull null
+        val store = SourceStore(context)
+        val bundleManager = BundleManager(context)
+        val installedSources = store.all().filter { it.enabled && it.installedVersion != null }
+
+        val autoUpdated = mutableListOf<String>()
+        val notified = mutableListOf<String>()
+
+        for (source in installedSources) {
+            val release = runCatching { SourceClient.latestRelease(source, includePrerelease = includeBeta) }.getOrNull() ?: continue
+            val key = "source_${source.id}"
+            if (release.version == source.installedVersion) continue
+
+            if (settings.autoUpdatePatches) {
+                val success = runCatching {
+                    for ((_, url) in release.bundles) {
+                        val connection = SourceClient.open(url)
+                        connection.inputStream.use { stream ->
+                            bundleManager.install(stream, source.id, connection.contentLengthLong)
+                        }
                     }
+                    store.save(source.copy(installedVersion = release.version))
                     settings.setLastNotified(key, release.version)
-                    "${source.name} ${release.version}"
+                    true
+                }.getOrDefault(false)
+
+                if (success) {
+                    autoUpdated.add("${source.name} ${release.version}")
                 }
-            if (updated.isNotEmpty()) UpdateNotifications.patchUpdates(context, updated)
+            } else if (settings.notifyPatchUpdates) {
+                if (settings.lastNotified(key) != release.version) {
+                    settings.setLastNotified(key, release.version)
+                    notified.add("${source.name} ${release.version}")
+                }
+            }
+        }
+
+        if (autoUpdated.isNotEmpty()) {
+            UpdateNotifications.patchesAutoUpdated(context, autoUpdated)
+        } else if (notified.isNotEmpty()) {
+            UpdateNotifications.patchUpdates(context, notified)
         }
 
         // Lightweight periodic cache prune to prevent storage accumulation

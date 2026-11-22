@@ -15,6 +15,13 @@ class AppSettings(context: Context) {
         set(value) = prefs.edit().putBoolean("notify_patch_updates", value).apply()
 
     /**
+     * Whether to automatically download and install updates for installed patch bundles in the background.
+     */
+    var autoUpdatePatches: Boolean
+        get() = prefs.getBoolean("auto_update_patches", false)
+        set(value) = prefs.edit().putBoolean("auto_update_patches", value).apply()
+
+    /**
      * Selected update channel: "stable" or "beta".
      * Controls whether pre-releases and beta bundles are included in update checks.
      */

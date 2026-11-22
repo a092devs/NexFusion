@@ -1,5 +1,6 @@
 package io.github.a092devs.nexfusion.ui.screens
 
+import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -58,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -243,6 +245,8 @@ fun PatchesContent(
         }
     }
 
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     if (isMiuix) {
         Box(
             modifier = Modifier
@@ -254,6 +258,9 @@ fun PatchesContent(
                     title = stringResource(R.string.nav_patches),
                     color = MaterialTheme.colorScheme.background,
                     actions = {
+                        ThemedIconButton(onClick = { addSource = true }) {
+                            Icon(icons.add, contentDescription = stringResource(R.string.add_source_title))
+                        }
                         ThemedIconButton(onClick = { menu = true }) {
                             Icon(icons.more, contentDescription = null)
                         }
@@ -272,7 +279,7 @@ fun PatchesContent(
                 )
                 bodyContent(PaddingValues(0.dp))
             }
-            if (selectedTab == 0) {
+            if (selectedTab == 0 && !isLandscape) {
                 val fabBg = MiuixTheme.colorScheme.primary
                 val fabFg = if (fabBg.luminance() > 0.5f) Color(0xFF0F172A) else Color.White
                 MiuixFloatingActionButton(
@@ -302,6 +309,9 @@ fun PatchesContent(
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
                     actions = {
+                        IconButton(onClick = { addSource = true }) {
+                            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_source_title))
+                        }
                         IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, contentDescription = null) }
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                             DropdownMenuItem(
@@ -315,7 +325,7 @@ fun PatchesContent(
                 )
             },
             floatingActionButton = {
-                if (selectedTab == 0) {
+                if (selectedTab == 0 && !isLandscape) {
                     ExtendedFloatingActionButton(
                         onClick = { addSource = true },
                         icon = { Icon(Icons.Filled.Add, contentDescription = null) },

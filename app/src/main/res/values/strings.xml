@@ -81,6 +81,8 @@
     <string name="setting_notify_app_summary">Notify when a new version of NexFusion is released</string>
     <string name="setting_notify_patches">Patch update notifications</string>
     <string name="setting_notify_patches_summary">Notify when an installed patch source releases new bundles</string>
+    <string name="setting_auto_update_patches">Auto-update patch bundles</string>
+    <string name="setting_auto_update_patches_summary">Automatically download and apply patch updates in the background</string>
     <string name="check_for_update_title">Check for updates</string>
     <string name="settings_general">General</string>
     <string name="settings_appearance">Appearance</string>
@@ -118,6 +120,8 @@
     <string name="notification_app_update_title">NexFusion %s is available</string>
     <string name="notification_app_update_text">Tap to update the app.</string>
     <string name="notification_patch_update_title">Patch updates available</string>
+    <string name="notification_patches_auto_updated_title">Patch bundles updated</string>
+    <string name="notification_patches_auto_updated_text">Updated in background: %s</string>
 
     <!-- Compatibility Statuses & Redesign -->
     <string name="status_compatible">Compatible</string>

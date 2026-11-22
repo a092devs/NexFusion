@@ -45,6 +45,13 @@ object UpdateNotifications {
         MainActivity.DESTINATION_PATCHES,
     )
 
+    fun patchesAutoUpdated(context: Context, sources: List<String>) = notify(
+        context, CHANNEL_PATCHES, ID_PATCHES,
+        context.getString(R.string.notification_patches_auto_updated_title),
+        context.getString(R.string.notification_patches_auto_updated_text, sources.joinToString()),
+        MainActivity.DESTINATION_PATCHES,
+    )
+
     private fun notify(context: Context, channel: String, id: Int, title: String, text: String, destination: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED

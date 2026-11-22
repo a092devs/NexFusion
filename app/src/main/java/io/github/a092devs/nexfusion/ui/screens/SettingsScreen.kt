@@ -66,6 +66,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
 
     var notifyApp by remember { mutableStateOf(settings.notifyAppUpdates) }
     var notifyPatches by remember { mutableStateOf(settings.notifyPatchUpdates) }
+    var autoUpdatePatches by remember { mutableStateOf(settings.autoUpdatePatches) }
     var iconHidden by remember { mutableStateOf(viewModel.launcherIconHidden) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showUpdateChannelDialog by remember { mutableStateOf(false) }
@@ -142,6 +143,12 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             summary = stringResource(R.string.setting_notify_patches_summary),
                             checked = notifyPatches,
                             onCheckedChange = { notifyPatches = it; settings.notifyPatchUpdates = it },
+                        )
+                        SwitchPreference(
+                            title = stringResource(R.string.setting_auto_update_patches),
+                            summary = stringResource(R.string.setting_auto_update_patches_summary),
+                            checked = autoUpdatePatches,
+                            onCheckedChange = { autoUpdatePatches = it; settings.autoUpdatePatches = it },
                         )
                         ArrowPreference(
                             title = stringResource(R.string.update_channel_title),
@@ -291,6 +298,17 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         },
                         colors = transparent,
                         modifier = Modifier.clickable { notifyPatches = !notifyPatches; settings.notifyPatchUpdates = notifyPatches },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.setting_auto_update_patches)) },
+                        supportingContent = { Text(stringResource(R.string.setting_auto_update_patches_summary)) },
+                        trailingContent = {
+                            Switch(autoUpdatePatches, { autoUpdatePatches = it; settings.autoUpdatePatches = it })
+                        },
+                        colors = transparent,
+                        modifier = Modifier.clickable { autoUpdatePatches = !autoUpdatePatches; settings.autoUpdatePatches = autoUpdatePatches },
                     )
                 }
                 item {
