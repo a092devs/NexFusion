@@ -5,6 +5,15 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.3
+
+- **Performance & Navigation Fluidity:**
+  * Cached patch bundle loading in ViewModel to eliminate stutter and hitching when returning from patch details.
+  * Enhanced predictive back animation curve and edge swipe responsiveness.
+  * Streamlined batch patch toggle actions with instant reactive updates.
+- **Ecosystem Synchronization:**
+  * Synchronized compatibility series with NexFusion Patches bundle v5.0.2.
+
 ## 5.0.2
 
 - **Themed Floating Notification Snackbar:**
