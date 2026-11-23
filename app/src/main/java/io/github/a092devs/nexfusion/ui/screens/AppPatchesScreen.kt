@@ -3,7 +3,11 @@ package io.github.a092devs.nexfusion.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.BackEventCompat
 import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -82,16 +86,17 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-    var backProgress by remember { mutableFloatStateOf(0f) }
+    val backProgressAnim = remember { Animatable(0f) }
+    var swipeEdge by remember { mutableIntStateOf(BackEventCompat.EDGE_LEFT) }
     PredictiveBackHandler { progress ->
         try {
             progress.collect { backEvent ->
-                backProgress = backEvent.progress
+                swipeEdge = backEvent.swipeEdge
+                backProgressAnim.snapTo(backEvent.progress)
             }
-            backProgress = 0f
             navController.popBackStack()
         } catch (e: CancellationException) {
-            backProgress = 0f
+            backProgressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow))
         }
     }
 
@@ -542,9 +547,17 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
-                    if (backProgress > 0f) {
-                        translationX = backProgress * screenWidthPx
-                        alpha = 1f - (backProgress * 0.25f)
+                    val progress = backProgressAnim.value
+                    if (progress > 0f) {
+                        val maxShift = 40.dp.toPx()
+                        val shift = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -maxShift else maxShift
+                        translationX = progress * shift
+                        val scale = 1f - (progress * 0.08f)
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = 1f - (progress * 0.12f)
+                        shape = RoundedCornerShape(24.dp * progress)
+                        clip = true
                     }
                 }
                 .background(MaterialTheme.colorScheme.background),
@@ -581,9 +594,17 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
         Scaffold(
             modifier = Modifier
                 .graphicsLayer {
-                    if (backProgress > 0f) {
-                        translationX = backProgress * screenWidthPx
-                        alpha = 1f - (backProgress * 0.25f)
+                    val progress = backProgressAnim.value
+                    if (progress > 0f) {
+                        val maxShift = 40.dp.toPx()
+                        val shift = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -maxShift else maxShift
+                        translationX = progress * shift
+                        val scale = 1f - (progress * 0.08f)
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = 1f - (progress * 0.12f)
+                        shape = RoundedCornerShape(24.dp * progress)
+                        clip = true
                     }
                 }
                 .nestedScroll(scrollBehavior.nestedScrollConnection),

@@ -329,13 +329,13 @@ private val navPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEn
     val targetRoute = targetState.destination.route
 
     when {
-        // Returning to top-level from App detail: top-level screen shifts back from left (parallax return)
+        // Returning to top-level from App detail: smooth scale-in and fade-in
         isDetailRoute(initialRoute) -> {
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> -fullWidth / 3 },
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
+            scaleIn(
+                initialScale = 0.94f,
+                animationSpec = tween(260, easing = FastOutSlowInEasing),
             ) + fadeIn(
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
+                animationSpec = tween(220, easing = LinearOutSlowInEasing),
                 initialAlpha = 0.85f,
             )
         }
@@ -365,11 +365,14 @@ private val navPopExitTransition: AnimatedContentTransitionScope<NavBackStackEnt
     val targetRoute = targetState.destination.route
 
     when {
-        // Leaving App detail: detail screen slides out smoothly to the right without premature fading
+        // Leaving App detail: smooth scale-out and fade-out seamlessly completing predictive back
         isDetailRoute(initialRoute) -> {
-            slideOutHorizontally(
-                targetOffsetX = { fullWidth -> fullWidth },
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
+            scaleOut(
+                targetScale = 0.90f,
+                animationSpec = tween(220, easing = FastOutSlowInEasing),
+            ) + fadeOut(
+                animationSpec = tween(200, easing = FastOutLinearInEasing),
+                targetAlpha = 0f,
             )
         }
         // Between peer top-level tabs:
