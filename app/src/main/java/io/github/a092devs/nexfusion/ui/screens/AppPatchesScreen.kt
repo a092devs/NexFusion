@@ -3,6 +3,7 @@ package io.github.a092devs.nexfusion.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,13 +50,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import kotlin.coroutines.cancellation.CancellationException
 import io.github.a092devs.nexfusion.core.R
 import io.github.a092devs.nexfusion.core.compatibility.CompatibilityEngine
 import io.github.a092devs.nexfusion.core.compatibility.CompatibilityStatus
@@ -75,6 +81,23 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    var backProgress by remember { mutableFloatStateOf(0f) }
+    PredictiveBackHandler { progress ->
+        try {
+            progress.collect { backEvent ->
+                backProgress = backEvent.progress
+            }
+            backProgress = 0f
+            navController.popBackStack()
+        } catch (e: CancellationException) {
+            backProgress = 0f
+        }
+    }
+
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val density = LocalDensity.current
+    val screenWidthPx = with(density) { screenWidth.toPx() }
 
     val appItem = state.appCatalog.find { it.packageName == packageName }
     val liveInfo = remember(packageName) { AppDiscovery.queryPackage(context, packageName) }
@@ -98,10 +121,14 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
 
     LaunchedEffect(packageName, state.isActive, state.bundles, reload) {
         val loaded = viewModel.patches(packageName)
-        enabled.value = mapOf()
-        loaded.getOrNull()?.forEach { group ->
-            group.patches.forEach { (patch, on) -> enabled.value = enabled.value + (patchPreferenceKey(group.bundle.id, patch.name) to on) }
+        val newMap = buildMap {
+            loaded.getOrNull()?.forEach { group ->
+                group.patches.forEach { (patch, on) ->
+                    put(patchPreferenceKey(group.bundle.id, patch.name), on)
+                }
+            }
         }
+        enabled.value = newMap
         result = loaded
     }
 
@@ -380,31 +407,42 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                     }
 
                     item {
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceSm),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(
                                 stringResource(R.string.force_stop_to_apply_summary),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f).padding(end = 8.dp),
                             )
-                            // FlowRow: long localized labels wrap onto a second line instead of
-                            // squeezing the summary text or overflowing the card.
                             FlowRow(
-                                modifier = Modifier.padding(start = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 ThemedOutlinedButton(
-                                    label = "App info",
+                                    label = stringResource(R.string.action_enable_all),
+                                    onClick = {
+                                        viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = true)
+                                        reload++
+                                    },
+                                )
+                                ThemedOutlinedButton(
+                                    label = stringResource(R.string.action_disable_all),
+                                    onClick = {
+                                        viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = false)
+                                        reload++
+                                    },
+                                )
+                                ThemedOutlinedButton(
+                                    label = stringResource(R.string.action_app_info),
                                     onClick = { viewModel.openAppInfo(packageName) },
                                 )
                                 ThemedOutlinedButton(
-                                    label = "Force stop",
+                                    label = stringResource(R.string.action_force_stop),
                                     onClick = { viewModel.forceStopApp(packageName) },
                                 )
                             }
@@ -503,6 +541,12 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .graphicsLayer {
+                    if (backProgress > 0f) {
+                        translationX = backProgress * screenWidthPx
+                        alpha = 1f - (backProgress * 0.25f)
+                    }
+                }
                 .background(MaterialTheme.colorScheme.background),
         ) {
             MiuixTopAppBar(
@@ -535,7 +579,14 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
         }
     } else {
         Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .graphicsLayer {
+                    if (backProgress > 0f) {
+                        translationX = backProgress * screenWidthPx
+                        alpha = 1f - (backProgress * 0.25f)
+                    }
+                }
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(

@@ -98,6 +98,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.a092devs.nexfusion.ui.liquid.FluidFloatingBottomBar
@@ -263,7 +264,7 @@ private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry
         isDetailRoute(targetRoute) -> {
             slideInHorizontally(
                 initialOffsetX = { fullWidth -> fullWidth },
-                animationSpec = tween(280, easing = FastOutSlowInEasing),
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
             )
         }
         // Between peer top-level tabs:
@@ -296,7 +297,10 @@ private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>
         isDetailRoute(targetRoute) -> {
             slideOutHorizontally(
                 targetOffsetX = { fullWidth -> -fullWidth / 3 },
-                animationSpec = tween(280, easing = FastOutSlowInEasing),
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+            ) + fadeOut(
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+                targetAlpha = 0.85f,
             )
         }
         // Between peer top-level tabs:
@@ -329,7 +333,10 @@ private val navPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEn
         isDetailRoute(initialRoute) -> {
             slideInHorizontally(
                 initialOffsetX = { fullWidth -> -fullWidth / 3 },
-                animationSpec = tween(280, easing = FastOutSlowInEasing),
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+            ) + fadeIn(
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
+                initialAlpha = 0.85f,
             )
         }
         // Between peer top-level tabs:
@@ -362,7 +369,7 @@ private val navPopExitTransition: AnimatedContentTransitionScope<NavBackStackEnt
         isDetailRoute(initialRoute) -> {
             slideOutHorizontally(
                 targetOffsetX = { fullWidth -> fullWidth },
-                animationSpec = tween(280, easing = FastOutSlowInEasing),
+                animationSpec = tween(300, easing = FastOutSlowInEasing),
             )
         }
         // Between peer top-level tabs:
@@ -449,7 +456,6 @@ private fun ManagerApp(
 
     val navBarBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val contentBottomPadding = when {
-        !isTopLevel -> 16.dp
         isMiuix && floatingNavigation -> 100.dp
         isMiuix -> 84.dp + navBarBottomInset
         else -> 80.dp + navBarBottomInset

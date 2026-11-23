@@ -72,6 +72,7 @@
     <string name="patches_load_failed">Could not load the patches: %s</string>
     <string name="duplicate_patch_warning">Provided by multiple bundles</string>
     <string name="action_app_info">App info</string>
+    <string name="action_force_stop">Force stop</string>
     <string name="action_restore_defaults">Restore defaults</string>
     <string name="action_enable_all">Enable all</string>
     <string name="action_disable_all">Disable all</string>
