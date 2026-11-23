@@ -688,6 +688,40 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     // region Patches of an app
 
+    /** Synchronously returns cached patches if already loaded into memory. */
+    fun getCachedPatches(packageName: String): Result<List<BundlePatches>>? {
+        val state = _state.value
+        val mgr = manager
+        val enabledSourceIds = state.sources.filter { it.enabled }.map { it.id }.toSet()
+        val activeBundles = state.bundles.filter {
+            it.enabled && (it.sourceId == null || it.sourceId in enabledSourceIds) && packageName in it.apps
+        }
+        if (activeBundles.isEmpty()) return null
+        if (!activeBundles.all { mgr.getCachedPatches(it) != null }) return null
+        return runCatching {
+            val service = state.service
+            val prefs = service?.let { runCatching { it.getRemotePreferences(packageName) }.getOrNull() }
+            val bundlePatchLists = activeBundles.map { bundle ->
+                val apps: List<AppPatchInfo> = mgr.getCachedPatches(bundle).orEmpty().filter { it.packageName == packageName }
+                val patches = apps.flatMap { it.patches.asList() }
+                    .filter { it.name.isNotEmpty() && !it.name.startsWith("<") }
+                    .sortedBy { it.name }
+                    .map { patch ->
+                        val isEnabled = prefs?.getBoolean(patchPreferenceKey(bundle.id, patch.name), patch.use)
+                            ?: patch.use
+                        patch to isEnabled
+                    }
+                val sourceName = state.sources.find { it.id == bundle.sourceId }?.name
+                Triple(bundle, patches, sourceName)
+            }
+            val allNames = bundlePatchLists.flatMap { (_, patches, _) -> patches.map { it.first.name } }
+            val duplicates = allNames.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
+            bundlePatchLists.map { (bundle, patches, sourceName) ->
+                BundlePatches(bundle, patches, duplicates, sourceName)
+            }
+        }
+    }
+
     /** Loads the patches enabled bundles provide for [packageName], with offline fallback. */
     suspend fun patches(packageName: String): Result<List<BundlePatches>> = withContext(Dispatchers.IO) {
         runCatching {

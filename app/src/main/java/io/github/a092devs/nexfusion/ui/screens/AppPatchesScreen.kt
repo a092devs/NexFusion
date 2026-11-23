@@ -3,14 +3,6 @@ package io.github.a092devs.nexfusion.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.activity.BackEventCompat
-import androidx.activity.compose.PredictiveBackHandler
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +40,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,45 +83,22 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-    val coroutineScope = rememberCoroutineScope()
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val density = LocalDensity.current
-    val screenWidthPx = with(density) { screenWidth.toPx() }
-
-    val backProgressAnim = remember { Animatable(0f) }
-    var swipeEdge by remember { mutableIntStateOf(BackEventCompat.EDGE_LEFT) }
-
-    val performBack: () -> Unit = {
-        coroutineScope.launch {
-            swipeEdge = BackEventCompat.EDGE_LEFT
-            backProgressAnim.animateTo(1f, tween(250, easing = FastOutSlowInEasing))
-            navController.popBackStack()
-        }
-    }
-
-    PredictiveBackHandler { progress ->
-        try {
-            progress.collect { backEvent ->
-                swipeEdge = backEvent.swipeEdge
-                backProgressAnim.snapTo(backEvent.progress)
-            }
-            backProgressAnim.animateTo(
-                1f,
-                tween(durationMillis = 160, easing = FastOutLinearInEasing)
-            )
-            navController.popBackStack()
-        } catch (e: CancellationException) {
-            backProgressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy))
-        }
-    }
-
-    val appItem = state.appCatalog.find { it.packageName == packageName }
     val liveInfo = remember(packageName) { AppDiscovery.queryPackage(context, packageName) }
     val appIcon = remember(packageName) { AppDiscovery.loadAppIcon(context, packageName) }
+    val appItem = state.appCatalog.find { it.packageName == packageName }
     val appName = appItem?.appName ?: liveInfo.appLabel.ifBlank { packageName }
+    val performBack: () -> Unit = { navController.popBackStack() }
 
-    var result by remember { mutableStateOf<Result<List<BundlePatches>>?>(null) }
-    val enabled = remember { mutableStateOf(mapOf<String, Boolean>()) }
+    val initialCached = remember(packageName) { viewModel.getCachedPatches(packageName) }
+    var result by remember { mutableStateOf<Result<List<BundlePatches>>?>(initialCached) }
+    val initialMap = remember(initialCached) {
+        initialCached?.getOrNull()?.flatMap { group ->
+            group.patches.map { (patch, on) ->
+                patchPreferenceKey(group.bundle.id, patch.name) to on
+            }
+        }?.toMap().orEmpty()
+    }
+    val enabled = remember { mutableStateOf(initialMap) }
     var reload by remember { mutableIntStateOf(0) }
     var menu by remember { mutableStateOf(false) }
     var patchSearchQuery by remember { mutableStateOf("") }
@@ -565,19 +534,6 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    val progress = backProgressAnim.value
-                    if (progress > 0f) {
-                        val direction = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -1f else 1f
-                        translationX = progress * screenWidthPx * direction
-                        val scale = 1f - (progress * 0.04f)
-                        scaleX = scale
-                        scaleY = scale
-                        alpha = (1f - (progress * 0.15f)).coerceIn(0f, 1f)
-                        shape = RoundedCornerShape(16.dp * progress)
-                        clip = true
-                    }
-                }
                 .background(MaterialTheme.colorScheme.background),
         ) {
             MiuixTopAppBar(
@@ -611,19 +567,6 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     } else {
         Scaffold(
             modifier = Modifier
-                .graphicsLayer {
-                    val progress = backProgressAnim.value
-                    if (progress > 0f) {
-                        val direction = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -1f else 1f
-                        translationX = progress * screenWidthPx * direction
-                        val scale = 1f - (progress * 0.04f)
-                        scaleX = scale
-                        scaleY = scale
-                        alpha = (1f - (progress * 0.15f)).coerceIn(0f, 1f)
-                        shape = RoundedCornerShape(16.dp * progress)
-                        clip = true
-                    }
-                }
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {

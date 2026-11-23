@@ -140,7 +140,6 @@ the release notes, falling back to generated commit notes when no section exists
   * Increased Gradle memory heap to 4GB and unified APK compilation tasks for significantly faster CI builds.
   * Added duplicate push detection for `beta` branch to avoid redundant CI runs without cancellation errors.
   * Hardened nightly `autobuild` release workflow with in-place asset updates, preventing GitHub release race condition collisions.
-  * Added authentication guard to Crowdin localization workflows to skip gracefully when API secrets are not configured.
 
 ## 4.3.2
 
@@ -201,9 +200,6 @@ the release notes, falling back to generated commit notes when no section exists
   * Added package queries and discovery metadata for VLC (`org.videolan.vlc`).
   * Removed MX Player (`com.mxtech.videoplayer.ad`) from discovery and bundle targets.
   * Updated supported applications matrix across video, audio, social, and system utilities.
-- Community Translations via Crowdin:
-  * Integrated automated Crowdin translation configuration (`crowdin.yml`) for multi-language community localization.
-  * Added automated GitHub Actions workflows for source upload (`crowdin_push.yml`) and community translation sync (`crowdin_pull.yml`).
 
 ## 4.2.7
 

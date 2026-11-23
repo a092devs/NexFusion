@@ -17,6 +17,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -111,6 +112,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigationevent.NavigationEvent
 import io.github.a092devs.nexfusion.core.PrefKeys
 import io.github.a092devs.nexfusion.core.R
 import io.github.a092devs.nexfusion.ui.screens.AppPatchesScreen
@@ -329,16 +331,10 @@ private val navPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEn
     val targetRoute = targetState.destination.route
 
     when {
-        // Returning to top-level from App detail: top-level screen shifts back from left (parallax return)
-        isDetailRoute(initialRoute) -> {
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> -fullWidth / 3 },
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
-            ) + fadeIn(
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
-                initialAlpha = 0.85f,
-            )
-        }
+        isDetailRoute(initialRoute) -> slideInHorizontally(
+            initialOffsetX = { -it / 3 },
+            animationSpec = tween(240, easing = FastOutSlowInEasing),
+        )
         // Between peer top-level tabs:
         else -> {
             val initialIdx = destinationIndex(initialRoute)
@@ -365,10 +361,11 @@ private val navPopExitTransition: AnimatedContentTransitionScope<NavBackStackEnt
     val targetRoute = targetState.destination.route
 
     when {
-        // Leaving App detail: gracefully fades out completing gesture/exit slide
-        isDetailRoute(initialRoute) -> {
-            fadeOut(animationSpec = tween(120))
-        }
+        // Toolbar, three-button navigation, or other non-predictive back.
+        isDetailRoute(initialRoute) -> slideOutHorizontally(
+            targetOffsetX = { it },
+            animationSpec = tween(240, easing = FastOutSlowInEasing),
+        )
         // Between peer top-level tabs:
         else -> {
             val initialIdx = destinationIndex(initialRoute)
@@ -501,6 +498,14 @@ private fun ManagerApp(
                     exitTransition = navExitTransition,
                     popEnterTransition = navPopEnterTransition,
                     popExitTransition = navPopExitTransition,
+                    predictivePopEnterTransition = { edge ->
+                        val direction = if (edge == NavigationEvent.EDGE_RIGHT) -1 else 1
+                        slideInHorizontally(tween(240, easing = LinearEasing)) { -direction * it / 3 }
+                    },
+                    predictivePopExitTransition = { edge ->
+                        val direction = if (edge == NavigationEvent.EDGE_RIGHT) -1 else 1
+                        slideOutHorizontally(tween(240, easing = LinearEasing)) { direction * it }
+                    },
                 ) {
                     composable(MainActivity.DESTINATION_HOME) {
                         HorizontalPager(

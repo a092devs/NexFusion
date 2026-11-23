@@ -399,6 +399,8 @@ class BundleManager(private val context: Context, private val service: XposedSer
 
     /** The patches of an installed bundle, loaded from the manager's copy of the bundle. */
     fun patches(bundle: InstalledBundle): List<AppPatchInfo> {
+        val cached = loadedApps[bundle.fileName]
+        if (cached != null) return cached
         var local = File(localDir, bundle.fileName)
         if (!local.exists() || local.length() == 0L) {
             local.delete()
@@ -498,6 +500,8 @@ class BundleManager(private val context: Context, private val service: XposedSer
         }
         loadedApps.remove(fileName)
     }
+
+    fun getCachedPatches(bundle: InstalledBundle): List<AppPatchInfo>? = loadedApps[bundle.fileName]
 
     private companion object {
         /** Bundles are loaded at most once per manager process; their file names change with every update. */

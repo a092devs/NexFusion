@@ -8,7 +8,6 @@
     <img src="https://img.shields.io/badge/LSPosed-API%20101%2F102-8957e5?style=flat&labelColor=21262d" alt="LSPosed API 101/102" />
     <img src="https://img.shields.io/badge/UI-Miuix%20%7C%20Material%203-a371f7?style=flat&labelColor=21262d" alt="Design Systems" />
     <img src="https://img.shields.io/badge/Icon-Hardware%20Silicon%20Matrix-1f6feb?style=flat&labelColor=21262d" alt="Hardware Silicon Matrix" />
-    <a href="https://crowdin.com/project/nexfusion"><img src="https://img.shields.io/badge/Crowdin-Translate-1f6feb?style=flat&labelColor=21262d&logo=crowdin&logoColor=white" alt="Crowdin Translations" /></a>
     <a href="https://t.me/a092devs"><img src="https://img.shields.io/badge/Telegram-@a092devs-2f81f7?style=flat&labelColor=21262d&logo=telegram&logoColor=white" alt="Telegram Support" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-d29922?style=flat&labelColor=21262d" alt="GPL-3.0" /></a>
   </p>
@@ -205,20 +204,6 @@ cd NexFusion
 
 ---
 
-## 🌐 Translations
-
-NexFusion is localized by community contributors via [Crowdin](https://crowdin.com/project/nexfusion).
-
-<div align="center">
-  <a href="https://crowdin.com/project/nexfusion">
-    <img src="https://img.shields.io/badge/Crowdin-Translate%20NexFusion-1f6feb?style=flat&labelColor=21262d&logo=crowdin&logoColor=white" alt="Crowdin Translations" />
-  </a>
-</div>
-
-- **Help Translate:** Help translate NexFusion into your language or review existing localizations on our [Crowdin Project](https://crowdin.com/project/nexfusion).
-- **Automated Synchronization:** Completed translations are automatically synchronized into the repository and included in upcoming release builds.
-
----
 
 ## 🔍 Troubleshooting
 
