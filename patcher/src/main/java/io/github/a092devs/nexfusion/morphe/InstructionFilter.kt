@@ -475,11 +475,18 @@ class MethodCallFilter internal constructor(
 
     context(matcher: MethodMatcher)
     override fun addQuery() {
-        matcher.addInvoke {
-            this@MethodCallFilter.definingClass?.let(::getTypeNameCompat)?.let { declaredClass(it) }
-            this@MethodCallFilter.name?.let { name(it) }
-            this@MethodCallFilter.parameters?.let { parameters(it) }
-            this@MethodCallFilter.returnType?.let { returns(it) }
+        val declaredClassName = this@MethodCallFilter.definingClass?.let(::getTypeNameCompat)
+        val methodName = this@MethodCallFilter.name
+        val methodParams = this@MethodCallFilter.parameters?.mapNotNull(::getTypeNameCompat)?.takeIf { it.size == this@MethodCallFilter.parameters.size }
+        val methodReturn = this@MethodCallFilter.returnType?.let(::getTypeNameCompat)
+
+        if (declaredClassName != null || methodName != null || methodParams != null || methodReturn != null) {
+            matcher.addInvoke {
+                declaredClassName?.let { declaredClass(it) }
+                methodName?.let { name(it) }
+                methodParams?.let { parameters(it) }
+                methodReturn?.let { returns(it) }
+            }
         }
     }
 
@@ -730,14 +737,15 @@ class FieldAccessFilter internal constructor(
 
     context(matcher: MethodMatcher)
     override fun addQuery() {
-
         val declaredClassName = this@FieldAccessFilter.definingClass?.let(::getTypeNameCompat)
+        val fieldName = this@FieldAccessFilter.name
+        val fieldTypeName = this@FieldAccessFilter.type?.let(::getTypeNameCompat)
 
-        (declaredClassName ?: name ?: type)?.let { _ ->
+        if (declaredClassName != null || fieldName != null || fieldTypeName != null) {
             matcher.addUsingField {
                 declaredClassName?.let { declaredClass(it) }
-                this@FieldAccessFilter.name?.let { name(it) }
-                this@FieldAccessFilter.type?.let(::getTypeNameCompat)?.let { type(it) }
+                fieldName?.let { name(it) }
+                fieldTypeName?.let { type(it) }
             }
         }
     }

@@ -116,16 +116,23 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
             },
         ),
         ThemedMenuItem(
-            label = stringResource(R.string.action_restore_defaults),
+            label = stringResource(R.string.action_enable_all),
             onClick = {
-                viewModel.resetPatches(packageName, result?.getOrNull().orEmpty(), defaults = true)
+                viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = true)
                 reload++
             },
         ),
         ThemedMenuItem(
             label = stringResource(R.string.action_disable_all),
             onClick = {
-                viewModel.resetPatches(packageName, result?.getOrNull().orEmpty(), defaults = false)
+                viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = false)
+                reload++
+            },
+        ),
+        ThemedMenuItem(
+            label = stringResource(R.string.action_restore_defaults),
+            onClick = {
+                viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = null)
                 reload++
             },
         ),

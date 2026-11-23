@@ -733,8 +733,8 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Sets every patch of the app to its default (or to off, if [defaults] is false). */
-    fun resetPatches(packageName: String, patches: List<BundlePatches>, defaults: Boolean) {
+    /** Sets every patch of the app to enabled, to its default, or to disabled. */
+    fun setAllPatches(packageName: String, patches: List<BundlePatches>, state: Boolean? = null) {
         val service = _state.value.service ?: run {
             message("LSPosed framework service is currently inactive")
             return
@@ -742,11 +742,17 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         val prefs = service.getRemotePreferences(packageName)
         val editor = prefs.edit()
         for (group in patches) for ((patch, _) in group.patches) {
-            editor.putBoolean(patchPreferenceKey(group.bundle.id, patch.name), defaults && patch.use)
+            val value = state ?: patch.use
+            editor.putBoolean(patchPreferenceKey(group.bundle.id, patch.name), value)
         }
         if (!editor.commit()) {
             editor.apply()
         }
+    }
+
+    /** Sets every patch of the app to its default (or to off, if [defaults] is false). */
+    fun resetPatches(packageName: String, patches: List<BundlePatches>, defaults: Boolean) {
+        setAllPatches(packageName, patches, if (defaults) null else false)
     }
 
     /** Force stops the target application via root 'am force-stop' with background process kill fallback. */

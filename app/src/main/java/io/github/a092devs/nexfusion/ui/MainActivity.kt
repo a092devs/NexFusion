@@ -249,10 +249,9 @@ private fun destinationIndex(route: String?): Int {
 }
 
 /**
- * Fluid depth elevation and directional transitions synchronized with bottom bar selections:
- * - Entering App detail: smooth fade and subtle scale-in (elevation pop from 94% to 100%).
- * - Leaving App detail (BACK): smooth fade and subtle scale-out to 94% with zero horizontal tearing
- *   or directional conflicts across edge swipes (left or right), 3-button nav, or top back arrow.
+ * Fluid horizontal slide transitions matching native Android and modern app navigation:
+ * - Entering App detail: screen slides in from right to left (100% to 0%), with underlying screen shifting slightly left (-25%).
+ * - Popping App detail (swipe back / back button): detail screen slides out from left to right (0% to 100%), with underlying screen returning from -25% to 0%.
  * - Peer tabs (Home <-> Patches <-> Settings): slide horizontally in sync with navigation bar direction.
  */
 private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
@@ -260,16 +259,12 @@ private val navEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry
     val targetRoute = targetState.destination.route
 
     when {
-        // Pushing a detail screen (Home -> App detail): depth elevation scale in
+        // Pushing a detail screen (Home -> App detail): slides in smoothly from right
         isDetailRoute(targetRoute) -> {
-            fadeIn(animationSpec = tween(220, easing = LinearOutSlowInEasing)) +
-                scaleIn(initialScale = 0.94f, animationSpec = tween(220, easing = FastOutSlowInEasing))
-        }
-        // Popping back from a detail screen to top-level (App detail -> Home):
-        // Top-level screen scales in smoothly from 0.96f with gentle fade
-        isDetailRoute(initialRoute) -> {
-            fadeIn(animationSpec = tween(200, easing = LinearOutSlowInEasing)) +
-                scaleIn(initialScale = 0.96f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
+            )
         }
         // Between peer top-level tabs:
         else -> {
@@ -297,17 +292,78 @@ private val navExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>
     val targetRoute = targetState.destination.route
 
     when {
-        // Pushing a detail screen (Home -> App detail): top-level screen subtly recedes
+        // Pushing a detail screen (Home -> App detail): underlying top-level screen shifts slightly left (parallax)
         isDetailRoute(targetRoute) -> {
-            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing)) +
-                scaleOut(targetScale = 0.96f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> -fullWidth / 3 },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
+            )
         }
-        // Popping back from a detail screen to top-level (App detail -> Home):
-        // Detail screen fades out cleanly with subtle scale down - completely eliminating horizontal
-        // slicing and directional conflicts regardless of gesture or button navigation.
+        // Between peer top-level tabs:
+        else -> {
+            val initialIdx = destinationIndex(initialRoute)
+            val targetIdx = destinationIndex(targetRoute)
+            val direction = when {
+                targetIdx > initialIdx -> -1
+                targetIdx < initialIdx -> 1
+                else -> 0
+            }
+            if (direction == 0) {
+                fadeOut(animationSpec = tween(180))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { (it * 0.20f * direction).toInt() },
+                    animationSpec = tween(260, easing = FastOutSlowInEasing),
+                ) + fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing))
+            }
+        }
+    }
+}
+
+private val navPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+    val initialRoute = initialState.destination.route
+    val targetRoute = targetState.destination.route
+
+    when {
+        // Returning to top-level from App detail: top-level screen shifts back from left (parallax return)
         isDetailRoute(initialRoute) -> {
-            fadeOut(animationSpec = tween(180, easing = FastOutLinearInEasing)) +
-                scaleOut(targetScale = 0.94f, animationSpec = tween(200, easing = FastOutSlowInEasing))
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> -fullWidth / 3 },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
+            )
+        }
+        // Between peer top-level tabs:
+        else -> {
+            val initialIdx = destinationIndex(initialRoute)
+            val targetIdx = destinationIndex(targetRoute)
+            val direction = when {
+                targetIdx > initialIdx -> 1
+                targetIdx < initialIdx -> -1
+                else -> 0
+            }
+            if (direction == 0) {
+                fadeIn(animationSpec = tween(200))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { (it * 0.20f * direction).toInt() },
+                    animationSpec = tween(260, easing = FastOutSlowInEasing),
+                ) + fadeIn(animationSpec = tween(200, easing = LinearOutSlowInEasing))
+            }
+        }
+    }
+}
+
+private val navPopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
+    val initialRoute = initialState.destination.route
+    val targetRoute = targetState.destination.route
+
+    when {
+        // Leaving App detail: detail screen slides out smoothly to the right without premature fading
+        isDetailRoute(initialRoute) -> {
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
+            )
         }
         // Between peer top-level tabs:
         else -> {
@@ -440,8 +496,8 @@ private fun ManagerApp(
                     startDestination = MainActivity.DESTINATION_HOME,
                     enterTransition = navEnterTransition,
                     exitTransition = navExitTransition,
-                    popEnterTransition = navEnterTransition,
-                    popExitTransition = navExitTransition,
+                    popEnterTransition = navPopEnterTransition,
+                    popExitTransition = navPopExitTransition,
                 ) {
                     composable(MainActivity.DESTINATION_HOME) {
                         HorizontalPager(

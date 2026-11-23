@@ -34,10 +34,10 @@ typealias FindFieldListFunc = DexKitBridge.() -> List<FieldData>
 fun patch(
     name: String = "",
     description: String = "",
-    use: Boolean = true,
+    use: Boolean = name.isEmpty() || name.startsWith("<"),
     func: PatchExecutor.() -> Unit
 ) =
-    Patch(name, description, use, func)
+    Patch(name, description, if (name.isEmpty() || name.startsWith("<")) true else use, func)
 
 open class Patch(
     open val name: String,
@@ -128,22 +128,28 @@ open class PatchExecutor(
     internal val failedPatches = mutableListOf<Patch>()
 
     internal fun executePatches(patches: Array<Patch>) {
+        val remoteAll: Map<String, *>? = runCatching { patchPreferences?.all }.getOrNull()
+        val localAll: Map<String, *>? = runCatching { localPreferences?.all }.getOrNull()
+        val localEditor = localPreferences?.edit()
+        var hasLocalEdits = false
+
         patches.forEach { hook ->
             if (appliedPatches.contains(hook)) return@forEach
             val prefKey = patchPreferenceKey(bundle.id, hook.name)
             val isEnabled = runCatching {
-                val localTime = localPreferences?.getLong("${prefKey}_timestamp", 0L) ?: 0L
-                val remoteTime = runCatching { patchPreferences?.getLong("${prefKey}_timestamp", 0L) ?: 0L }.getOrDefault(0L)
+                val localTime = (localAll?.get("${prefKey}_timestamp") as? Number)?.toLong() ?: 0L
+                val remoteTime = (remoteAll?.get("${prefKey}_timestamp") as? Number)?.toLong() ?: 0L
                 if (localTime > 0L && localTime >= remoteTime) {
-                    localPreferences?.getBoolean(prefKey, hook.use) ?: hook.use
-                } else if (patchPreferences != null && patchPreferences.contains(prefKey)) {
-                    val remoteVal = patchPreferences.getBoolean(prefKey, hook.use)
-                    localPreferences?.edit()?.putBoolean(prefKey, remoteVal)?.apply()
+                    (localAll?.get(prefKey) as? Boolean) ?: hook.use
+                } else if (remoteAll != null && remoteAll.containsKey(prefKey)) {
+                    val remoteVal = (remoteAll[prefKey] as? Boolean) ?: hook.use
+                    localEditor?.putBoolean(prefKey, remoteVal)
+                    hasLocalEdits = true
                     remoteVal
                 } else {
-                    localPreferences?.getBoolean(prefKey, hook.use) ?: hook.use
+                    (localAll?.get(prefKey) as? Boolean) ?: hook.use
                 }
-            }.getOrNull() ?: localPreferences?.getBoolean(prefKey, hook.use) ?: hook.use
+            }.getOrNull() ?: (localAll?.get(prefKey) as? Boolean) ?: hook.use
 
             if (!isEnabled) {
                 PatcherLog.state { "${bundle.id}: patch '${hook.name}' is DISABLED by user preference" }
@@ -158,20 +164,26 @@ open class PatchExecutor(
                 }
             }
 
+            val patchStartTime = System.currentTimeMillis()
             runCatching { hook.run(this) }.onFailure { err ->
-                XposedBridge.log("${bundle.id}: patch '${hook.name}' failed: ${err.message ?: err.javaClass.simpleName}")
+                val duration = System.currentTimeMillis() - patchStartTime
+                XposedBridge.log("${bundle.id}: patch '${hook.name}' failed in ${duration}ms: ${err.message ?: err.javaClass.simpleName}")
                 XposedBridge.log(err)
                 PatcherLog.error(err) {
-                    "${bundle.id}: patch '${hook.name}' failed: ${err.message ?: err.javaClass.simpleName}"
+                    "${bundle.id}: patch '${hook.name}' failed in ${duration}ms: ${err.message ?: err.javaClass.simpleName}"
                 }
                 failedPatches.add(hook)
             }.onSuccess {
+                val duration = System.currentTimeMillis() - patchStartTime
                 appliedPatches.add(hook)
                 if (hook.name.isNotEmpty() && !hook.name.startsWith("<")) {
                     sessionAppliedPatches?.add(hook.name)
                 }
-                PatcherLog.state { "${bundle.id}: applied patch '${hook.name}'" }
+                PatcherLog.state { "${bundle.id}: applied patch '${hook.name}' in ${duration}ms" }
             }
+        }
+        if (hasLocalEdits) {
+            localEditor?.apply()
         }
     }
 
@@ -251,6 +263,16 @@ open class PatchExecutor(
         getDexMethod(cacheKey) { this@hookMethod.run() }.hookMethod(callback)
     }
 
+    fun Fingerprint.hookAllMethods(block: HookDsl<IHookCallback>.() -> Unit) {
+        val methods = getDexMethods(cacheKey) { this@hookAllMethods.matchAllOrNull()?.map { it.method } ?: emptyList() }
+        methods.forEach { it.hookMethod(block) }
+    }
+
+    fun Fingerprint.hookAllMethods(callback: XC_MethodHook) {
+        val methods = getDexMethods(cacheKey) { this@hookAllMethods.matchAllOrNull()?.map { it.method } ?: emptyList() }
+        methods.forEach { it.hookMethod(callback) }
+    }
+
     val Fingerprint.dexMethod get() = getDexMethod(cacheKey) { this@dexMethod.run() }
 
     val Fingerprint.member get() = dexMethod.toMember()
@@ -269,13 +291,20 @@ open class PatchExecutor(
         crossinline serializer: (T) -> String
     ): DexKitBridge.() -> T {
         return {
+            val start = System.currentTimeMillis()
             val result = try {
                 funcFunc()
             } catch (e: Exception) {
-                PatcherLog.info(e) { "Fingerprint $key Not Found" }
+                val dt = System.currentTimeMillis() - start
+                PatcherLog.info(e) { "Fingerprint $key Not Found in ${dt}ms" }
                 throw FingerprintNotFoundException(key, e)
             }
-            PatcherLog.info { "$key Matches: ${serializer(result)}" }
+            val dt = System.currentTimeMillis() - start
+            if (dt > 20) {
+                PatcherLog.info { "$key Matches in ${dt}ms: ${serializer(result)}" }
+            } else {
+                PatcherLog.info { "$key Matches: ${serializer(result)}" }
+            }
             result
         }
     }

@@ -91,10 +91,13 @@ class BundleManifest(
 
         /** @throws InvalidBundleException if [apk] is not a usable patch bundle. */
         fun read(packageManager: PackageManager, apk: File): BundleManifest {
+            if (!apk.exists() || apk.length() == 0L) {
+                throw InvalidBundleException("Empty or missing bundle file: ${apk.name}")
+            }
             @Suppress("DEPRECATION")
             val info: PackageInfo = packageManager.getPackageArchiveInfo(
                 apk.path, PackageManager.GET_META_DATA
-            ) ?: throw InvalidBundleException("Not an APK file")
+            ) ?: throw InvalidBundleException("Not an APK file: ${apk.name}")
             val app = info.applicationInfo ?: throw InvalidBundleException("APK has no application")
             app.sourceDir = apk.path
             app.publicSourceDir = apk.path

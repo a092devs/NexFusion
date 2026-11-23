@@ -18,7 +18,8 @@ fun getTypeNameCompat(it: String): String? {
     return when {
         it == "this" -> null
         it.trimStart('[').startsWith('L') && !it.endsWith(';') -> null
-        else -> getTypeName(it)
+        it.contains('.') -> it
+        else -> runCatching { getTypeName(it) }.getOrNull()
     }
 }
 
@@ -69,11 +70,17 @@ fun MethodMatcher.accessFlags(vararg accessFlags: AccessFlags) {
 }
 
 fun MethodMatcher.parameters(vararg parameters: String) {
-    this.paramTypes(parameters.map(::getTypeNameCompat))
+    parameters(parameters.toList())
 }
 
 fun MethodMatcher.parameters(parameters: Collection<String>) {
-    this.paramTypes(parameters.map(::getTypeNameCompat))
+    val mapped = parameters.map { param ->
+        when (param) {
+            "L", "[L" -> null
+            else -> getTypeNameCompat(param)
+        }
+    }
+    this.paramTypes(mapped)
 }
 
 fun MethodMatcher.returns(returnType: String) {
@@ -362,16 +369,21 @@ open class Fingerprint(
     fun run(): MethodData {
         var results: List<MethodData> = queryAll()
 
-        if (results.size > 1 && isStrict) {
+        if (results.size > 1 && (isStrict || filters != null)) {
             results = results.filter { matchOrNull(it) != null }
         }
 
-        if (results.size != 1) {
+        if (results.isEmpty()) {
+            val name = this::class.simpleName ?: "Anonymous Fingerprint"
+            throw io.github.a092devs.nexfusion.FingerprintNotFoundException("Fingerprint $name matched no methods")
+        }
+        if (results.size > 1) {
             val name = this::class.simpleName ?: "Anonymous Fingerprint"
             val list = results.joinToString("\n  ") { it.descriptor }
-            System.err.println("$name matched ${results.size} methods:\n  $list")
+            System.err.println("$name matched ${results.size} methods, selecting first:\n  $list")
+            return results.first()
         }
-        return results.single()
+        return results.first()
     }
 
     private val isStrict = this::class.java.annotations.filterIsInstance<StrictQuery>().isNotEmpty()
@@ -402,8 +414,8 @@ open class Fingerprint(
             }
         }
 
-        if (results.size > 10) {
-            throw IllegalStateException("Bad query, too much results")
+        if (results.size > 2000) {
+            throw IllegalStateException("Bad query, too many results: ${results.size}")
         }
 
         return results

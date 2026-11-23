@@ -51,7 +51,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
             var changed = false
             val refreshed = baseList.map { bundle ->
                 val localFile = File(localDir, bundle.fileName)
-                if (localFile.exists()) {
+                if (localFile.exists() && localFile.length() > 0L) {
                     val freshDesc = runCatching {
                         BundleManifest.read(context.packageManager, localFile).description
                     }.getOrNull()
@@ -172,7 +172,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
             registryPrefs?.let { runCatching { BundleRegistry.write(it, current) } }
             for (bundle in current) {
                 val localFile = File(localDir, bundle.fileName)
-                if (localFile.exists()) {
+                if (localFile.exists() && localFile.length() > 0L) {
                     runCatching {
                         svc.openRemoteFile(bundle.fileName).use { pfd ->
                             if (pfd.statSize == 0L || pfd.statSize != localFile.length()) {
@@ -399,13 +399,31 @@ class BundleManager(private val context: Context, private val service: XposedSer
 
     /** The patches of an installed bundle, loaded from the manager's copy of the bundle. */
     fun patches(bundle: InstalledBundle): List<AppPatchInfo> {
-        val local = File(localDir, bundle.fileName)
-        if (!local.exists()) {
-            val svc = service ?: throw FileNotFoundException("Bundle ${bundle.name} file missing and service inactive")
-            svc.openRemoteFile(bundle.fileName).use { pfd ->
-                FileInputStream(pfd.fileDescriptor).use { input ->
-                    local.outputStream().use { input.copyTo(it) }
+        var local = File(localDir, bundle.fileName)
+        if (!local.exists() || local.length() == 0L) {
+            local.delete()
+            val svc = service
+            if (svc != null) {
+                runCatching {
+                    svc.openRemoteFile(bundle.fileName).use { pfd ->
+                        if (pfd.statSize > 0L) {
+                            FileInputStream(pfd.fileDescriptor).use { input ->
+                                local.outputStream().use { input.copyTo(it) }
+                            }
+                        }
+                    }
                 }
+            }
+        }
+        if (!local.exists() || local.length() == 0L) {
+            local.delete()
+            val fallback = localDir.listFiles()?.firstOrNull {
+                it.name.startsWith(bundle.id) && it.name.endsWith(".apk") && it.length() > 1024L
+            }
+            if (fallback != null) {
+                local = fallback
+            } else {
+                throw FileNotFoundException("Bundle ${bundle.name} file missing or empty")
             }
         }
         val manifest = BundleManifest.read(context.packageManager, local)
