@@ -6,8 +6,11 @@ import android.provider.Settings
 import androidx.activity.BackEventCompat
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,8 +52,10 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -86,23 +91,37 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
+    val coroutineScope = rememberCoroutineScope()
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val density = LocalDensity.current
+    val screenWidthPx = with(density) { screenWidth.toPx() }
+
     val backProgressAnim = remember { Animatable(0f) }
     var swipeEdge by remember { mutableIntStateOf(BackEventCompat.EDGE_LEFT) }
+
+    val performBack: () -> Unit = {
+        coroutineScope.launch {
+            swipeEdge = BackEventCompat.EDGE_LEFT
+            backProgressAnim.animateTo(1f, tween(250, easing = FastOutSlowInEasing))
+            navController.popBackStack()
+        }
+    }
+
     PredictiveBackHandler { progress ->
         try {
             progress.collect { backEvent ->
                 swipeEdge = backEvent.swipeEdge
                 backProgressAnim.snapTo(backEvent.progress)
             }
+            backProgressAnim.animateTo(
+                1f,
+                tween(durationMillis = 160, easing = FastOutLinearInEasing)
+            )
             navController.popBackStack()
         } catch (e: CancellationException) {
-            backProgressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow))
+            backProgressAnim.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow, dampingRatio = Spring.DampingRatioNoBouncy))
         }
     }
-
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val density = LocalDensity.current
-    val screenWidthPx = with(density) { screenWidth.toPx() }
 
     val appItem = state.appCatalog.find { it.packageName == packageName }
     val liveInfo = remember(packageName) { AppDiscovery.queryPackage(context, packageName) }
@@ -549,14 +568,13 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 .graphicsLayer {
                     val progress = backProgressAnim.value
                     if (progress > 0f) {
-                        val maxShift = 40.dp.toPx()
-                        val shift = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -maxShift else maxShift
-                        translationX = progress * shift
-                        val scale = 1f - (progress * 0.08f)
+                        val direction = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -1f else 1f
+                        translationX = progress * screenWidthPx * direction
+                        val scale = 1f - (progress * 0.04f)
                         scaleX = scale
                         scaleY = scale
-                        alpha = 1f - (progress * 0.12f)
-                        shape = RoundedCornerShape(24.dp * progress)
+                        alpha = (1f - (progress * 0.15f)).coerceIn(0f, 1f)
+                        shape = RoundedCornerShape(16.dp * progress)
                         clip = true
                     }
                 }
@@ -567,7 +585,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 subtitle = packageName,
                 color = MaterialTheme.colorScheme.background,
                 navigationIcon = {
-                    ThemedIconButton(onClick = { navController.popBackStack() }) {
+                    ThemedIconButton(onClick = performBack) {
                         Icon(icons.back, contentDescription = null)
                     }
                 },
@@ -596,14 +614,13 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 .graphicsLayer {
                     val progress = backProgressAnim.value
                     if (progress > 0f) {
-                        val maxShift = 40.dp.toPx()
-                        val shift = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -maxShift else maxShift
-                        translationX = progress * shift
-                        val scale = 1f - (progress * 0.08f)
+                        val direction = if (swipeEdge == BackEventCompat.EDGE_RIGHT) -1f else 1f
+                        translationX = progress * screenWidthPx * direction
+                        val scale = 1f - (progress * 0.04f)
                         scaleX = scale
                         scaleY = scale
-                        alpha = 1f - (progress * 0.12f)
-                        shape = RoundedCornerShape(24.dp * progress)
+                        alpha = (1f - (progress * 0.15f)).coerceIn(0f, 1f)
+                        shape = RoundedCornerShape(16.dp * progress)
                         clip = true
                     }
                 }
@@ -626,7 +643,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
                     navigationIcon = {
-                        ThemedIconButton(onClick = { navController.popBackStack() }) {
+                        ThemedIconButton(onClick = performBack) {
                             Icon(icons.back, contentDescription = null)
                         }
                     },
