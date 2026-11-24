@@ -252,4 +252,18 @@
     <string name="message_app_info_failed">Could not open App Info for %s</string>
     <string name="error_unknown">Unknown error</string>
     <string name="error_download_failed">Download failed</string>
+    <!-- Backup and Restore -->
+    <string name="settings_backup_restore">Backup &amp; Restore</string>
+    <string name="backup_patch_preferences_title">Export Patch Preferences</string>
+    <string name="backup_patch_preferences_summary">Export all configured patch toggles and preferences to a JSON backup file</string>
+    <string name="restore_patch_preferences_title">Import Patch Preferences</string>
+    <string name="restore_patch_preferences_summary">Restore patch toggles and preferences from a backup file</string>
+    <string name="restore_dialog_title">Restore Patch Preferences</string>
+    <string name="restore_dialog_message">Found preferences for %1$d applications (%2$d patch toggles). Do you want to restore them?</string>
+    <string name="action_restore">Restore</string>
+    <string name="message_backup_export_success">Exported preferences for %1$d applications (%2$d patches)</string>
+    <string name="message_backup_export_failed">Failed to export backup: %s</string>
+    <string name="message_restore_success">Restored preferences for %1$d applications (%2$d patches)</string>
+    <string name="message_restore_failed">Failed to restore backup: %s</string>
+    <string name="error_invalid_backup_file">Selected file is not a valid NexFusion backup</string>
 </resources>

@@ -124,7 +124,7 @@ The official companion patch repository is maintained at:
 
 ### Included Bundles:
 - **`Nexfusion-Patches`:** Unified community runtime patch distribution covering **17 supported application targets**:
-  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, VLC, Stremio
+  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Stremio
   - 💬 **Social & Communication:** Instagram, X (Twitter), Reddit, Discord, LinkedIn
   - 🛠️ **System, Productivity & Audio:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN, 1.1.1.1, Spotify
 
@@ -133,7 +133,7 @@ The official companion patch repository is maintained at:
 ## 📱 Supported Applications Matrix
 
 <details>
-<summary><b>🎥 Video, Audio & Streaming (5 Targets)</b> — <i>YouTube, YouTube Music, Crunchyroll, VLC, Stremio</i></summary>
+<summary><b>🎥 Video, Audio & Streaming (4 Targets)</b> — <i>YouTube, YouTube Music, Crunchyroll, Stremio</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
@@ -141,8 +141,7 @@ The official companion patch repository is maintained at:
 | **YouTube** | `com.google.android.youtube` | Ad-free playback, SponsorBlock, background audio, DeArrow replacement, custom speed/quality dialogs, swipe volume/brightness, miniplayer, ambient mode, Litho node bypass, channel search fix. |
 | **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners, SoundProof AI blocker, Playlist tags, offline fullscreen player, mark downloaded songs, third-party lyrics enhancement. |
 | **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
-| **VLC** | `org.videolan.vlc` | AMOLED pure black theme; suppress What's New changelog dialog on updates; unlock experimental feature flags; force bitstream audio passthrough (digital output); force AAudio low-latency output; raise network cache to 3000ms; disable audio time-stretch for artifact-free 1x speed playback; force ReplayGain track normalization with peak protection; verbose libVLC logging. |
-| **Stremio** | `com.stremio.one` | Auto & manual intro/credits skipping using embedded chapters and stream metadata; auto-pick best stream (resolves 4K/cached stream on tap); hide episode spoilers (synopses & thumbnails); avoid SDH subtitles; audio & subtitle track language memory; smoother playback buffer expansion (120s); seamless binge watching; external player progress & subtitle hand-off (VLC, Vimu). |
+| **Stremio** | `com.stremio.one` | Auto & manual intro/credits skipping using embedded chapters and stream metadata; auto-pick best stream (resolves 4K/cached stream on tap); hide episode spoilers (synopses & thumbnails); avoid SDH subtitles; audio & subtitle track language memory; smoother playback buffer expansion (120s); seamless binge watching; external player progress & subtitle hand-off (MX Player, Vimu). |
 
 </details>
 
@@ -175,10 +174,6 @@ The official companion patch repository is maintained at:
 | **1.1.1.1** | `com.cloudflare.onedotonedotonedotone` | Spoof WARP+ Unlimited account tier in UI, disable telemetry, and optionally bypass SSL certificate pinning. |
 
 </details>
-
----
-
-## 🛠️ Building from Source
 
 <details>
 <summary><b>View Build Instructions & Developer Guide</b></summary>

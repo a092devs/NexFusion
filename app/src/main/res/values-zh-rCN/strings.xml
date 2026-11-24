@@ -253,5 +253,19 @@
     <string name="message_app_info_failed">无法打开 %s 的应用信息</string>
     <string name="error_unknown">未知错误</string>
     <string name="error_download_failed">下载失败</string>
+    <!-- 备份与恢复 -->
+    <string name="settings_backup_restore">备份与恢复</string>
+    <string name="backup_patch_preferences_title">导出补丁偏好设置</string>
+    <string name="backup_patch_preferences_summary">将所有已配置的应用补丁开关与偏好导出为 JSON 备份文件</string>
+    <string name="restore_patch_preferences_title">导入补丁偏好设置</string>
+    <string name="restore_patch_preferences_summary">从备份文件中恢复应用补丁开关与偏好设置</string>
+    <string name="restore_dialog_title">恢复补丁偏好设置</string>
+    <string name="restore_dialog_message">找到 %1$d 个应用的偏好设置（共 %2$d 个补丁开关）。是否立即恢复？</string>
+    <string name="action_restore">恢复</string>
+    <string name="message_backup_export_success">已导出 %1$d 个应用的偏好设置（%2$d 个补丁）</string>
+    <string name="message_backup_export_failed">导出备份失败：%s</string>
+    <string name="message_restore_success">已恢复 %1$d 个应用的偏好设置（%2$d 个补丁）</string>
+    <string name="message_restore_failed">恢复备份失败：%s</string>
+    <string name="error_invalid_backup_file">所选文件不是有效的 NexFusion 备份文件</string>
 </resources>
 

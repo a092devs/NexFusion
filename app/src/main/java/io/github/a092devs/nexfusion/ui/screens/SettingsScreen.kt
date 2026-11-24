@@ -1,6 +1,8 @@
 package io.github.a092devs.nexfusion.ui.screens
 
 import android.text.format.DateUtils
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -36,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.a092devs.nexfusion.core.BuildConfig
 import io.github.a092devs.nexfusion.core.R
+import io.github.a092devs.nexfusion.manager.PatchBackupData
 import io.github.a092devs.nexfusion.ui.ManagerViewModel
 import io.github.a092devs.nexfusion.ui.theme.ColorPalette
 import io.github.a092devs.nexfusion.ui.theme.isMiuixStyle
@@ -78,6 +81,31 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     var showColorSchemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
+    var pendingRestoreBackup by remember { mutableStateOf<PatchBackupData?>(null) }
+    val defaultBackupFilename = remember {
+        val date = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US).format(java.util.Date())
+        "nexfusion-patches-backup-$date.json"
+    }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            viewModel.exportPatchPreferences(uri)
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            viewModel.parseBackupFile(uri) { parsed ->
+                if (parsed != null) {
+                    pendingRestoreBackup = parsed
+                }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.refreshCacheSize()
@@ -244,6 +272,22 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             title = stringResource(R.string.action_clear_cache),
                             summary = stringResource(R.string.action_clear_cache_summary, viewModel.cacheSizeText.value),
                             onClick = { viewModel.clearCache() },
+                        )
+                    }
+                }
+
+                item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_backup_restore)) }
+                item {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        ArrowPreference(
+                            title = stringResource(R.string.backup_patch_preferences_title),
+                            summary = stringResource(R.string.backup_patch_preferences_summary),
+                            onClick = { exportLauncher.launch(defaultBackupFilename) },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.restore_patch_preferences_title),
+                            summary = stringResource(R.string.restore_patch_preferences_summary),
+                            onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
                         )
                     }
                 }
@@ -435,6 +479,24 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                     )
                 }
 
+                item { SectionHeader(stringResource(R.string.settings_backup_restore)) }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.backup_patch_preferences_title)) },
+                        supportingContent = { Text(stringResource(R.string.backup_patch_preferences_summary)) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { exportLauncher.launch(defaultBackupFilename) },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.restore_patch_preferences_title)) },
+                        supportingContent = { Text(stringResource(R.string.restore_patch_preferences_summary)) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { importLauncher.launch(arrayOf("application/json", "*/*")) },
+                    )
+                }
+
                 item { SectionHeader(stringResource(R.string.settings_about)) }
                 item {
                     ListItem(
@@ -592,6 +654,27 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                     )
                 }
             }
+        }
+    }
+
+    pendingRestoreBackup?.let { backup ->
+        ThemedDialog(
+            show = true,
+            title = stringResource(R.string.restore_dialog_title),
+            onDismissRequest = { pendingRestoreBackup = null },
+            confirmText = stringResource(R.string.action_restore),
+            onConfirm = {
+                viewModel.restorePatchPreferences(backup)
+                pendingRestoreBackup = null
+            },
+            dismissText = stringResource(android.R.string.cancel),
+            onDismiss = { pendingRestoreBackup = null },
+        ) {
+            Text(
+                stringResource(R.string.restore_dialog_message, backup.packages.size, backup.totalPatches),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }

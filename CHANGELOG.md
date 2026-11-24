@@ -5,6 +5,15 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.5
+
+- **Backup & Restore for Patch Preferences:**
+  * Added JSON export and import for all patch preferences and toggle states across all configured apps.
+  * Allows backing up and restoring customizations in a single tap without manually toggling each patch after updates or re-installations.
+- **Supported Applications & Discovery:**
+  * Cleaned up legacy VLC player entries from discovery and documentation.
+  * Refined supported applications matrix layout with clean collapsible sections.
+
 ## 5.0.4
 
 - **Localization & Multi-Language Support:**

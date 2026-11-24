@@ -22,6 +22,8 @@ import io.github.a092devs.nexfusion.core.compatibility.VersionComparator
 import io.github.a092devs.nexfusion.core.discovery.AppDiscovery
 import io.github.a092devs.nexfusion.core.discovery.AppItemState
 import io.github.a092devs.nexfusion.manager.BundleManager
+import io.github.a092devs.nexfusion.manager.PatchBackupData
+import io.github.a092devs.nexfusion.manager.PatchSettingsBackup
 import io.github.a092devs.nexfusion.manager.PatchSource
 import io.github.a092devs.nexfusion.manager.SourceClient
 import io.github.a092devs.nexfusion.manager.SourceProvenance
@@ -898,6 +900,84 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                 )
             }
         }
+
+    // endregion
+
+    // region Backup & Restore
+
+    fun exportPatchPreferences(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val service = _state.value.service
+            if (service == null) {
+                withContext(Dispatchers.Main) {
+                    message(R.string.message_settings_pending_lsposed)
+                }
+                return@launch
+            }
+
+            val bundles = _state.value.bundles
+            val knownPackages = (_state.value.bundles.flatMap { it.apps.keys } + _state.value.appCatalog.map { it.packageName }).distinct()
+            val ignored = _state.value.ignoredPackages
+            val backup = PatchSettingsBackup.createBackup(service, bundles, knownPackages, ignored)
+
+            runCatching {
+                val output = context.contentResolver.openOutputStream(uri)
+                    ?: throw java.io.IOException("Cannot open output stream for $uri")
+                output.use { PatchSettingsBackup.exportToStream(it, backup) }
+                withContext(Dispatchers.Main) {
+                    message(R.string.message_backup_export_success, backup.packages.size, backup.totalPatches)
+                }
+            }.onFailure { err ->
+                withContext(Dispatchers.Main) {
+                    message(R.string.message_backup_export_failed, err.localizedMessage ?: err.javaClass.simpleName)
+                }
+            }
+        }
+    }
+
+    fun parseBackupFile(uri: Uri, onResult: (PatchBackupData?) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val parsed = runCatching {
+                val input = context.contentResolver.openInputStream(uri)
+                    ?: throw java.io.IOException("Cannot open input stream for $uri")
+                input.use { PatchSettingsBackup.parseFromStream(it) }
+            }.onFailure { err ->
+                withContext(Dispatchers.Main) {
+                    message(R.string.error_invalid_backup_file)
+                }
+            }.getOrNull()
+
+            withContext(Dispatchers.Main) {
+                onResult(parsed)
+            }
+        }
+    }
+
+    fun restorePatchPreferences(backup: PatchBackupData) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val service = _state.value.service
+            if (service == null) {
+                withContext(Dispatchers.Main) {
+                    message(R.string.message_settings_pending_lsposed)
+                }
+                return@launch
+            }
+
+            val bundles = _state.value.bundles
+            val result = PatchSettingsBackup.applyBackup(backup, service, bundles) { pkg, ignored ->
+                setAppIgnored(pkg, ignored)
+            }
+
+            withContext(Dispatchers.Main) {
+                if (result.success) {
+                    message(R.string.message_restore_success, result.packagesRestored, result.patchesRestored)
+                    refresh()
+                } else {
+                    message(R.string.message_restore_failed, result.error.orEmpty())
+                }
+            }
+        }
+    }
 
     // endregion
 

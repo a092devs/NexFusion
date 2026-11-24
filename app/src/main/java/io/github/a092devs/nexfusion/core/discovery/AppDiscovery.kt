@@ -297,12 +297,6 @@ object AppDiscovery {
             appIconColor = 0x000000,
         ),
         KnownSupportedApp(
-            packageName = "org.videolan.vlc",
-            appName = "VLC",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0xFF6600,
-        ),
-        KnownSupportedApp(
             packageName = "com.stremio.one",
             appName = "Stremio",
             defaultBundleName = "NexFusion Patches",
