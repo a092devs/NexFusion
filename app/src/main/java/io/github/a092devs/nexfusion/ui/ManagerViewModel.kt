@@ -98,7 +98,7 @@ data class ManagerState(
     val ignoredPackages: Set<String> = emptySet(),
     val searchQuery: String = "",
 ) {
-    val isActive get() = service != null
+    val isActive get() = service != null || ModuleStatus.isActive()
 
     /** Package name to display name of the apps patched by enabled bundles. */
     val apps: Map<String, String>
@@ -141,6 +141,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     private val _state = MutableStateFlow(
         ManagerState(
+            framework = ModuleStatus.frameworkName(),
             sources = store.all(),
             updateChannel = settings.updateChannel,
             updateBuildType = settings.updateBuildType,
@@ -194,9 +195,9 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     override fun onServiceStateChanged(service: XposedService?) {
         val active = service?.takeIf {
             runCatching { it.getRemotePreferences(PrefKeys.BUNDLES_GROUP) }.isSuccess
-        }
+        } ?: service
         val framework = active?.let { "${it.frameworkName} ${it.frameworkVersion}" }
-            ?: ModuleStatus.frameworkName()
+            ?: ModuleStatus.frameworkName() ?: _state.value.framework
         _state.update { it.copy(service = active, framework = framework) }
         refresh()
         if (active != null) {

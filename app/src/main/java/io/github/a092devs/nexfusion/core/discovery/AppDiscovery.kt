@@ -320,6 +320,12 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x2AABEE,
         ),
+        KnownSupportedApp(
+            packageName = "com.whatsapp",
+            appName = "WhatsApp",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x25D366,
+        ),
     )
 
     /**

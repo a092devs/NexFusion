@@ -250,26 +250,6 @@ fun HomeContent(
                                     }
                                 }
 
-                                if (isDownloading) {
-                                    Spacer(Modifier.height(10.dp))
-                                    if (downloadProgress != null) {
-                                        androidx.compose.material3.LinearProgressIndicator(
-                                            progress = { (downloadState as UpdateDownloadState.Downloading).progress },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(4.dp)
-                                                .clip(RoundedCornerShape(2.dp)),
-                                        )
-                                    } else {
-                                        androidx.compose.material3.LinearProgressIndicator(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(4.dp)
-                                                .clip(RoundedCornerShape(2.dp)),
-                                        )
-                                    }
-                                }
-
                                 Spacer(Modifier.height(12.dp))
 
                                 Row(
@@ -286,7 +266,7 @@ fun HomeContent(
                                     ThemedCompactFilledButton(
                                         label = primaryLabel,
                                         icon = if (downloadState is UpdateDownloadState.ReadyToInstall) icons.install else icons.update,
-                                        enabled = !isDownloading,
+                                        loading = isDownloading,
                                         onClick = {
                                             if (downloadState is UpdateDownloadState.ReadyToInstall) {
                                                 AppInstaller.installApk(context, downloadState.apkFile)
@@ -374,7 +354,7 @@ fun HomeContent(
                                     ThemedCompactFilledButton(
                                         label = primaryLabel,
                                         icon = icons.update,
-                                        enabled = !isDownloadingPatches && state.busySources.isEmpty(),
+                                        loading = isDownloadingPatches || state.busySources.isNotEmpty(),
                                         onClick = primaryAction,
                                     )
                                 }

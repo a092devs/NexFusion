@@ -244,6 +244,44 @@ jobs:
                     gh release create "${RELEASE_ARGS[@]}"
                   fi
 
+            - name: Publish to Xposed Modules Repo
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.XPOSED_REPO_TOKEN }}
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
+
+                  if [[ -z "${GH_TOKEN:-}" ]]; then
+                    echo "::warning::XPOSED_REPO_TOKEN is not configured; skipping automatic Xposed Modules Repo release."
+                    exit 0
+                  fi
+
+                  if [[ "$RELEASE_TAG" == *-* ]]; then
+                    echo "Skipping Xposed Modules Repo publish for pre-release $RELEASE_TAG"
+                    exit 0
+                  fi
+
+                  XPOSED_REPO="Xposed-Modules-Repo/io.github.a092devs.nexfusion"
+                  CODE=$(grep '^appVersionCode=' gradle.properties | cut -d'=' -f2)
+                  XPOSED_TAG="${CODE}-${RELEASE_TAG}"
+                  echo "Publishing release $RELEASE_TAG to $XPOSED_REPO with tag $XPOSED_TAG"
+
+                  ASSETS=("release/NexFusion-${RELEASE_TAG}.apk")
+                  if [[ -f "release/NexFusion-${RELEASE_TAG}-debug.apk" ]]; then
+                    ASSETS+=("release/NexFusion-${RELEASE_TAG}-debug.apk")
+                  fi
+
+                  if gh release view "$XPOSED_TAG" --repo "$XPOSED_REPO" >/dev/null 2>&1; then
+                    echo "Release $XPOSED_TAG already exists on $XPOSED_REPO; uploading assets."
+                    gh release upload "$XPOSED_TAG" "${ASSETS[@]}" --repo "$XPOSED_REPO" --clobber
+                  else
+                    gh release create "$XPOSED_TAG" "${ASSETS[@]}" \
+                      --repo "$XPOSED_REPO" \
+                      --title "$RELEASE_TAG" \
+                      --notes-file release-notes.md
+                  fi
+
             # External patch bundles use:
             # https://raw.githubusercontent.com/<owner>/<repo>/maven
             - name: Publish patcher API to the maven branch

@@ -49,9 +49,11 @@ import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.SystemUpdateAlt
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
@@ -534,24 +536,32 @@ fun ThemedCompactFilledButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    loading: Boolean = false,
     icon: ImageVector? = null,
 ) {
     val isMiuix = isMiuixStyle
     val shape = RoundedCornerShape(17.dp)
     if (isMiuix) {
-        val bg = if (enabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.disabledPrimaryButton
-        val fg = if (enabled) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.disabledOnPrimaryButton
+        val bg = if (enabled || loading) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.disabledPrimaryButton
+        val fg = if (enabled || loading) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.disabledOnPrimaryButton
         Row(
             modifier = modifier
                 .height(34.dp)
                 .clip(shape)
                 .background(bg)
-                .clickable(enabled = enabled, onClick = onClick)
+                .clickable(enabled = enabled && !loading, onClick = onClick)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            if (icon != null) {
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(15.dp),
+                    color = fg,
+                    strokeWidth = 2.dp,
+                )
+                Spacer(Modifier.width(6.dp))
+            } else if (icon != null) {
                 Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
             }
@@ -561,11 +571,22 @@ fun ThemedCompactFilledButton(
         FilledTonalButton(
             onClick = onClick,
             modifier = modifier.height(34.dp),
-            enabled = enabled,
+            enabled = enabled && !loading,
             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
             shape = shape,
+            colors = if (loading) ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) else ButtonDefaults.filledTonalButtonColors(),
         ) {
-            if (icon != null) {
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(15.dp),
+                    color = if (loading) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                    strokeWidth = 2.dp,
+                )
+                Spacer(Modifier.width(6.dp))
+            } else if (icon != null) {
                 Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
             }
