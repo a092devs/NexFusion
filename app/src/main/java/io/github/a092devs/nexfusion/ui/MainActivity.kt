@@ -142,6 +142,10 @@ class MainActivity : ComponentActivity() {
     /** Message requested externally or via test intent. */
     private var requestedMessage by mutableStateOf<String?>(null)
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(io.github.a092devs.nexfusion.core.AppLocale.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)

@@ -62,6 +62,12 @@ class AppPreferenceNamesTest {
     }
 
     @Test
+    fun supportedLanguageValuesArePreserved() {
+        assertEquals(AppPreferenceNames.LANGUAGE_ENGLISH, AppPreferenceNames.normalizeLanguage("en"))
+        assertEquals(AppPreferenceNames.LANGUAGE_SIMPLIFIED_CHINESE, AppPreferenceNames.normalizeLanguage("zh-CN"))
+    }
+
+    @Test
     fun persistedStyleIdentifiersAreStable() {
         // These literals are persisted in SharedPreferences; changing them would silently reset
         // the user's selection unless a migration is added.

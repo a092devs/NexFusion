@@ -366,17 +366,18 @@ fun PatchesContent(
     }
 }
 
+@Composable
 private fun formatRelativeTime(timestamp: Long): String {
-    if (timestamp <= 0L) return "Never"
+    if (timestamp <= 0L) return stringResource(R.string.time_never)
     val diff = System.currentTimeMillis() - timestamp
     val mins = diff / (60 * 1000)
     val hours = mins / 60
     val days = hours / 24
     return when {
-        mins < 1 -> "Just now"
-        mins < 60 -> "${mins}m ago"
-        hours < 24 -> "${hours}h ago"
-        else -> "${days}d ago"
+        mins < 1 -> stringResource(R.string.time_just_now)
+        mins < 60 -> stringResource(R.string.time_minutes_ago, mins)
+        hours < 24 -> stringResource(R.string.time_hours_ago, hours)
+        else -> stringResource(R.string.time_days_ago, days)
     }
 }
 
@@ -429,7 +430,7 @@ private fun SourceCard(
                         ProvenanceBadge(source.provenance)
                         if (source.prerelease) {
                             Text(
-                                "Pre-release",
+                                stringResource(R.string.source_prerelease_badge),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.secondary,
                                 maxLines = 1,
@@ -467,19 +468,25 @@ private fun SourceCard(
                     } else if (downloadProgress.progress >= 0f) {
                         val pct = (downloadProgress.progress * 100).toInt()
                         if (downloadProgress.totalBundles > 1) {
-                            "Downloading (${downloadProgress.bundleIndex}/${downloadProgress.totalBundles}) ${downloadProgress.bundleName}: $pct%"
+                            stringResource(
+                                R.string.downloading_bundle_progress,
+                                downloadProgress.bundleIndex,
+                                downloadProgress.totalBundles,
+                                downloadProgress.bundleName,
+                                pct,
+                            )
                         } else {
-                            "Downloading update... $pct%"
+                            stringResource(R.string.downloading_update, pct)
                         }
                     } else {
                         if (downloadProgress.bundleName.isNotBlank()) {
-                            "Downloading ${downloadProgress.bundleName}..."
+                            stringResource(R.string.downloading_bundle, downloadProgress.bundleName)
                         } else {
-                            "Downloading update..."
+                            stringResource(R.string.downloading_update_indeterminate)
                         }
                     }
                 }
-                busy -> "Downloading update..."
+                busy -> stringResource(R.string.downloading_update_indeterminate)
                 release == null -> stringResource(R.string.source_checking)
                 release.isFailure -> stringResource(R.string.source_error, release.exceptionOrNull()?.message.orEmpty())
                 source.installedVersion == null -> stringResource(R.string.source_available, release.getOrThrow().version)
@@ -545,7 +552,7 @@ private fun SourceCard(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        "Refresh error: ${source.lastError} (using cached release)",
+                        stringResource(R.string.source_refresh_error_cached, source.lastError),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                     )
@@ -695,7 +702,7 @@ private fun BundleCard(
                     ) {
                         if (bundle.author.isNotEmpty()) {
                             Text(
-                                "by ${bundle.author}",
+                                stringResource(R.string.bundle_author, bundle.author),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -713,7 +720,7 @@ private fun BundleCard(
             }
 
             val displayDesc = if (bundle.description.startsWith("Unified patch suite for ")) {
-                "Unified patch suite with dynamic bytecode hooks and feature enhancements for supported applications."
+                stringResource(R.string.bundle_description_unified)
             } else {
                 bundle.description
             }
@@ -800,7 +807,7 @@ private fun BundleCard(
                     }
                     if (hasMore) {
                         Text(
-                            text = if (expanded) "Show less ▲" else "+${sortedApps.size - maxInitial} more ▼",
+                            text = if (expanded) stringResource(R.string.show_less) else stringResource(R.string.more_apps, sortedApps.size - maxInitial),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.primary,

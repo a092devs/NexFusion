@@ -11,6 +11,7 @@ import io.github.libxposed.service.XposedService
 import io.github.a092devs.nexfusion.AppPatchInfo
 import io.github.a092devs.nexfusion.Patch
 import io.github.a092devs.nexfusion.activity.SettingApplication
+import io.github.a092devs.nexfusion.core.AppLocale
 import io.github.a092devs.nexfusion.core.BundleRegistry
 import io.github.a092devs.nexfusion.core.CacheManager
 import io.github.a092devs.nexfusion.core.InstalledBundle
@@ -83,6 +84,8 @@ data class ManagerState(
     val updateBuildType: String = AppSettings.BUILD_TYPE_RELEASE,
     val currentThemeStyle: String = AppSettings.THEME_STYLE_MATERIAL3,
     val currentColorScheme: String = AppSettings.COLOR_SCHEME_DEFAULT,
+    /** App language: "system", "en", or "zh-CN". */
+    val currentLanguage: String = AppPreferenceNames.LANGUAGE_ENGLISH,
     /** Miuix-only: floating navigation bar preference. Disabled by default. */
     val floatingNavigation: Boolean = AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION,
     /** Miuix-only: translucent liquid glass blur on floating navigation bar. Disabled by default. */
@@ -142,6 +145,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             currentTheme = settings.theme,
             currentThemeStyle = settings.themeStyle,
             currentColorScheme = settings.colorScheme,
+            currentLanguage = settings.language,
             floatingNavigation = settings.miuixFloatingNavigation,
             floatingBarTranslucent = settings.miuixFloatingBarTranslucent,
             hideUninstalledApps = settings.hideUninstalledApps,
@@ -208,8 +212,12 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun message(resource: Int, vararg args: Any?) {
-        _messages.tryEmit(context.getString(resource, *args))
+        _messages.tryEmit(localizedString(resource, *args))
     }
+
+    /** Resolves a string with the language currently selected in Settings. */
+    private fun localizedString(resource: Int, vararg args: Any?): String =
+        AppLocale.wrap(context).getString(resource, *args)
 
     fun setSearchQuery(query: String) {
         _state.update { it.copy(searchQuery = query) }
@@ -231,6 +239,15 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         val normalized = AppPreferenceNames.normalizeColorScheme(scheme)
         settings.colorScheme = normalized
         _state.update { it.copy(currentColorScheme = normalized) }
+    }
+
+    /**
+     * Selects the app language. The caller recreates the activity so resources reload.
+     */
+    fun setLanguage(language: String) {
+        val normalized = AppPreferenceNames.normalizeLanguage(language)
+        settings.language = normalized
+        _state.update { it.copy(currentLanguage = normalized) }
     }
 
     /**
@@ -309,6 +326,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     currentTheme = settings.theme,
                     currentThemeStyle = settings.themeStyle,
                     currentColorScheme = settings.colorScheme,
+                    currentLanguage = settings.language,
                     floatingNavigation = settings.miuixFloatingNavigation,
                     floatingBarTranslucent = settings.miuixFloatingBarTranslucent,
                 )
@@ -347,7 +365,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                             // Preserve cached release data so failure does not wipe the card
                             currentReleases[source.id] = Result.success(cached)
                         } else {
-                            currentReleases[source.id] = Result.failure(err ?: Exception("Unknown error"))
+                            currentReleases[source.id] = Result.failure(err ?: Exception(localizedString(R.string.error_unknown)))
                         }
                     }
                 }
@@ -410,7 +428,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     message(R.string.install_failed, err.message)
                 }
             }.onFailure { err ->
-                _state.update { it.copy(updateDownloadState = UpdateDownloadState.Error(err.message ?: "Download failed")) }
+                _state.update { it.copy(updateDownloadState = UpdateDownloadState.Error(err.message ?: localizedString(R.string.error_download_failed))) }
                 message(R.string.download_failed, err.message)
             }
         }
@@ -656,7 +674,11 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch(Dispatchers.IO) {
             manager.setPackageIgnored(packageName, ignored)
             val appName = AppDiscovery.queryPackage(context, packageName).appLabel
-            val msg = if (ignored) "Excluded $appName from patching" else "Included $appName in patching"
+            val msg = if (ignored) {
+                localizedString(R.string.message_package_excluded, appName)
+            } else {
+                localizedString(R.string.message_package_included, appName)
+            }
             _messages.tryEmit(msg)
             if (!ignored) {
                 requestMissingScope(listOf(packageName))
@@ -763,14 +785,14 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                 prefs.edit().putBoolean(patchPreferenceKey(bundle.id, patch.name), enabled).apply()
             }
         } else {
-            message("Settings will be saved when LSPosed framework is active")
+            message(R.string.message_settings_pending_lsposed)
         }
     }
 
     /** Sets every patch of the app to enabled, to its default, or to disabled. */
     fun setAllPatches(packageName: String, patches: List<BundlePatches>, state: Boolean? = null) {
         val service = _state.value.service ?: run {
-            message("LSPosed framework service is currently inactive")
+            message(R.string.message_lsposed_inactive)
             return
         }
         val prefs = service.getRemotePreferences(packageName)
@@ -810,10 +832,10 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
             withContext(Dispatchers.Main) {
                 if (stoppedViaRoot) {
-                    message("Force stopped $appLabel")
+                    message(R.string.message_app_force_stopped, appLabel)
                 } else {
                     openAppInfo(packageName)
-                    message("Opened App Info for $appLabel: tap 'Force stop' to completely restart")
+                    message(R.string.message_app_info_opened, appLabel)
                 }
             }
         }
@@ -828,7 +850,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         runCatching {
             context.startActivity(intent)
         }.onFailure {
-            message("Could not open App Info for $packageName")
+            message(R.string.message_app_info_failed, packageName)
         }
     }
 
@@ -848,7 +870,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val freedBytes = CacheManager.clearAll(context)
             val freedStr = CacheManager.formatSize(freedBytes)
             refreshCacheSize()
-            message(context.getString(R.string.cache_cleared, freedStr))
+            message(R.string.cache_cleared, freedStr)
         }
     }
 

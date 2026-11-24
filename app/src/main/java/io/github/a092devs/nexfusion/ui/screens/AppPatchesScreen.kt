@@ -130,7 +130,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     val isExcluded = state.ignoredPackages.contains(packageName)
     val patchMenuItems: List<ThemedMenuItem> = listOf(
         ThemedMenuItem(
-            label = if (isExcluded) "Include in Patching" else "Exclude from Patching",
+            label = stringResource(if (isExcluded) R.string.action_include_patching else R.string.action_exclude_patching),
             onClick = {
                 viewModel.setAppIgnored(packageName, !isExcluded)
             },
@@ -157,13 +157,13 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
             },
         ),
         ThemedMenuItem(
-            label = "Open App Info",
+            label = stringResource(R.string.action_open_app_info),
             onClick = {
                 viewModel.openAppInfo(packageName)
             },
         ),
         ThemedMenuItem(
-            label = "Force stop",
+            label = stringResource(R.string.action_force_stop),
             onClick = {
                 viewModel.forceStopApp(packageName)
             },
@@ -199,7 +199,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 )
                 Spacer(Modifier.height(16.dp))
                 ThemedOutlinedButton(
-                    label = "Retry",
+                    label = stringResource(R.string.action_retry),
                     onClick = { reload++ },
                 )
             }
@@ -233,20 +233,20 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                             )
                                             Spacer(Modifier.width(8.dp))
                                             Text(
-                                                text = "Patching Disabled",
+                                                text = stringResource(R.string.patching_disabled_title),
                                                 style = MaterialTheme.typography.titleMedium,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                             )
                                         }
                                         ThemedFilledButton(
-                                            label = "Enable",
+                                            label = stringResource(R.string.action_enable),
                                             onClick = { viewModel.setAppIgnored(packageName, false) },
                                         )
                                     }
                                     Spacer(Modifier.height(6.dp))
                                     Text(
-                                        text = "This application is excluded from patching. NexFusion will not hook into its process or show scope warnings.",
+                                        text = stringResource(R.string.patching_disabled_text),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onErrorContainer,
                                     )
@@ -320,13 +320,13 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                             )
                                         } else if (allMatchingBundles.isEmpty()) {
                                             Text(
-                                                "No official recommendation available (no bundle installed)",
+                                                stringResource(R.string.no_recommendation_no_bundle),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.outline,
                                             )
                                         } else {
                                             Text(
-                                                "No official recommendation available (all tested versions are experimental)",
+                                                stringResource(R.string.no_recommendation_experimental),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.outline,
                                             )
@@ -334,7 +334,10 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
 
                                         if (allMatchingBundles.isNotEmpty()) {
                                             Text(
-                                                "Source: " + allMatchingBundles.joinToString { b -> "${b.name} (${b.author.ifBlank { "NexFusion" }})" },
+                                                stringResource(
+                                                    R.string.app_patch_source,
+                                                    allMatchingBundles.joinToString { b -> "${b.name} (${b.author.ifBlank { "NexFusion" }})" },
+                                                ),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 modifier = Modifier.padding(top = 2.dp),
@@ -349,17 +352,20 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
 
                                 val explanation = when (compatibility) {
                                     is CompatibilityStatus.Compatible -> if (compatibility.isExperimental) {
-                                        "Installed version matches an officially tested experimental target."
+                                        stringResource(R.string.compat_explanation_experimental)
                                     } else {
-                                        "Installed version matches an officially verified stable target."
+                                        stringResource(R.string.compat_explanation_stable)
                                     }
                                     is CompatibilityStatus.CompatibleUntested -> {
-                                        "Installed version is newer than verified targets (highest tested: ${compatibility.highestVerified ?: "none"}). Patches may still work dynamically."
+                                        stringResource(
+                                            R.string.compat_explanation_newer,
+                                            compatibility.highestVerified ?: stringResource(R.string.none_value),
+                                        )
                                     }
                                     is CompatibilityStatus.Incompatible -> compatibility.reason
-                                    is CompatibilityStatus.Dynamic -> "Universal bytecode hook — compatible with most versions dynamically."
-                                    is CompatibilityStatus.NotInstalled -> "Application is not installed on this device."
-                                    is CompatibilityStatus.MissingBundle -> "No active patch bundle installed for this application."
+                                    is CompatibilityStatus.Dynamic -> stringResource(R.string.compat_explanation_dynamic)
+                                    is CompatibilityStatus.NotInstalled -> stringResource(R.string.compat_explanation_not_installed)
+                                    is CompatibilityStatus.MissingBundle -> stringResource(R.string.compat_explanation_missing_bundle)
                                     is CompatibilityStatus.Unknown -> compatibility.reason
                                 }
                                 Text(
@@ -378,7 +384,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                             ActionCard(
                                 icon = Icons.Rounded.Warning,
                                 title = stringResource(R.string.scope_missing_title),
-                                text = "This application is not in the module scope. Patches will not take effect until added.",
+                                text = stringResource(R.string.scope_missing_app_text),
                                 primary = stringResource(R.string.action_request) to {
                                     viewModel.requestMissingScope(listOf(packageName))
                                 },

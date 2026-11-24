@@ -170,7 +170,7 @@ fun HomeContent(
                                 state.missingScope.mapNotNull { state.apps[it] }.joinToString()
                             ),
                             primary = stringResource(R.string.action_request) to onRequestScope,
-                            secondary = (if (state.missingScope.size == 1) "Don't Patch" else "Exclude...") to {
+                            secondary = (if (state.missingScope.size == 1) stringResource(R.string.action_dont_patch) else stringResource(R.string.action_exclude_ellipsis)) to {
                                 if (state.missingScope.size == 1) {
                                     onSetAppIgnored(state.missingScope.first(), true)
                                 } else {
@@ -193,14 +193,16 @@ fun HomeContent(
 
                         val primaryLabel = when {
                             isDownloading && downloadProgress != null -> stringResource(R.string.downloading_update, downloadProgress)
-                            isDownloading -> "Downloading update…"
+                            isDownloading -> stringResource(R.string.downloading_update_indeterminate)
                             downloadState is UpdateDownloadState.ReadyToInstall -> stringResource(R.string.action_install)
                             else -> stringResource(R.string.action_download)
                         }
 
                         val isSwitchingVariant = (state.updateBuildType == AppSettings.BUILD_TYPE_DEBUG && !io.github.a092devs.nexfusion.core.BuildConfig.DEBUG) ||
                             (state.updateBuildType == AppSettings.BUILD_TYPE_RELEASE && io.github.a092devs.nexfusion.core.BuildConfig.DEBUG)
-                        val variantSuffix = if (release.isDebugAsset) "Debug" else "Release"
+                        val variantSuffix = stringResource(
+                            if (release.isDebugAsset) R.string.update_build_type_debug else R.string.update_build_type_release
+                        )
                         val updateTitle = if (isSwitchingVariant) {
                             stringResource(R.string.app_update_title, "${release.tag} ($variantSuffix)")
                         } else {
@@ -209,7 +211,7 @@ fun HomeContent(
                         val updateText = if (downloadState is UpdateDownloadState.Error) {
                             stringResource(R.string.download_failed, downloadState.message)
                         } else if (isSwitchingVariant) {
-                            "Switch to the $variantSuffix build variant."
+                            stringResource(R.string.switch_build_variant, variantSuffix)
                         } else {
                             stringResource(R.string.app_update_text)
                         }
@@ -310,13 +312,18 @@ fun HomeContent(
                             activeProgress != null && activeProgress.progress >= 0f -> {
                                 val pct = (activeProgress.progress * 100).toInt()
                                 if (activeProgress.totalBundles > 1) {
-                                    "Downloading (${activeProgress.bundleIndex}/${activeProgress.totalBundles})... $pct%"
+                                    stringResource(
+                                        R.string.downloading_bundles_progress,
+                                        activeProgress.bundleIndex,
+                                        activeProgress.totalBundles,
+                                        pct,
+                                    )
                                 } else {
-                                    "Downloading update... $pct%"
+                                    stringResource(R.string.downloading_update, pct)
                                 }
                             }
-                            activeProgress != null -> "Downloading..."
-                            state.busySources.isNotEmpty() -> "Downloading..."
+                            activeProgress != null -> stringResource(R.string.downloading)
+                            state.busySources.isNotEmpty() -> stringResource(R.string.downloading)
                             else -> stringResource(R.string.action_update_all)
                         }
                         val primaryAction = if (isDownloadingPatches || state.busySources.isNotEmpty()) {
@@ -413,7 +420,7 @@ fun HomeContent(
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 Text(
-                                    text = "Install a patch bundle to discover supported applications. Once a bundle is installed, applications will appear here and NexFusion will prompt LSPosed to add them to scope.",
+                                    text = stringResource(R.string.no_bundles_text_detailed),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -421,7 +428,7 @@ fun HomeContent(
                                 )
                                 Spacer(Modifier.height(20.dp))
                                 ThemedCompactFilledButton(
-                                    label = "Install Bundle",
+                                    label = stringResource(R.string.action_install_bundle),
                                     icon = appIcons().install,
                                     onClick = onOpenPatches,
                                 )
@@ -470,7 +477,11 @@ fun HomeContent(
                         }
                         item {
                             ThemedChip(
-                                label = if (state.ignoredPackages.isEmpty()) "Excluded" else "Excluded (${state.ignoredPackages.size})",
+                                label = if (state.ignoredPackages.isEmpty()) {
+                                    stringResource(R.string.filter_excluded)
+                                } else {
+                                    stringResource(R.string.filter_excluded_count, state.ignoredPackages.size)
+                                },
                                 selected = selectedFilter == AppFilter.EXCLUDED,
                                 onClick = { selectedFilter = AppFilter.EXCLUDED },
                             )
@@ -513,13 +524,13 @@ fun HomeContent(
                     if (excludedApps.isEmpty()) {
                         item {
                             ActionCard(
-                                title = "No Excluded Applications",
-                                text = "Applications you exclude from patching will appear here. They won't load hooks or show scope warnings.",
+                                title = stringResource(R.string.no_excluded_title),
+                                text = stringResource(R.string.no_excluded_text),
                             )
                         }
                     } else {
                         item {
-                            SectionTitle("Excluded Applications (${excludedApps.size})")
+                            SectionTitle(stringResource(R.string.excluded_apps_count, excludedApps.size))
                         }
                         items(excludedApps, key = { it.packageName }) { app ->
                             AppCard(app = app, onClick = { onOpenApp(app.packageName) })
@@ -546,7 +557,7 @@ fun HomeContent(
 
                     if (selectedFilter == AppFilter.ALL && excludedApps.isNotEmpty()) {
                         item {
-                            SectionTitle("Excluded Applications (${excludedApps.size})")
+                            SectionTitle(stringResource(R.string.excluded_apps_count, excludedApps.size))
                         }
                         items(excludedApps, key = { "excluded_" + it.packageName }) { app ->
                             AppCard(app = app, onClick = { onOpenApp(app.packageName) })
@@ -628,19 +639,19 @@ fun HomeContent(
     if (showExcludeDialog && state.missingScope.isNotEmpty()) {
         ThemedDialog(
             show = true,
-            title = "Exclude from Patching",
+            title = stringResource(R.string.exclude_dialog_title),
             onDismissRequest = { showExcludeDialog = false },
-            confirmText = "Exclude All",
+            confirmText = stringResource(R.string.action_exclude_all),
             onConfirm = {
                 state.missingScope.forEach { pkg -> onSetAppIgnored(pkg, true) }
                 showExcludeDialog = false
             },
-            dismissText = "Cancel",
+            dismissText = stringResource(android.R.string.cancel),
             onDismiss = { showExcludeDialog = false },
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "Excluded apps will not load hooks and will not trigger scope prompts or notifications.",
+                    text = stringResource(R.string.exclude_dialog_text),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -658,7 +669,7 @@ fun HomeContent(
                             modifier = Modifier.weight(1f),
                         )
                         ThemedOutlinedButton(
-                            label = "Don't Patch",
+                            label = stringResource(R.string.action_dont_patch),
                             onClick = {
                                 onSetAppIgnored(pkg, true)
                                 if (state.missingScope.size <= 1) showExcludeDialog = false
@@ -768,7 +779,7 @@ private fun StatusCard(active: Boolean, title: String, text: String) {
                             .padding(horizontal = 8.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = if (active) "Active" else "Inactive",
+                            text = if (active) stringResource(R.string.status_active) else stringResource(R.string.status_inactive),
                             fontSize = DesignTokens.fontSizeLabelMedium,
                             fontWeight = FontWeight.Bold,
                             color = palette.icon,

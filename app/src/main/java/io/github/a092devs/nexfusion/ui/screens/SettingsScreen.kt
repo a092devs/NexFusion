@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -73,6 +76,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     var showBuildTypeDialog by remember { mutableStateOf(false) }
     var showThemeStyleDialog by remember { mutableStateOf(false) }
     var showColorSchemeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -123,6 +127,15 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             MiuixTopAppBar(
                 title = stringResource(R.string.nav_settings),
                 color = MaterialTheme.colorScheme.background,
+                actions = {
+                    ThemedIconButton(onClick = { showLanguageDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Translate,
+                            contentDescription = stringResource(R.string.language_title),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                },
             )
 
             LazyColumn(
@@ -276,6 +289,15 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         containerColor = MaterialTheme.colorScheme.background,
                         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
+                    actions = {
+                        ThemedIconButton(onClick = { showLanguageDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Rounded.Translate,
+                                contentDescription = stringResource(R.string.language_title),
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    },
                     scrollBehavior = scrollBehavior,
                 )
             },
@@ -528,6 +550,27 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             onSelect = { viewModel.setColorScheme(it) },
             onDismissRequest = { showColorSchemeDialog = false },
             colorMap = { ColorPalette.schemeSeed(it) },
+        )
+    }
+
+    if (showLanguageDialog) {
+        val englishLabel = stringResource(R.string.language_english)
+        val chineseLabel = stringResource(R.string.language_chinese)
+        ThemedRadioDialog(
+            show = true,
+            title = stringResource(R.string.language_title),
+            options = AppPreferenceNames.LANGUAGES.map { tag ->
+                tag to when (tag) {
+                    AppPreferenceNames.LANGUAGE_SIMPLIFIED_CHINESE -> chineseLabel
+                    else -> englishLabel
+                }
+            },
+            selected = state.currentLanguage,
+            onSelect = { language ->
+                viewModel.setLanguage(language)
+                context.findActivity()?.recreate()
+            },
+            onDismissRequest = { showLanguageDialog = false },
         )
     }
 

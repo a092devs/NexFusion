@@ -1,5 +1,7 @@
 package io.github.a092devs.nexfusion.updates
 
+import java.util.Locale
+
 /**
  * Pure preference-name helpers, kept separate from [AppSettings] so they can be unit tested
  * without an Android Context.
@@ -24,6 +26,28 @@ object AppPreferenceNames {
 
     /** The Miuix floating navigation bar translucent liquid blur is disabled by default for optimal performance. */
     const val DEFAULT_FLOATING_BAR_TRANSLUCENT = false
+
+    /** App language options: English or Simplified Chinese. */
+    const val LANGUAGE_ENGLISH = "en"
+    const val LANGUAGE_SIMPLIFIED_CHINESE = "zh-CN"
+
+    /** Preference order of the language dialog. */
+    val LANGUAGES = listOf(
+        LANGUAGE_ENGLISH,
+        LANGUAGE_SIMPLIFIED_CHINESE,
+    )
+    val SUPPORTED_LANGUAGES = LANGUAGES
+
+    /** Maps any stored language value to a supported one, defaulting to English or Chinese if system is zh. */
+    fun normalizeLanguage(raw: String?): String = when (raw) {
+        LANGUAGE_SIMPLIFIED_CHINESE -> LANGUAGE_SIMPLIFIED_CHINESE
+        LANGUAGE_ENGLISH -> LANGUAGE_ENGLISH
+        else -> if (Locale.getDefault().language.equals("zh", ignoreCase = true)) {
+            LANGUAGE_SIMPLIFIED_CHINESE
+        } else {
+            LANGUAGE_ENGLISH
+        }
+    }
 
     /**
      * Color scheme options. Default is the refreshed cyan palette; remaining values

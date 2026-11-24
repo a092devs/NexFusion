@@ -37,6 +37,13 @@ class AppSettings(context: Context) {
         set(value) = prefs.edit().putString("update_build_type", value).apply()
 
     /**
+     * Selected app language: "en" or "zh-CN". Defaults to English.
+     */
+    var language: String
+        get() = AppPreferenceNames.normalizeLanguage(prefs.getString("app_language", null))
+        set(value) = prefs.edit().putString("app_language", AppPreferenceNames.normalizeLanguage(value)).apply()
+
+    /**
      * Selected colour mode: "system", "light", or "dark".
      */
     var theme: String

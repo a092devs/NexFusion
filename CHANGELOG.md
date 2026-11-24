@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.4
+
+- **Localization & Multi-Language Support:**
+  * Added complete Simplified Chinese (简体中文) translation covering all screens, options, and diagnostics.
+  * Introduced an in-app Language selector directly in the Settings top bar (accessible via the universal translation icon).
+  * Implemented runtime context wrapping to dynamically switch languages with instant UI reloading without requiring an app restart.
+  * Replaced all remaining hardcoded strings across screens with localized string resources.
+- **Community Translations:**
+  * Added dedicated `TRANSLATIONS.md` guide for open-source community translation contributions.
+
 ## 5.0.3
 
 - **Performance & Navigation Fluidity:**

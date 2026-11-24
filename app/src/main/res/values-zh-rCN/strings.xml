@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NexFusion</string>
+    <string name="app_description">LSPosed 模块，用于从补丁源应用补丁包。</string>
+    <string name="slogan_summary">NexFusion 从补丁源应用补丁包。请只添加你信任的补丁源。</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">首页</string>
+    <string name="nav_patches">补丁</string>
+    <string name="nav_settings">设置</string>
+
+    <!-- Home -->
+    <string name="module_active_title">模块已启用</string>
+    <string name="module_active_summary">NexFusion %s</string>
+    <string name="module_inactive_title">模块未启用</string>
+    <string name="module_inactive_summary">请在 LSPosed 中启用 NexFusion 并重启应用。</string>
+    <string name="app_update_title">NexFusion %s 已可用</string>
+    <string name="app_update_text">应用有新版本可用。</string>
+    <string name="patch_updates_title">补丁更新可用</string>
+    <string name="scope_missing_title">模块作用域中缺少应用</string>
+    <string name="scope_missing_text">补丁只会应用到模块作用域内的应用：%s</string>
+    <string name="apps_title">应用</string>
+    <string name="app_not_installed_short">未安装</string>
+    <string name="recommended_version">推荐版本：%s</string>
+    <string name="recommended_any_version">适用于任意版本</string>
+    <string name="installed_version">已安装：%s</string>
+    <string name="chip_untested">未测试</string>
+    <string name="badge_not_in_scope">不在作用域</string>
+    <string name="badge_update">更新</string>
+    <string name="no_bundles_title">未安装补丁包</string>
+    <string name="no_bundles_text">从补丁源安装补丁包以适配应用。</string>
+    <string name="action_browse_sources">浏览补丁源</string>
+    <string name="action_download">下载</string>
+    <string name="action_update_all">全部更新</string>
+    <string name="action_request">请求</string>
+    <string name="up_to_date">所有内容均为最新</string>
+    <string name="update_check_failed">检查更新失败：%s</string>
+    <string name="app_update_available">NexFusion 有新版本可用：%s</string>
+    <string name="patch_updates_available">有可用的补丁源更新</string>
+
+    <!-- Patches -->
+    <string name="patch_sources_summary">补丁源提供补丁包，类似于 Morphe 的补丁源。补丁源是一个 GitHub 仓库，其 Releases 中包含 .nxb 补丁包，或者是补丁包 JSON 文件的 URL。</string>
+    <string name="sources_category">补丁源</string>
+    <string name="installed_bundles_category">已安装的补丁包</string>
+    <string name="bundle_no_installed_apps">此设备上未安装受支持的应用</string>
+    <string name="add_source_title">添加补丁源</string>
+    <string name="add_source_warning">补丁包会在被适配的应用内运行代码。请只添加你信任的补丁源。</string>
+    <string name="source_name_hint">名称（可选）</string>
+    <string name="source_url_hint">owner/repo、GitHub URL 或补丁包 JSON URL</string>
+    <string name="source_prerelease">使用预发布版本</string>
+    <string name="import_bundle_title">从文件导入补丁包</string>
+    <string name="source_checking">正在检查更新…</string>
+    <string name="source_installing">正在安装…</string>
+    <string name="source_error">错误：%s</string>
+    <string name="source_available">未安装 · 最新 %s</string>
+    <string name="source_update_available">已安装 %1$s · 可更新至 %2$s</string>
+    <string name="source_downgrade_available">已安装 %1$s · 可降级至 %2$s</string>
+    <string name="source_up_to_date">已安装 %s · 已是最新</string>
+    <string name="bundles_installed">已安装 %s。请强行停止被适配的应用以生效。</string>
+    <string name="install_failed">安装失败：%s</string>
+    <string name="remove_title">移除 %s？</string>
+    <string name="action_install">安装</string>
+    <string name="action_update">更新</string>
+    <string name="action_downgrade">降级</string>
+    <string name="action_reinstall">重新安装</string>
+    <string name="action_changelog">更新日志</string>
+    <string name="action_add">添加</string>
+    <string name="action_remove">移除</string>
+    <string name="action_uninstall">卸载</string>
+
+    <!-- App patches -->
+    <string name="force_stop_to_apply_summary">强行停止应用以应用更改。</string>
+    <string name="patches_load_failed">无法加载补丁：%s</string>
+    <string name="duplicate_patch_warning">由多个补丁包提供</string>
+    <string name="action_app_info">应用信息</string>
+    <string name="action_force_stop">强行停止</string>
+    <string name="action_restore_defaults">恢复默认值</string>
+    <string name="action_enable_all">全部启用</string>
+    <string name="action_disable_all">全部禁用</string>
+
+    <!-- Settings -->
+    <string name="settings_updates">更新</string>
+    <string name="setting_notify_app">应用更新通知</string>
+    <string name="setting_notify_app_summary">当 NexFusion 发布新版本时通知</string>
+    <string name="setting_notify_patches">补丁更新通知</string>
+    <string name="setting_notify_patches_summary">当已安装的补丁源发布新补丁包时通知</string>
+    <string name="setting_auto_update_patches">自动更新补丁包</string>
+    <string name="setting_auto_update_patches_summary">在后台自动下载并应用补丁更新</string>
+    <string name="check_for_update_title">检查更新</string>
+    <string name="settings_general">通用</string>
+    <string name="settings_appearance">外观</string>
+    <string name="hide_icon_title">隐藏启动器图标</string>
+    <string name="hide_icon_summary">改为从 LSPosed 打开 NexFusion</string>
+    <string name="hide_uninstalled_apps_title">隐藏未安装的应用</string>
+    <string name="hide_uninstalled_apps_summary">在首页仅显示此设备上已安装的应用</string>
+    <string name="action_hide_uninstalled">隐藏未安装的应用</string>
+    <string name="action_show_all_apps">显示所有受支持的应用</string>
+    <string name="bundle_warning_app_update_title">建议更新应用</string>
+    <string name="bundle_warning_app_update_desc">此补丁包需要 NexFusion %s 或更高版本。</string>
+    <string name="settings_about">关于</string>
+    <string name="source_code">源代码</string>
+    <string name="open_source_license">开源许可证</string>
+
+    <!-- Update Channels -->
+    <string name="update_channel_title">更新通道</string>
+    <string name="update_channel_summary">选择接收稳定版还是预发布测试版</string>
+    <string name="update_channel_stable">稳定版</string>
+    <string name="update_channel_stable_summary">经过测试、适合日常使用的官方稳定版本</string>
+    <string name="update_channel_beta">测试版</string>
+    <string name="update_channel_beta_summary">用于抢先体验的预发布版本和补丁</string>
+
+    <!-- Build Variant -->
+    <string name="update_build_type_title">构建类型</string>
+    <string name="update_build_type_summary">选择下载 Release 还是 Debug 版 APK</string>
+    <string name="update_build_type_release">Release</string>
+    <string name="update_build_type_release_summary">正式签名构建</string>
+    <string name="update_build_type_debug">Debug</string>
+    <string name="update_build_type_debug_summary">用于测试和开发的调试构建</string>
+
+    <!-- Notifications -->
+    <string name="channel_app_updates">应用更新</string>
+    <string name="channel_patch_updates">补丁更新</string>
+    <string name="notification_app_update_title">NexFusion %s 已可用</string>
+    <string name="notification_app_update_text">点按以更新应用。</string>
+    <string name="notification_patch_update_title">补丁更新可用</string>
+    <string name="notification_patches_auto_updated_title">补丁包已更新</string>
+    <string name="notification_patches_auto_updated_text">已在后台更新：%s</string>
+
+    <!-- Compatibility Statuses & Redesign -->
+    <string name="status_compatible">兼容</string>
+    <string name="status_compatible_experimental">兼容（实验性）</string>
+    <string name="status_untested">未测试（v%s）</string>
+    <string name="status_dynamic">动态</string>
+    <string name="status_incompatible">不兼容</string>
+    <string name="status_missing_bundle">缺少补丁包</string>
+    <string name="status_not_installed">未安装</string>
+    <string name="category_installed_apps">已安装的应用</string>
+    <string name="category_supported_apps">受支持的应用</string>
+    <string name="search_apps_hint">搜索应用或包名…</string>
+    <string name="filter_all">全部</string>
+    <string name="filter_updates">可更新</string>
+    <string name="filter_scope">作用域问题</string>
+    <string name="tab_sources">补丁源</string>
+    <string name="tab_bundles">补丁包</string>
+    <string name="theme_title">颜色模式</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_style_title">设计风格</string>
+    <string name="theme_style_material3">Material 3</string>
+    <string name="theme_style_miuix">Miuix</string>
+    <string name="color_scheme_title">配色方案</string>
+    <string name="color_scheme_default">默认</string>
+    <string name="color_scheme_sunset">日落</string>
+    <string name="color_scheme_emerald">翡翠</string>
+    <string name="color_scheme_rose">玫瑰</string>
+    <string name="color_scheme_amber">琥珀</string>
+    <string name="color_scheme_indigo">靛蓝</string>
+    <string name="color_scheme_fuchsia">紫红</string>
+    <string name="color_scheme_lime">青柠</string>
+    <string name="miuix_floating_nav_title">悬浮导航栏</string>
+    <string name="miuix_floating_nav_summary">带有流畅弹簧动画的悬浮胶囊导航栏。</string>
+    <string name="miuix_floating_nav_translucent_title">半透明玻璃效果</string>
+    <string name="miuix_floating_nav_translucent_summary">为悬浮导航栏应用半透明玻璃模糊与折射效果。</string>
+    <string name="cache_cleared">已清理 %s 缓存文件</string>
+    <string name="action_clear_cache">清除缓存</string>
+    <string name="action_clear_cache_summary">释放临时下载、更新文件和字节码索引（已占用 %s）</string>
+    <string name="patches_count">有 %d 个可用补丁</string>
+    <string name="search_patches_hint">搜索补丁…</string>
+    <string name="no_patches_found">未找到匹配的补丁</string>
+
+    <!-- Multi-source Management -->
+    <string name="source_refreshed">已刷新 %s</string>
+    <string name="source_refresh_failed">刷新 %1$s 失败：%2$s</string>
+    <string name="action_refresh">刷新</string>
+    <string name="filter_conflicts">冲突</string>
+    <string name="filter_uninstalled">未安装</string>
+    <string name="provenance_official">官方</string>
+    <string name="provenance_community">社区</string>
+    <string name="provenance_nexfusion">NexFusion</string>
+    <string name="provenance_custom">自定义</string>
+    <string name="preset_sources_title">快速添加预设补丁源：</string>
+    <string name="source_enabled">已启用</string>
+    <string name="source_disabled">已禁用</string>
+    <string name="last_refreshed">刷新时间：%s</string>
+    <string name="downloading_update">正在下载更新… %d%%</string>
+    <string name="download_failed">下载失败：%s</string>
+    <string name="app_update_no_apk">此版本没有可直接下载的 APK 文件。</string>
+
+    <!-- Language -->
+    <string name="language_title">语言</string>
+    <string name="language_english">English</string>
+    <string name="language_chinese">简体中文</string>
+
+    <!-- Additional UI text -->
+    <string name="action_dont_patch">不再适配</string>
+    <string name="action_exclude_ellipsis">排除…</string>
+    <string name="filter_excluded">已排除</string>
+    <string name="filter_excluded_count">已排除（%d）</string>
+    <string name="no_excluded_title">没有已排除的应用</string>
+    <string name="no_excluded_text">被你排除适配的应用会显示在这里。它们不会加载 Hook，也不会触发作用域提示。</string>
+    <string name="excluded_apps_count">已排除的应用（%d）</string>
+    <string name="exclude_dialog_title">排除适配</string>
+    <string name="exclude_dialog_text">已排除的应用不会加载 Hook，也不会触发作用域提示或通知。</string>
+    <string name="action_exclude_all">全部排除</string>
+    <string name="status_active">已启用</string>
+    <string name="status_inactive">未启用</string>
+    <string name="downloading">正在下载…</string>
+    <string name="downloading_update_indeterminate">正在下载更新…</string>
+    <string name="downloading_bundles_progress">正在下载（%1$d/%2$d）… %3$d%%</string>
+    <string name="downloading_bundle_progress">正在下载（%1$d/%2$d）%3$s：%4$d%%</string>
+    <string name="downloading_bundle">正在下载 %s…</string>
+    <string name="switch_build_variant">切换到 %s 构建类型。</string>
+    <string name="no_bundles_text_detailed">安装补丁包以发现受支持的应用。安装补丁包后，应用会显示在这里，NexFusion 也会提示 LSPosed 将它们加入作用域。</string>
+    <string name="action_install_bundle">安装补丁包</string>
+    <string name="source_prerelease_badge">预发布</string>
+    <string name="source_refresh_error_cached">刷新出错：%s（正在使用缓存的版本）</string>
+    <string name="bundle_author">作者：%s</string>
+    <string name="bundle_description_unified">统一的补丁套件，为受支持的应用提供动态字节码 Hook 与功能增强。</string>
+    <string name="show_less">收起 ▲</string>
+    <string name="more_apps">还有 %d 个 ▼</string>
+    <string name="time_never">从未</string>
+    <string name="time_just_now">刚刚</string>
+    <string name="time_minutes_ago">%d 分钟前</string>
+    <string name="time_hours_ago">%d 小时前</string>
+    <string name="time_days_ago">%d 天前</string>
+    <string name="action_include_patching">加入适配</string>
+    <string name="action_exclude_patching">排除适配</string>
+    <string name="action_open_app_info">打开应用信息</string>
+    <string name="action_retry">重试</string>
+    <string name="action_enable">启用</string>
+    <string name="patching_disabled_title">适配已禁用</string>
+    <string name="patching_disabled_text">此应用已被排除适配。NexFusion 不会 Hook 其进程，也不会显示作用域提示。</string>
+    <string name="no_recommendation_no_bundle">暂无官方推荐（未安装补丁包）</string>
+    <string name="no_recommendation_experimental">暂无官方推荐（所有已测试版本均为实验性）</string>
+    <string name="app_patch_source">来源：%s</string>
+    <string name="none_value">无</string>
+    <string name="compat_explanation_experimental">已安装版本匹配官方测试过的实验性目标版本。</string>
+    <string name="compat_explanation_stable">已安装版本匹配官方验证过的稳定目标版本。</string>
+    <string name="compat_explanation_newer">已安装版本比已验证的目标版本更新（最高测试版本：%1$s）。补丁仍可能通过动态方式正常工作。</string>
+    <string name="compat_explanation_dynamic">通用字节码 Hook — 可通过动态方式兼容大多数版本。</string>
+    <string name="compat_explanation_not_installed">此设备上未安装该应用。</string>
+    <string name="compat_explanation_missing_bundle">此应用没有已启用的补丁包。</string>
+    <string name="scope_missing_app_text">此应用不在模块作用域内，加入作用域后补丁才会生效。</string>
+    <string name="badge_dual_bundle">多个补丁包</string>
+    <string name="no_changelog">没有提供更新日志详情。</string>
+    <string name="message_settings_pending_lsposed">LSPosed 框架启用后即可保存设置</string>
+    <string name="message_lsposed_inactive">LSPosed 框架服务当前未运行</string>
+    <string name="message_package_excluded">已将 %s 排除适配</string>
+    <string name="message_package_included">已将 %s 加入适配</string>
+    <string name="message_app_force_stopped">已强行停止 %s</string>
+    <string name="message_app_info_opened">已打开 %s 的应用信息：点按“强行停止”以完全重启</string>
+    <string name="message_app_info_failed">无法打开 %s 的应用信息</string>
+    <string name="error_unknown">未知错误</string>
+    <string name="error_download_failed">下载失败</string>
+</resources>
+

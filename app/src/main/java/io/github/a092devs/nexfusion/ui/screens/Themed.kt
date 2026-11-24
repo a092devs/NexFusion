@@ -99,6 +99,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.a092devs.nexfusion.core.R
 import io.github.a092devs.nexfusion.ui.theme.isMiuixStyle
 import io.github.a092devs.nexfusion.ui.theme.nexFusionCardBorder
 import io.github.a092devs.nexfusion.ui.theme.nexFusionCardShape
@@ -910,7 +911,7 @@ fun ChangelogText(
 
     if (notes.isBlank()) {
         Text(
-            text = "No changelog details provided.",
+            text = stringResource(R.string.no_changelog),
             style = MaterialTheme.typography.bodyMedium,
             color = subtextColor,
             modifier = modifier.padding(vertical = 12.dp),

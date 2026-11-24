@@ -48,6 +48,10 @@ class SettingApplication : Application(), XposedServiceHelper.OnServiceListener 
         }
     }
 
+    override fun attachBaseContext(base: android.content.Context) {
+        super.attachBaseContext(io.github.a092devs.nexfusion.core.AppLocale.wrap(base))
+    }
+
     override fun onCreate() {
         super.onCreate()
         XposedServiceHelper.registerListener(this)
