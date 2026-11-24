@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.6
+
+- **Module Activation Resilience:**
+  * Resolved issue where the module would report as inactive if remote preference initialization was pending.
+  * Integrated live fallback to direct Xposed framework status verification.
+- **Modern Download & Update Experience:**
+  * Refined update download button with smooth circular loading state, retaining vibrant theme colors.
+- **Supported Applications Catalog:**
+  * Registered WhatsApp discovery and default patch associations.
+
 ## 5.0.5
 
 - **Backup & Restore for Patch Preferences:**
