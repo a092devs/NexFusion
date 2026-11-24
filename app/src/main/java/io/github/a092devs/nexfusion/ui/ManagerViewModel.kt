@@ -727,6 +727,9 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         return runCatching {
             val service = state.service
             val prefs = service?.let { runCatching { it.getRemotePreferences(packageName) }.getOrNull() }
+            val pkgPrefs = runCatching {
+                context.getSharedPreferences("nexfusion_prefs_$packageName", Context.MODE_PRIVATE)
+            }.getOrNull()
             val bundlePatchLists = activeBundles.map { bundle ->
                 val apps: List<AppPatchInfo> = mgr.getCachedPatches(bundle).orEmpty().filter { it.packageName == packageName }
                 val localPrefs = runCatching {
@@ -739,10 +742,13 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                         val key = patchPreferenceKey(bundle.id, patch.name)
                         val isEnabled = prefs?.let { p ->
                             if (p.contains(key)) p.getBoolean(key, patch.use) else null
-                        } ?: localPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
+                        } ?: pkgPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
+                        ?: localPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
                         ?: patch.use
-                        if (prefs != null && !prefs.contains(key) && localPrefs?.contains(key) == true) {
-                            runCatching { prefs.edit().putBoolean(key, isEnabled).apply() }
+                        if (prefs != null && !prefs.contains(key)) {
+                            if (pkgPrefs?.contains(key) == true || localPrefs?.contains(key) == true) {
+                                runCatching { prefs.edit().putBoolean(key, isEnabled).apply() }
+                            }
                         }
                         patch to isEnabled
                     }
@@ -765,6 +771,9 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val mgr = manager
             val enabledSourceIds = state.sources.filter { it.enabled }.map { it.id }.toSet()
             val prefs = service?.let { runCatching { it.getRemotePreferences(packageName) }.getOrNull() }
+            val pkgPrefs = runCatching {
+                context.getSharedPreferences("nexfusion_prefs_$packageName", Context.MODE_PRIVATE)
+            }.getOrNull()
             val activeBundles = state.bundles.filter {
                 it.enabled && (it.sourceId == null || it.sourceId in enabledSourceIds) && packageName in it.apps
             }
@@ -780,10 +789,13 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                         val key = patchPreferenceKey(bundle.id, patch.name)
                         val isEnabled = prefs?.let { p ->
                             if (p.contains(key)) p.getBoolean(key, patch.use) else null
-                        } ?: localPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
+                        } ?: pkgPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
+                        ?: localPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
                         ?: patch.use
-                        if (prefs != null && !prefs.contains(key) && localPrefs?.contains(key) == true) {
-                            runCatching { prefs.edit().putBoolean(key, isEnabled).apply() }
+                        if (prefs != null && !prefs.contains(key)) {
+                            if (pkgPrefs?.contains(key) == true || localPrefs?.contains(key) == true) {
+                                runCatching { prefs.edit().putBoolean(key, isEnabled).apply() }
+                            }
                         }
                         patch to isEnabled
                     }
@@ -801,6 +813,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     fun setPatchEnabled(packageName: String, bundle: InstalledBundle, patch: Patch, enabled: Boolean) {
         val service = _state.value.service
         val key = patchPreferenceKey(bundle.id, patch.name)
+        val now = System.currentTimeMillis()
         var remoteSuccess = false
         if (service != null) {
             runCatching {
@@ -815,8 +828,12 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             }
         }
         runCatching {
+            val pkgPrefs = context.getSharedPreferences("nexfusion_prefs_$packageName", Context.MODE_PRIVATE)
+            pkgPrefs.edit().putBoolean(key, enabled).putLong("${key}_timestamp", now).apply()
+        }
+        runCatching {
             val localPrefs = context.getSharedPreferences("nexfusion_patch_prefs_${bundle.id}", Context.MODE_PRIVATE)
-            localPrefs.edit().putBoolean(key, enabled).putLong("${key}_timestamp", System.currentTimeMillis()).apply()
+            localPrefs.edit().putBoolean(key, enabled).putLong("${key}_timestamp", now).apply()
         }
         if (service == null) {
             message(R.string.message_settings_pending_lsposed)
@@ -845,6 +862,16 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             }
         }
         val now = System.currentTimeMillis()
+        runCatching {
+            val pkgPrefs = context.getSharedPreferences("nexfusion_prefs_$packageName", Context.MODE_PRIVATE)
+            val pkgEditor = pkgPrefs.edit()
+            for (group in patches) for ((patch, _) in group.patches) {
+                val value = state ?: patch.use
+                val key = patchPreferenceKey(group.bundle.id, patch.name)
+                pkgEditor.putBoolean(key, value).putLong("${key}_timestamp", now)
+            }
+            pkgEditor.apply()
+        }
         for (group in patches) {
             runCatching {
                 val localPrefs = context.getSharedPreferences("nexfusion_patch_prefs_${group.bundle.id}", Context.MODE_PRIVATE)
@@ -962,17 +989,11 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     fun exportPatchPreferences(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             val service = _state.value.service
-            if (service == null) {
-                withContext(Dispatchers.Main) {
-                    message(R.string.message_settings_pending_lsposed)
-                }
-                return@launch
-            }
-
             val bundles = _state.value.bundles
             val knownPackages = (_state.value.bundles.flatMap { it.apps.keys } + _state.value.appCatalog.map { it.packageName }).distinct()
             val ignored = _state.value.ignoredPackages
-            val backup = PatchSettingsBackup.createBackup(service, bundles, knownPackages, ignored)
+            val enabledSources = _state.value.sources.filter { it.enabled }.map { it.id }.toSet()
+            val backup = PatchSettingsBackup.createBackup(context, service, bundles, knownPackages, ignored, enabledSources)
 
             runCatching {
                 val output = context.contentResolver.openOutputStream(uri)
@@ -1010,24 +1031,20 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     fun restorePatchPreferences(backup: PatchBackupData) {
         viewModelScope.launch(Dispatchers.IO) {
             val service = _state.value.service
-            if (service == null) {
-                withContext(Dispatchers.Main) {
-                    message(R.string.message_settings_pending_lsposed)
-                }
-                return@launch
-            }
-
             val bundles = _state.value.bundles
-            val result = PatchSettingsBackup.applyBackup(backup, service, bundles) { pkg, ignored ->
+            val result = PatchSettingsBackup.applyBackup(context, service, bundles, backup) { pkg, ignored ->
                 setAppIgnored(pkg, ignored)
             }
 
             withContext(Dispatchers.Main) {
                 if (result.success) {
                     message(R.string.message_restore_success, result.packagesRestored, result.patchesRestored)
+                    if (result.missingScopePackages.isNotEmpty()) {
+                        requestMissingScope(result.missingScopePackages)
+                    }
                     refresh()
                 } else {
-                    message(R.string.message_restore_failed, result.error.orEmpty())
+                    message(R.string.message_restore_failed, result.error ?: context.getString(R.string.error_unknown))
                 }
             }
         }

@@ -5,6 +5,17 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.7
+
+- **Backup & Restore Upgrades:**
+  * Redesigned backup and restore to operate independently of framework runtime state with resilient local persistence.
+  * Added automatic discovery of all configured applications and settings during backup.
+  * Streamlined settings titles to Backup and Restore.
+- **Download Experience Uniformity:**
+  * Aligned Home screen update and patch bundle download progress bars with Patches tab styling.
+- **Patch Management Resilience:**
+  * Safeguarded batch patch toggling (Enable All / Disable All) with local preference persistence fallback.
+
 ## 5.0.6
 
 - **Module Activation Resilience:**

@@ -254,9 +254,9 @@
     <string name="error_download_failed">Download failed</string>
     <!-- Backup and Restore -->
     <string name="settings_backup_restore">Backup &amp; Restore</string>
-    <string name="backup_patch_preferences_title">Export Patch Preferences</string>
+    <string name="backup_patch_preferences_title">Backup</string>
     <string name="backup_patch_preferences_summary">Export all configured patch toggles and preferences to a JSON backup file</string>
-    <string name="restore_patch_preferences_title">Import Patch Preferences</string>
+    <string name="restore_patch_preferences_title">Restore</string>
     <string name="restore_patch_preferences_summary">Restore patch toggles and preferences from a backup file</string>
     <string name="restore_dialog_title">Restore Patch Preferences</string>
     <string name="restore_dialog_message">Found preferences for %1$d applications (%2$d patch toggles). Do you want to restore them?</string>

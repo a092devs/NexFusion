@@ -255,9 +255,9 @@
     <string name="error_download_failed">下载失败</string>
     <!-- 备份与恢复 -->
     <string name="settings_backup_restore">备份与恢复</string>
-    <string name="backup_patch_preferences_title">导出补丁偏好设置</string>
+    <string name="backup_patch_preferences_title">备份</string>
     <string name="backup_patch_preferences_summary">将所有已配置的应用补丁开关与偏好导出为 JSON 备份文件</string>
-    <string name="restore_patch_preferences_title">导入补丁偏好设置</string>
+    <string name="restore_patch_preferences_title">恢复</string>
     <string name="restore_patch_preferences_summary">从备份文件中恢复应用补丁开关与偏好设置</string>
     <string name="restore_dialog_title">恢复补丁偏好设置</string>
     <string name="restore_dialog_message">找到 %1$d 个应用的偏好设置（共 %2$d 个补丁开关）。是否立即恢复？</string>

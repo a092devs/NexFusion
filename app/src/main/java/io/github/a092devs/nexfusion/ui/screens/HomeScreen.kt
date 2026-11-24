@@ -35,6 +35,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -250,6 +251,27 @@ fun HomeContent(
                                     }
                                 }
 
+                                if (isDownloading) {
+                                    Spacer(Modifier.height(8.dp))
+                                    val dlProgress = (downloadState as? UpdateDownloadState.Downloading)?.progress ?: -1f
+                                    if (dlProgress >= 0f) {
+                                        LinearProgressIndicator(
+                                            progress = { dlProgress },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp)),
+                                        )
+                                    } else {
+                                        LinearProgressIndicator(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp)),
+                                        )
+                                    }
+                                }
+
                                 Spacer(Modifier.height(12.dp))
 
                                 Row(
@@ -341,6 +363,27 @@ fun HomeContent(
                                         )
                                     }
                                 }
+
+                                if ((activeProgress != null && !activeProgress.isInstalling) || (state.busySources.isNotEmpty() && activeProgress == null)) {
+                                    Spacer(Modifier.height(8.dp))
+                                    if (activeProgress != null && activeProgress.progress >= 0f) {
+                                        LinearProgressIndicator(
+                                            progress = { activeProgress.progress },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp)),
+                                        )
+                                    } else {
+                                        LinearProgressIndicator(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(RoundedCornerShape(2.dp)),
+                                        )
+                                    }
+                                }
+
                                 Spacer(Modifier.height(12.dp))
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
