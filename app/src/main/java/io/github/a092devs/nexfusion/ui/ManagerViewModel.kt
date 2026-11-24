@@ -2,6 +2,7 @@ package io.github.a092devs.nexfusion.ui
 
 import android.app.Application
 import android.content.ComponentName
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
@@ -728,12 +729,21 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val prefs = service?.let { runCatching { it.getRemotePreferences(packageName) }.getOrNull() }
             val bundlePatchLists = activeBundles.map { bundle ->
                 val apps: List<AppPatchInfo> = mgr.getCachedPatches(bundle).orEmpty().filter { it.packageName == packageName }
+                val localPrefs = runCatching {
+                    context.getSharedPreferences("nexfusion_patch_prefs_${bundle.id}", Context.MODE_PRIVATE)
+                }.getOrNull()
                 val patches = apps.flatMap { it.patches.asList() }
                     .filter { it.name.isNotEmpty() && !it.name.startsWith("<") }
                     .sortedBy { it.name }
                     .map { patch ->
-                        val isEnabled = prefs?.getBoolean(patchPreferenceKey(bundle.id, patch.name), patch.use)
-                            ?: patch.use
+                        val key = patchPreferenceKey(bundle.id, patch.name)
+                        val isEnabled = prefs?.let { p ->
+                            if (p.contains(key)) p.getBoolean(key, patch.use) else null
+                        } ?: localPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
+                        ?: patch.use
+                        if (prefs != null && !prefs.contains(key) && localPrefs?.contains(key) == true) {
+                            runCatching { prefs.edit().putBoolean(key, isEnabled).apply() }
+                        }
                         patch to isEnabled
                     }
                 val sourceName = state.sources.find { it.id == bundle.sourceId }?.name
@@ -760,12 +770,21 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             }
             val bundlePatchLists = activeBundles.map { bundle ->
                 val apps: List<AppPatchInfo> = mgr.patches(bundle).filter { it.packageName == packageName }
+                val localPrefs = runCatching {
+                    context.getSharedPreferences("nexfusion_patch_prefs_${bundle.id}", Context.MODE_PRIVATE)
+                }.getOrNull()
                 val patches = apps.flatMap { it.patches.asList() }
                     .filter { it.name.isNotEmpty() && !it.name.startsWith("<") }
                     .sortedBy { it.name }
                     .map { patch ->
-                        val isEnabled = prefs?.getBoolean(patchPreferenceKey(bundle.id, patch.name), patch.use)
-                            ?: patch.use
+                        val key = patchPreferenceKey(bundle.id, patch.name)
+                        val isEnabled = prefs?.let { p ->
+                            if (p.contains(key)) p.getBoolean(key, patch.use) else null
+                        } ?: localPrefs?.takeIf { it.contains(key) }?.getBoolean(key, patch.use)
+                        ?: patch.use
+                        if (prefs != null && !prefs.contains(key) && localPrefs?.contains(key) == true) {
+                            runCatching { prefs.edit().putBoolean(key, isEnabled).apply() }
+                        }
                         patch to isEnabled
                     }
                 val sourceName = state.sources.find { it.id == bundle.sourceId }?.name
@@ -781,31 +800,65 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     fun setPatchEnabled(packageName: String, bundle: InstalledBundle, patch: Patch, enabled: Boolean) {
         val service = _state.value.service
+        val key = patchPreferenceKey(bundle.id, patch.name)
+        var remoteSuccess = false
         if (service != null) {
-            val prefs = service.getRemotePreferences(packageName)
-            val committed = prefs.edit().putBoolean(patchPreferenceKey(bundle.id, patch.name), enabled).commit()
-            if (!committed) {
-                prefs.edit().putBoolean(patchPreferenceKey(bundle.id, patch.name), enabled).apply()
+            runCatching {
+                val prefs = service.getRemotePreferences(packageName)
+                if (!prefs.edit().putBoolean(key, enabled).commit()) {
+                    prefs.edit().putBoolean(key, enabled).apply()
+                }
+                remoteSuccess = true
+            }.onFailure {
+                android.util.Log.w("NexFusion", "Failed to write remote preferences for $packageName: ${it.message}")
+                runCatching { requestMissingScope(listOf(packageName)) }
             }
-        } else {
+        }
+        runCatching {
+            val localPrefs = context.getSharedPreferences("nexfusion_patch_prefs_${bundle.id}", Context.MODE_PRIVATE)
+            localPrefs.edit().putBoolean(key, enabled).putLong("${key}_timestamp", System.currentTimeMillis()).apply()
+        }
+        if (service == null) {
             message(R.string.message_settings_pending_lsposed)
         }
     }
 
     /** Sets every patch of the app to enabled, to its default, or to disabled. */
     fun setAllPatches(packageName: String, patches: List<BundlePatches>, state: Boolean? = null) {
-        val service = _state.value.service ?: run {
+        val service = _state.value.service
+        var remoteSuccess = false
+        if (service != null) {
+            runCatching {
+                val prefs = service.getRemotePreferences(packageName)
+                val editor = prefs.edit()
+                for (group in patches) for ((patch, _) in group.patches) {
+                    val value = state ?: patch.use
+                    editor.putBoolean(patchPreferenceKey(group.bundle.id, patch.name), value)
+                }
+                if (!editor.commit()) {
+                    editor.apply()
+                }
+                remoteSuccess = true
+            }.onFailure {
+                android.util.Log.w("NexFusion", "Failed to write remote preferences for $packageName: ${it.message}")
+                runCatching { requestMissingScope(listOf(packageName)) }
+            }
+        }
+        val now = System.currentTimeMillis()
+        for (group in patches) {
+            runCatching {
+                val localPrefs = context.getSharedPreferences("nexfusion_patch_prefs_${group.bundle.id}", Context.MODE_PRIVATE)
+                val localEditor = localPrefs.edit()
+                for ((patch, _) in group.patches) {
+                    val value = state ?: patch.use
+                    val key = patchPreferenceKey(group.bundle.id, patch.name)
+                    localEditor.putBoolean(key, value).putLong("${key}_timestamp", now)
+                }
+                localEditor.apply()
+            }
+        }
+        if (service == null) {
             message(R.string.message_lsposed_inactive)
-            return
-        }
-        val prefs = service.getRemotePreferences(packageName)
-        val editor = prefs.edit()
-        for (group in patches) for ((patch, _) in group.patches) {
-            val value = state ?: patch.use
-            editor.putBoolean(patchPreferenceKey(group.bundle.id, patch.name), value)
-        }
-        if (!editor.commit()) {
-            editor.apply()
         }
     }
 

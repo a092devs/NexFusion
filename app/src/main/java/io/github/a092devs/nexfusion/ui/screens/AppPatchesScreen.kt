@@ -138,21 +138,45 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
         ThemedMenuItem(
             label = stringResource(R.string.action_enable_all),
             onClick = {
-                viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = true)
+                val currentGroups = result?.getOrNull().orEmpty()
+                viewModel.setAllPatches(packageName, currentGroups, state = true)
+                val newMap = enabled.value.toMutableMap()
+                for (group in currentGroups) {
+                    for ((patch, _) in group.patches) {
+                        newMap[patchPreferenceKey(group.bundle.id, patch.name)] = true
+                    }
+                }
+                enabled.value = newMap
                 reload++
             },
         ),
         ThemedMenuItem(
             label = stringResource(R.string.action_disable_all),
             onClick = {
-                viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = false)
+                val currentGroups = result?.getOrNull().orEmpty()
+                viewModel.setAllPatches(packageName, currentGroups, state = false)
+                val newMap = enabled.value.toMutableMap()
+                for (group in currentGroups) {
+                    for ((patch, _) in group.patches) {
+                        newMap[patchPreferenceKey(group.bundle.id, patch.name)] = false
+                    }
+                }
+                enabled.value = newMap
                 reload++
             },
         ),
         ThemedMenuItem(
             label = stringResource(R.string.action_restore_defaults),
             onClick = {
-                viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = null)
+                val currentGroups = result?.getOrNull().orEmpty()
+                viewModel.setAllPatches(packageName, currentGroups, state = null)
+                val newMap = enabled.value.toMutableMap()
+                for (group in currentGroups) {
+                    for ((patch, _) in group.patches) {
+                        newMap[patchPreferenceKey(group.bundle.id, patch.name)] = patch.use
+                    }
+                }
+                enabled.value = newMap
                 reload++
             },
         ),
@@ -425,14 +449,30 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                 ThemedOutlinedButton(
                                     label = stringResource(R.string.action_enable_all),
                                     onClick = {
-                                        viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = true)
+                                        val currentGroups = result?.getOrNull() ?: groups
+                                        viewModel.setAllPatches(packageName, currentGroups, state = true)
+                                        val newMap = enabled.value.toMutableMap()
+                                        for (group in currentGroups) {
+                                            for ((patch, _) in group.patches) {
+                                                newMap[patchPreferenceKey(group.bundle.id, patch.name)] = true
+                                            }
+                                        }
+                                        enabled.value = newMap
                                         reload++
                                     },
                                 )
                                 ThemedOutlinedButton(
                                     label = stringResource(R.string.action_disable_all),
                                     onClick = {
-                                        viewModel.setAllPatches(packageName, result?.getOrNull().orEmpty(), state = false)
+                                        val currentGroups = result?.getOrNull() ?: groups
+                                        viewModel.setAllPatches(packageName, currentGroups, state = false)
+                                        val newMap = enabled.value.toMutableMap()
+                                        for (group in currentGroups) {
+                                            for ((patch, _) in group.patches) {
+                                                newMap[patchPreferenceKey(group.bundle.id, patch.name)] = false
+                                            }
+                                        }
+                                        enabled.value = newMap
                                         reload++
                                     },
                                 )

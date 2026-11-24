@@ -12,8 +12,8 @@ the release notes, falling back to generated commit notes when no section exists
   * Integrated live fallback to direct Xposed framework status verification.
 - **Modern Download & Update Experience:**
   * Refined update download button with smooth circular loading state, retaining vibrant theme colors.
-- **Supported Applications Catalog:**
-  * Registered WhatsApp discovery and default patch associations.
+- **Patch Management Resilience:**
+  * Safeguarded batch patch toggling (Enable All / Disable All) with local preference persistence fallback.
 
 ## 5.0.5
 

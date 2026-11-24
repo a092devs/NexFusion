@@ -374,27 +374,31 @@ class BundleManager(private val context: Context, private val service: XposedSer
             onResult("Xposed framework service is currently inactive")
             return
         }
-        svc.requestScope(packages, object : XposedService.OnScopeEventListener {
-            override fun onScopeRequestApproved(approved: List<String>) {
-                val message = when {
-                    approved.isEmpty() -> "Scope updated"
-                    approved.size == 1 -> {
-                        val appLabel = io.github.a092devs.nexfusion.core.discovery.AppDiscovery.queryPackage(context, approved[0]).appLabel
-                        "Added $appLabel to module scope"
+        runCatching {
+            svc.requestScope(packages, object : XposedService.OnScopeEventListener {
+                override fun onScopeRequestApproved(approved: List<String>) {
+                    val message = when {
+                        approved.isEmpty() -> "Scope updated"
+                        approved.size == 1 -> {
+                            val appLabel = io.github.a092devs.nexfusion.core.discovery.AppDiscovery.queryPackage(context, approved[0]).appLabel
+                            "Added $appLabel to module scope"
+                        }
+                        approved.size <= 2 -> {
+                            val names = approved.map { io.github.a092devs.nexfusion.core.discovery.AppDiscovery.queryPackage(context, it).appLabel }
+                            "Added ${names.joinToString(", ")} to module scope"
+                        }
+                        else -> {
+                            "Added ${approved.size} apps to module scope"
+                        }
                     }
-                    approved.size <= 2 -> {
-                        val names = approved.map { io.github.a092devs.nexfusion.core.discovery.AppDiscovery.queryPackage(context, it).appLabel }
-                        "Added ${names.joinToString(", ")} to module scope"
-                    }
-                    else -> {
-                        "Added ${approved.size} apps to module scope"
-                    }
+                    onResult(message)
                 }
-                onResult(message)
-            }
 
-            override fun onScopeRequestFailed(message: String) = onResult(message)
-        })
+                override fun onScopeRequestFailed(message: String) = onResult(message)
+            })
+        }.onFailure { err ->
+            onResult("Scope request failed: ${err.localizedMessage ?: err.javaClass.simpleName}")
+        }
     }
 
     /** The patches of an installed bundle, loaded from the manager's copy of the bundle. */
