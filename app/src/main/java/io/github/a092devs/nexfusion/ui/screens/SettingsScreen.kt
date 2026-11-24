@@ -73,6 +73,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     var showBuildTypeDialog by remember { mutableStateOf(false) }
     var showThemeStyleDialog by remember { mutableStateOf(false) }
     var showColorSchemeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -111,6 +112,12 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
         AppPreferenceNames.COLOR_SCHEME_FUCHSIA -> stringResource(R.string.color_scheme_fuchsia)
         AppPreferenceNames.COLOR_SCHEME_LIME -> stringResource(R.string.color_scheme_lime)
         else -> stringResource(R.string.color_scheme_default)
+    }
+
+    val currentLanguageLabel = when (state.currentLanguage) {
+        AppPreferenceNames.LANGUAGE_ENGLISH -> stringResource(R.string.language_english)
+        AppPreferenceNames.LANGUAGE_SIMPLIFIED_CHINESE -> stringResource(R.string.language_chinese)
+        else -> stringResource(R.string.language_system)
     }
 
     if (isMiuix) {
@@ -192,6 +199,11 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             title = stringResource(R.string.color_scheme_title),
                             summary = currentColorSchemeLabel,
                             onClick = { showColorSchemeDialog = true },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.language_title),
+                            summary = currentLanguageLabel,
+                            onClick = { showLanguageDialog = true },
                         )
                         // Floating navigation is a Miuix-only arrangement, so this row only exists in
                         // the Miuix presentation. It is off by default and can be enabled here.
@@ -386,6 +398,14 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         modifier = Modifier.clickable { showColorSchemeDialog = true },
                     )
                 }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.language_title)) },
+                        supportingContent = { Text(currentLanguageLabel) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showLanguageDialog = true },
+                    )
+                }
 
                 item { SectionHeader(stringResource(R.string.settings_general)) }
                 item {
@@ -528,6 +548,26 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             onSelect = { viewModel.setColorScheme(it) },
             onDismissRequest = { showColorSchemeDialog = false },
             colorMap = { ColorPalette.schemeSeed(it) },
+        )
+    }
+
+    if (showLanguageDialog) {
+        ThemedRadioDialog(
+            show = true,
+            title = stringResource(R.string.language_title),
+            options = AppPreferenceNames.LANGUAGES.map { tag ->
+                tag to when (tag) {
+                    AppPreferenceNames.LANGUAGE_ENGLISH -> stringResource(R.string.language_english)
+                    AppPreferenceNames.LANGUAGE_SIMPLIFIED_CHINESE -> stringResource(R.string.language_chinese)
+                    else -> stringResource(R.string.language_system)
+                }
+            },
+            selected = state.currentLanguage,
+            onSelect = { language ->
+                viewModel.setLanguage(language)
+                context.findActivity()?.recreate()
+            },
+            onDismissRequest = { showLanguageDialog = false },
         )
     }
 

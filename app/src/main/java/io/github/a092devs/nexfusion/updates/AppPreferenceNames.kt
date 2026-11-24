@@ -25,6 +25,24 @@ object AppPreferenceNames {
     /** The Miuix floating navigation bar translucent liquid blur is disabled by default for optimal performance. */
     const val DEFAULT_FLOATING_BAR_TRANSLUCENT = false
 
+    /** App language options: follow the system locale, English, or Simplified Chinese. */
+    const val LANGUAGE_SYSTEM = "system"
+    const val LANGUAGE_ENGLISH = "en"
+    const val LANGUAGE_SIMPLIFIED_CHINESE = "zh-CN"
+
+    /** Preference order of the language dialog. */
+    val LANGUAGES = listOf(
+        LANGUAGE_SYSTEM,
+        LANGUAGE_ENGLISH,
+        LANGUAGE_SIMPLIFIED_CHINESE,
+    )
+
+    /** Maps any stored language value to a supported one. */
+    fun normalizeLanguage(raw: String?): String = when (raw) {
+        LANGUAGE_ENGLISH, LANGUAGE_SIMPLIFIED_CHINESE -> raw!!
+        else -> LANGUAGE_SYSTEM
+    }
+
     /**
      * Color scheme options. Default is the refreshed cyan palette; remaining values
      * are fixed accent seeds applied consistently to both Material 3 and Miuix design systems.

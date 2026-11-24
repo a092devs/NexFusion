@@ -3,6 +3,7 @@ package io.github.a092devs.nexfusion.updates
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
+import io.github.a092devs.nexfusion.core.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -105,7 +106,7 @@ object AppInstaller {
                 onProgress(UpdateDownloadState.ReadyToInstall(targetFile))
                 targetFile
             } catch (e: Exception) {
-                onProgress(UpdateDownloadState.Error(e.message ?: "Download failed"))
+                onProgress(UpdateDownloadState.Error(e.message ?: context.getString(R.string.error_download_failed)))
                 throw e
             } finally {
                 connection?.disconnect()

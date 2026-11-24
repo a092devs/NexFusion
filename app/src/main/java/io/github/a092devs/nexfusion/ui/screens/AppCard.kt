@@ -185,7 +185,7 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
         ) {
             if (app.isExcluded) {
                 StatusChip(
-                    label = "Excluded",
+                    label = stringResource(R.string.filter_excluded),
                     icon = Icons.Rounded.Block,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -196,7 +196,7 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
 
             if (app.hasConflicts) {
                 StatusChip(
-                    label = "Dual Bundle",
+                    label = stringResource(R.string.badge_dual_bundle),
                     icon = Icons.Rounded.WarningAmber,
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer,

@@ -1,6 +1,8 @@
 package io.github.a092devs.nexfusion.ui.screens
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.padding
@@ -24,4 +26,14 @@ fun openUrl(context: Context, url: String) {
     runCatching {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
+}
+
+/** Returns the Activity hosting [this] context, if any. */
+fun Context.findActivity(): Activity? {
+    var current: Context = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return null
 }
