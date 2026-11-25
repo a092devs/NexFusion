@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.12
+
+- **Diagnostic & Patcher Logging Improvements:**
+  * Forwarded `PatcherLog.state` and `PatcherLog.error` output to `XposedBridge.log` so LSPosed and Vector bug reports always capture app version, cache decisions, applied patches, and failure details on release builds.
+  * Logged DexKit fingerprint misses at error level in release builds and replaced bare `!!` assertions on cached lookups with `FingerprintNotFoundException` naming the missing fingerprint.
+- **HyperOS & OEM Dual-App Detection:**
+  * Added dynamic secondary user discovery via `pm list users` and `pm list packages --user` in `AppDiscovery` so OEM dual-app spaces (such as HyperOS Dual Apps and Samsung Secure Folder) are detected without hardcoded user IDs.
+
 ## 5.0.11
 
 - **Cold-Start UI Fix:**

@@ -167,8 +167,6 @@ open class PatchExecutor(
             val patchStartTime = System.currentTimeMillis()
             runCatching { hook.run(this) }.onFailure { err ->
                 val duration = System.currentTimeMillis() - patchStartTime
-                XposedBridge.log("${bundle.id}: patch '${hook.name}' failed in ${duration}ms: ${err.message ?: err.javaClass.simpleName}")
-                XposedBridge.log(err)
                 PatcherLog.error(err) {
                     "${bundle.id}: patch '${hook.name}' failed in ${duration}ms: ${err.message ?: err.javaClass.simpleName}"
                 }
@@ -296,7 +294,7 @@ open class PatchExecutor(
                 funcFunc()
             } catch (e: Exception) {
                 val dt = System.currentTimeMillis() - start
-                PatcherLog.info(e) { "Fingerprint $key Not Found in ${dt}ms" }
+                PatcherLog.error(e) { "Fingerprint $key not found in ${dt}ms" }
                 throw FingerprintNotFoundException(key, e)
             }
             val dt = System.currentTimeMillis() - start
@@ -328,7 +326,8 @@ open class PatchExecutor(
 
     private inline fun getDexClass(
         key: String, crossinline findFunc: DexKitBridge.() -> ClassData
-    ): DexClass = dexkit.getClassDirectOrNull(key, wrapFind(key, findFunc) { it.descriptor })!!
+    ): DexClass = dexkit.getClassDirectOrNull(key, wrapFind(key, findFunc) { it.descriptor })
+        ?: throw FingerprintNotFoundException(key)
 
     private inline fun getDexClasses(
         key: String, crossinline findFunc: DexKitBridge.() -> List<ClassData>
@@ -337,11 +336,13 @@ open class PatchExecutor(
 
     private inline fun getDexMethod(
         key: String, crossinline findFunc: DexKitBridge.() -> MethodData
-    ): DexMethod = dexkit.getMethodDirectOrNull(key, wrapFind(key, findFunc) { it.descriptor })!!
+    ): DexMethod = dexkit.getMethodDirectOrNull(key, wrapFind(key, findFunc) { it.descriptor })
+        ?: throw FingerprintNotFoundException(key)
 
     private inline fun getDexField(
         key: String, crossinline findFunc: DexKitBridge.() -> FieldData
-    ): DexField = dexkit.getFieldDirectOrNull(key, wrapFind(key, findFunc) { it.descriptor })!!
+    ): DexField = dexkit.getFieldDirectOrNull(key, wrapFind(key, findFunc) { it.descriptor })
+        ?: throw FingerprintNotFoundException(key)
 
     private inline fun getDexMethods(
         key: String, crossinline findFunc: DexKitBridge.() -> List<MethodData>

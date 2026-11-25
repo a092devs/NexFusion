@@ -362,10 +362,16 @@ object AppDiscovery {
         }
 
         val secondaryProfiles = querySecondaryProfiles(context)
+        val rootSecondaryUserPackages = queryRootSecondaryUserPackages(secondaryProfiles)
 
         return packageMap.map { (packageName, declaredName) ->
             val live = queryPackage(context, packageName)
-            val dualCount = countSecondaryProfileInstalls(context, packageName, secondaryProfiles)
+            val dualCount = countSecondaryProfileInstalls(
+                context,
+                packageName,
+                secondaryProfiles,
+                rootSecondaryUserPackages,
+            )
             val effectiveInstalled = live.isInstalled || dualCount > 0
             val matchingBundles = activeBundles.filter { packageName in it.apps }
             val known = KNOWN_SUPPORTED_APPS.find { it.packageName == packageName }
@@ -434,16 +440,64 @@ object AppDiscovery {
         context: Context,
         packageName: String,
         secondaryProfiles: List<UserHandle>,
+        rootSecondaryUserPackages: List<Set<String>>,
     ): Int {
-        if (secondaryProfiles.isEmpty()) return 0
-        val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? LauncherApps ?: return 0
         var count = 0
-        for (profile in secondaryProfiles) {
-            val hasActivity = runCatching {
-                launcherApps.getActivityList(packageName, profile).isNotEmpty()
-            }.getOrDefault(false)
-            if (hasActivity) count++
+        val coveredFromLauncherApps = if (secondaryProfiles.isNotEmpty()) {
+            val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? LauncherApps
+            if (launcherApps != null) {
+                for (profile in secondaryProfiles) {
+                    val hasActivity = runCatching {
+                        launcherApps.getActivityList(packageName, profile).isNotEmpty()
+                    }.getOrDefault(false)
+                    if (hasActivity) count++
+                }
+            }
+            count
+        } else 0
+
+        if (coveredFromLauncherApps > 0 || rootSecondaryUserPackages.isEmpty()) {
+            return count
         }
-        return count
+
+        // Fallback for OEM dual-app users (e.g. HyperOS Dual Apps / Samsung Secure Folder)
+        // that UserManager.userProfiles does not expose to user 0 apps.
+        var rootCount = 0
+        for (pkgs in rootSecondaryUserPackages) {
+            if (packageName in pkgs) rootCount++
+        }
+        return maxOf(count, rootCount)
+    }
+
+    /**
+     * Dynamically queries non-primary Android users via `pm list users` when root is available,
+     * covering OEM dual-app spaces that are hidden from `UserManager.userProfiles`.
+     */
+    private fun queryRootSecondaryUserPackages(secondaryProfiles: List<UserHandle>): List<Set<String>> {
+        val knownIds = secondaryProfiles.mapNotNull { runCatching { it.hashCode() }.getOrNull() }.toSet()
+        return runCatching {
+            val usersProc = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm list users"))
+            val usersOut = usersProc.inputStream.bufferedReader().readText()
+            usersProc.waitFor()
+            val userIdRegex = Regex("""UserInfo\{(\d+):""")
+            val secondaryIds = userIdRegex.findAll(usersOut)
+                .mapNotNull { it.groupValues[1].toIntOrNull() }
+                .filter { it != 0 && it !in knownIds }
+                .toList()
+            if (secondaryIds.isEmpty()) return emptyList()
+
+            secondaryIds.mapNotNull { uid ->
+                runCatching {
+                    val pkgProc = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm list packages --user $uid"))
+                    val pkgOut = pkgProc.inputStream.bufferedReader().readText()
+                    pkgProc.waitFor()
+                    pkgOut.lineSequence()
+                        .map { it.trim() }
+                        .filter { it.startsWith("package:") }
+                        .map { it.removePrefix("package:").trim() }
+                        .toSet()
+                }.getOrNull()?.takeIf { it.isNotEmpty() }
+            }
+        }.getOrDefault(emptyList())
     }
 }
