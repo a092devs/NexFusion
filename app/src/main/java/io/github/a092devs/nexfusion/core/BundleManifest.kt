@@ -207,7 +207,8 @@ object BundleClassLoader {
         apk.setReadOnly()
         prependedDex?.setReadOnly()
         val path = listOfNotNull(prependedDex, apk).joinToString(File.pathSeparator) { it.path }
-        val loader = DexClassLoader(path, null, null, parent)
+        val loader = runCatching { DexClassLoader(path, null, null, parent) }
+            .getOrElse { dalvik.system.PathClassLoader(path, parent) }
         android.util.Log.d("NexFusionDebug", "BundleClassLoader.load: apk=$apk entryClass=$entryClass prependedDex=$prependedDex")
         var fallbackApps: List<AppPatchInfo>? = null
         val targetClass = if (prependedDex != null && entryClass.startsWith("io.github.nexfusion.")) {

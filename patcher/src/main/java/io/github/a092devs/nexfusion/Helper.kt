@@ -189,11 +189,13 @@ object BundleResources {
 fun Context.addModuleAssets() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         // Adding a loader twice is a no-op.
-        resources.addLoaders(BundleResources.loader)
-        return
+        val added = runCatching { resources.addLoaders(BundleResources.loader) }.isSuccess
+        if (added) return
     }
 
-    BundleResources.paths.forEach { resources.assets.callMethod("addAssetPath", it) }
+    BundleResources.paths.forEach { path ->
+        runCatching { resources.assets.callMethod("addAssetPath", path) }
+    }
 }
 
 // Bundle layouts (e.g. morphe_sb_inline_sponsor_overlay.xml) reference bundle classes
@@ -203,29 +205,34 @@ fun Context.addModuleAssets() {
 // replacing host.parent with a proxy ClassLoader that delegates lookups of classes in
 // [packagePrefix] to the bundle's own ClassLoader before falling back to the original parent.
 fun injectSelfClassLoaderToHost(self: ClassLoader, host: ClassLoader, packagePrefix: String = "app.morphe") {
-    val findClassMethod =
-        XposedHelpers.findMethodExact(ClassLoader::class.java, "findClass", String::class.java)
-    val knownPrefixes = listOf(packagePrefix, "app.twoeno", "crimera.piko", "io.github.a092devs.nexfusion")
-    val currentParent = host.parent
-    host.setObjectField("parent", object : ClassLoader(currentParent) {
-        override fun findClass(name: String): Class<*> {
-            try {
-                if (knownPrefixes.any { name.startsWith(it) }) {
-                    return findClassMethod(self, name) as Class<*>
+    runCatching {
+        val findClassMethod =
+            XposedHelpers.findMethodExact(ClassLoader::class.java, "findClass", String::class.java)
+        val knownPrefixes = listOf(packagePrefix, "app.twoeno", "crimera.piko", "io.github.a092devs.nexfusion")
+        val currentParent = host.parent
+        host.setObjectField("parent", object : ClassLoader(currentParent) {
+            override fun findClass(name: String): Class<*> {
+                try {
+                    if (knownPrefixes.any { name.startsWith(it) }) {
+                        return findClassMethod(self, name) as Class<*>
+                    }
+                } catch (_: ClassNotFoundException) {
+                    // Ignore, will delegate to parent
                 }
-            } catch (_: ClassNotFoundException) {
-                // Ignore, will delegate to parent
-            }
 
-            throw ClassNotFoundException(name)
-        }
-    })
+                throw ClassNotFoundException(name)
+            }
+        })
+    }.onFailure {
+        PatcherLog.info(it) { "NexFusion: injectSelfClassLoaderToHost skipped" }
+    }
 }
 
 fun injectHostClassLoaderToSelf(self: ClassLoader, host: ClassLoader) {
-    val findClassMethod =
-        XposedHelpers.findMethodExact(ClassLoader::class.java, "findClass", String::class.java)
-    self.setObjectField("parent", object : ClassLoader(self.parent) {
+    runCatching {
+        val findClassMethod =
+            XposedHelpers.findMethodExact(ClassLoader::class.java, "findClass", String::class.java)
+        self.setObjectField("parent", object : ClassLoader(self.parent) {
         /**
          * In the context of Xposed modules, the class loading hierarchy can be complex.
          * The module's classes are loaded by its own ClassLoader (`self`).
@@ -265,6 +272,9 @@ fun injectHostClassLoaderToSelf(self: ClassLoader, host: ClassLoader) {
             throw ClassNotFoundException(name)
         }
     })
+    }.onFailure {
+        PatcherLog.info(it) { "NexFusion: injectHostClassLoaderToSelf skipped" }
+    }
 }
 
 @Suppress("UNCHECKED_CAST")

@@ -5,6 +5,15 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.9
+
+- **Android 17 & HyperOS 4 Hardening:**
+  * Hardened device-protected storage bundle copies with read-only permissions (`setReadOnly()`).
+  * Added `PathClassLoader` fallback when `DexClassLoader` fails to load bundle dex files.
+  * Guarded `Application.onCreate` hook lookup and initialization, `ResourcesLoader` asset registration (with `addAssetPath` fallback), and `ClassLoader.parent` injection against runtime exceptions.
+- **Release Automation:**
+  * Added automatic Telegram channel publishing for release notes and APK assets.
+
 ## 5.0.8
 
 - **Appearance & Theme Enhancements:**

@@ -167,7 +167,10 @@ class MainHook : XposedModule() {
         }
         apk.setReadOnly()
         if (dpsApk != null && (!dpsApk.exists() || dpsApk.length() != apk.length())) {
-            runCatching { apk.copyTo(dpsApk, overwrite = true) }
+            runCatching {
+                apk.copyTo(dpsApk, overwrite = true)
+                dpsApk.setReadOnly()
+            }
         }
 
         val manifest = BundleManifest.read(app.packageManager, apk)
@@ -243,9 +246,19 @@ class MainHook : XposedModule() {
 context(xposed: XposedInterface)
 fun inContext(lpparam: PackageReadyParam, f: (Application) -> Unit) {
     val appClassName = lpparam.applicationInfo.className ?: Application::class.java.name
-    val appClazz = Class.forName(appClassName, false, lpparam.classLoader)
-    xposed.hook(appClazz.getMethod("onCreate")).intercept { chain ->
-        f(chain.thisObject as Application)
+    val appClazz = runCatching { Class.forName(appClassName, false, lpparam.classLoader) }
+        .getOrElse { Application::class.java }
+    val onCreateMethod = runCatching { appClazz.getDeclaredMethod("onCreate") }
+        .getOrElse {
+            runCatching { appClazz.getMethod("onCreate") }
+                .getOrElse { Application::class.java.getMethod("onCreate") }
+        }
+    xposed.hook(onCreateMethod).intercept { chain ->
+        runCatching {
+            f(chain.thisObject as Application)
+        }.onFailure {
+            PatcherLog.info(it) { "NexFusion: inContext hook failed for ${lpparam.packageName}" }
+        }
         chain.proceed()
     }
 }
