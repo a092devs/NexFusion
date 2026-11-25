@@ -244,6 +244,44 @@ jobs:
                     gh release create "${RELEASE_ARGS[@]}"
                   fi
 
+            - name: Publish to Xposed Modules Repo
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.XPOSED_REPO_TOKEN }}
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
+
+                  if [[ -z "${GH_TOKEN:-}" ]]; then
+                    echo "::warning::XPOSED_REPO_TOKEN is not configured; skipping automatic Xposed Modules Repo release."
+                    exit 0
+                  fi
+
+                  if [[ "$RELEASE_TAG" == *-* ]]; then
+                    echo "Skipping Xposed Modules Repo publish for pre-release $RELEASE_TAG"
+                    exit 0
+                  fi
+
+                  XPOSED_REPO="Xposed-Modules-Repo/io.github.a092devs.nexfusion"
+                  CODE=$(grep '^appVersionCode=' gradle.properties | cut -d'=' -f2)
+                  XPOSED_TAG="${CODE}-${RELEASE_TAG}"
+                  echo "Publishing release $RELEASE_TAG to $XPOSED_REPO with tag $XPOSED_TAG"
+
+                  ASSETS=("release/NexFusion-${RELEASE_TAG}.apk")
+                  if [[ -f "release/NexFusion-${RELEASE_TAG}-debug.apk" ]]; then
+                    ASSETS+=("release/NexFusion-${RELEASE_TAG}-debug.apk")
+                  fi
+
+                  if gh release view "$XPOSED_TAG" --repo "$XPOSED_REPO" >/dev/null 2>&1; then
+                    echo "Release $XPOSED_TAG already exists on $XPOSED_REPO; uploading assets."
+                    gh release upload "$XPOSED_TAG" "${ASSETS[@]}" --repo "$XPOSED_REPO" --clobber
+                  else
+                    gh release create "$XPOSED_TAG" "${ASSETS[@]}" \
+                      --repo "$XPOSED_REPO" \
+                      --title "$RELEASE_TAG" \
+                      --notes-file release-notes.md
+                  fi
+
             - name: Publish to Telegram
               if: ${{ env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
               shell: bash
@@ -256,7 +294,7 @@ jobs:
                   set -euo pipefail
 
                   python3 - <<'PY'
-                  import html, os, re, urllib.request, urllib.parse, json
+                  import html, os, re, urllib.request, urllib.parse, urllib.error, sys
 
                   token = os.environ["TELEGRAM_BOT_TOKEN"]
                   chat_id = os.environ["TELEGRAM_CHAT_ID"]
@@ -297,8 +335,12 @@ jobs:
                       "disable_web_page_preview": "true",
                   }).encode("utf-8")
                   req = urllib.request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=payload)
-                  with urllib.request.urlopen(req, timeout=30) as resp:
-                      print("sendMessage:", resp.read().decode("utf-8"))
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as resp:
+                          print("sendMessage:", resp.read().decode("utf-8"))
+                  except urllib.error.HTTPError as e:
+                      print("Telegram sendMessage failed:", e.code, e.read().decode("utf-8", errors="replace"), file=sys.stderr)
+                      raise
                   PY
 
                   upload_doc() {
@@ -316,44 +358,6 @@ jobs:
 
                   upload_doc "release/NexFusion-${RELEASE_TAG}.apk" "<b>NexFusion ${RELEASE_TAG}</b> (Release)"
                   upload_doc "release/NexFusion-${RELEASE_TAG}-debug.apk" "<b>NexFusion ${RELEASE_TAG}</b> (Debug)"
-
-            - name: Publish to Xposed Modules Repo
-              shell: bash
-              env:
-                  GH_TOKEN: ${{ secrets.XPOSED_REPO_TOKEN }}
-                  RELEASE_TAG: ${{ env.TAG }}
-              run: |
-                  set -euo pipefail
-
-                  if [[ -z "${GH_TOKEN:-}" ]]; then
-                    echo "::warning::XPOSED_REPO_TOKEN is not configured; skipping automatic Xposed Modules Repo release."
-                    exit 0
-                  fi
-
-                  if [[ "$RELEASE_TAG" == *-* ]]; then
-                    echo "Skipping Xposed Modules Repo publish for pre-release $RELEASE_TAG"
-                    exit 0
-                  fi
-
-                  XPOSED_REPO="Xposed-Modules-Repo/io.github.a092devs.nexfusion"
-                  CODE=$(grep '^appVersionCode=' gradle.properties | cut -d'=' -f2)
-                  XPOSED_TAG="${CODE}-${RELEASE_TAG}"
-                  echo "Publishing release $RELEASE_TAG to $XPOSED_REPO with tag $XPOSED_TAG"
-
-                  ASSETS=("release/NexFusion-${RELEASE_TAG}.apk")
-                  if [[ -f "release/NexFusion-${RELEASE_TAG}-debug.apk" ]]; then
-                    ASSETS+=("release/NexFusion-${RELEASE_TAG}-debug.apk")
-                  fi
-
-                  if gh release view "$XPOSED_TAG" --repo "$XPOSED_REPO" >/dev/null 2>&1; then
-                    echo "Release $XPOSED_TAG already exists on $XPOSED_REPO; uploading assets."
-                    gh release upload "$XPOSED_TAG" "${ASSETS[@]}" --repo "$XPOSED_REPO" --clobber
-                  else
-                    gh release create "$XPOSED_TAG" "${ASSETS[@]}" \
-                      --repo "$XPOSED_REPO" \
-                      --title "$RELEASE_TAG" \
-                      --notes-file release-notes.md
-                  fi
 
             # External patch bundles use:
             # https://raw.githubusercontent.com/<owner>/<repo>/maven
