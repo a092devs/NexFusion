@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.11
+
+- **Cold-Start UI Fix:**
+  * Prevented the Home screen from briefly flashing the "No patch bundles installed" empty state on cold start before the initial bundle refresh completes.
+
 ## 5.0.10
 
 - **Dynamic Dual-App & Multi-Profile Detection:**

@@ -68,6 +68,8 @@ data class ManagerState(
     /** Name and version of the framework running the module. */
     val framework: String? = null,
     val bundles: List<InstalledBundle> = emptyList(),
+    /** True once the initial bundle/source refresh has completed, preventing a cold-start empty flash. */
+    val hasLoadedBundles: Boolean = false,
     val sources: List<PatchSource> = emptyList(),
     /** Latest release of each source, or the error fetching it. */
     val releases: Map<String, Result<SourceRelease>> = emptyMap(),
@@ -332,6 +334,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                 state.copy(
                     sources = syncedSources,
                     bundles = bundles,
+                    hasLoadedBundles = true,
                     missingScope = missing,
                     staleScopePackages = if (unpromptedStale.isNotEmpty()) unpromptedStale else state.staleScopePackages,
                     ignoredPackages = ignored,

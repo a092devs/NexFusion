@@ -408,8 +408,8 @@ fun HomeContent(
                     }
                 }
 
-                // Empty State when no bundles installed
-                if (state.bundles.isEmpty()) {
+                // Empty State when no bundles installed (wait for initial refresh to avoid cold-start flash)
+                if (state.hasLoadedBundles && state.bundles.isEmpty()) {
                     item {
                         ThemedCard(
                             modifier = Modifier
