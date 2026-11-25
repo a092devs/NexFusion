@@ -462,7 +462,7 @@ private fun ManagerApp(
     val systemDark = isSystemInDarkTheme()
     val isDark = when (state.currentTheme) {
         AppSettings.THEME_LIGHT -> false
-        AppSettings.THEME_DARK -> true
+        AppSettings.THEME_DARK, AppSettings.THEME_AMOLED -> true
         else -> systemDark
     }
 

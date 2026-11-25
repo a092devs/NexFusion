@@ -162,8 +162,10 @@ class MainHook : XposedModule() {
                     }
                 }
                 if (!tmp.renameTo(apk)) throw IllegalStateException("Cannot store bundle ${bundle.id}")
+                apk.setReadOnly()
             }
         }
+        apk.setReadOnly()
         if (dpsApk != null && (!dpsApk.exists() || dpsApk.length() != apk.length())) {
             runCatching { apk.copyTo(dpsApk, overwrite = true) }
         }
@@ -215,7 +217,7 @@ class MainHook : XposedModule() {
         val time = System.currentTimeMillis()
         val remapped = remapper.remap(apk, dex)
         PatcherLog.info { "Remapped the Xposed API in ${apk.name} in ${System.currentTimeMillis() - time}ms" }
-        if (!remapped) none.createNewFile()
+        if (!remapped) none.createNewFile() else dex.setReadOnly()
         return dex.takeIf { remapped }
     }
 

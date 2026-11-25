@@ -70,7 +70,7 @@ import io.github.a092devs.nexfusion.ui.ManagerState
 import io.github.a092devs.nexfusion.ui.ManagerViewModel
 import io.github.a092devs.nexfusion.ui.theme.isMiuixStyle
 import io.github.a092devs.nexfusion.updates.AppSettings
-import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar as UnusedMiuixTopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -135,7 +135,7 @@ fun PatchesContent(
                     onSelect = { selectedTab = it },
                     isDark = when (state.currentTheme) {
                         AppSettings.THEME_LIGHT -> false
-                        AppSettings.THEME_DARK -> true
+                        AppSettings.THEME_DARK, AppSettings.THEME_AMOLED -> true
                         else -> isSystemInDarkTheme()
                     },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -246,7 +246,7 @@ fun PatchesContent(
                 .background(MaterialTheme.colorScheme.background),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                MiuixTopAppBar(
+                MiuixAlignedTopAppBar(
                     title = stringResource(R.string.nav_patches),
                     color = MaterialTheme.colorScheme.background,
                     actions = {
@@ -777,7 +777,7 @@ private fun BundleCard(
                 var expanded by remember { mutableStateOf(false) }
                 val maxInitial = 4
                 val popularOrder = remember {
-                    listOf("YouTube", "YouTube Music", "Reddit", "Spotify", "X", "Discord", "Instagram", "Google Maps", "Google Photos")
+                    listOf("YouTube", "YouTube Music", "Reddit", "Spotify", "X", "Instagram", "Google Maps", "Google Photos")
                 }
                 val sortedApps = remember(appNames) {
                     appNames.sortedWith(

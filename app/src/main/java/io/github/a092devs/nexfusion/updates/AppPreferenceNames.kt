@@ -10,6 +10,7 @@ object AppPreferenceNames {
     const val THEME_SYSTEM = "system"
     const val THEME_LIGHT = "light"
     const val THEME_DARK = "dark"
+    const val THEME_AMOLED = "amoled"
 
     /** Design system options: AndroidX Material 3 and the official Miuix library. */
     const val THEME_STYLE_MATERIAL3 = "material3"
@@ -92,6 +93,7 @@ object AppPreferenceNames {
     fun normalizeTheme(raw: String?): String = when (raw) {
         THEME_LIGHT -> THEME_LIGHT
         THEME_DARK -> THEME_DARK
+        THEME_AMOLED -> THEME_AMOLED
         else -> THEME_SYSTEM
     }
 

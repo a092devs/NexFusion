@@ -81,7 +81,7 @@ import io.github.a092devs.nexfusion.updates.AppSettings
 import io.github.a092devs.nexfusion.updates.UpdateDownloadState
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
-import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar as UnusedMiuixTopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private enum class AppFilter {
@@ -598,7 +598,7 @@ fun HomeContent(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            MiuixTopAppBar(
+            MiuixAlignedTopAppBar(
                 title = stringResource(R.string.app_name),
                 color = MaterialTheme.colorScheme.background,
                 actions = {

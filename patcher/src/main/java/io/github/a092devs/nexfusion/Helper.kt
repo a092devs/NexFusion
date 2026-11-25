@@ -173,8 +173,12 @@ object BundleResources {
     internal val loader by lazy {
         ResourcesLoader().apply {
             paths.forEach { path ->
-                ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY).use {
-                    addProvider(ResourcesProvider.loadFromApk(it))
+                runCatching {
+                    ParcelFileDescriptor.open(File(path), ParcelFileDescriptor.MODE_READ_ONLY).use {
+                        addProvider(ResourcesProvider.loadFromApk(it))
+                    }
+                }.onFailure {
+                    PatcherLog.info(it) { "NexFusion: failed to load bundle resources from $path" }
                 }
             }
         }

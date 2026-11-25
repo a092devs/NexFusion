@@ -127,6 +127,7 @@ class AppSettings(context: Context) {
         const val THEME_SYSTEM = AppPreferenceNames.THEME_SYSTEM
         const val THEME_LIGHT = AppPreferenceNames.THEME_LIGHT
         const val THEME_DARK = AppPreferenceNames.THEME_DARK
+        const val THEME_AMOLED = AppPreferenceNames.THEME_AMOLED
 
         const val THEME_STYLE_MATERIAL3 = AppPreferenceNames.THEME_STYLE_MATERIAL3
         const val THEME_STYLE_MIUIX = AppPreferenceNames.THEME_STYLE_MIUIX

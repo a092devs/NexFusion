@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.8
+
+- **Appearance & Theme Enhancements:**
+  * Added **Amoled dark** color mode with pure black backgrounds and high-contrast elevated surfaces across both Material 3 and Miuix design systems.
+  * Unified top app bar alignment and spacing across Miuix and Material 3 screens (`Home`, `Patches`, `Settings`, and `AppPatches`) for a consistent single-row left-aligned layout.
+- **HyperOS 4 & Android 17 Compatibility:**
+  * Hardened Xposed module preference initialization with read-only permissions and safe resource bundle loading fallbacks.
+- **Supported Applications:**
+  * Removed Discord and Stremio from built-in app discovery.
+
 ## 5.0.7
 
 - **Backup & Restore Upgrades:**

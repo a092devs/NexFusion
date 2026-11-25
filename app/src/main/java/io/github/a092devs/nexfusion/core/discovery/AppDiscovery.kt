@@ -273,12 +273,6 @@ object AppDiscovery {
             appIconColor = 0xFF5C00,
         ),
         KnownSupportedApp(
-            packageName = "com.discord",
-            appName = "Discord",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x5865F2,
-        ),
-        KnownSupportedApp(
             packageName = "com.linkedin.android",
             appName = "LinkedIn",
             defaultBundleName = "NexFusion Patches",
@@ -295,12 +289,6 @@ object AppDiscovery {
             appName = "X",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x000000,
-        ),
-        KnownSupportedApp(
-            packageName = "com.stremio.one",
-            appName = "Stremio",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x5B67F1,
         ),
         KnownSupportedApp(
             packageName = "com.spotify.music",

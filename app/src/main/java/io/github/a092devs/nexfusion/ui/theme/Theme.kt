@@ -191,6 +191,17 @@ private val MiuixDarkScheme = darkColorScheme(
     outlineVariant = Color(0xFF334155),
 )
 
+private fun ColorScheme.toAmoled(): ColorScheme = copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceContainerLowest = Color.Black,
+    surfaceContainerLow = Color(0xFF0A0A0A),
+    surfaceContainer = Color(0xFF101010),
+    surfaceContainerHigh = Color(0xFF161616),
+    surfaceContainerHighest = Color(0xFF1E1E1E),
+    surfaceVariant = Color(0xFF141414),
+)
+
 /**
  * NexFusion adaptive dual-theme system supporting both standard AndroidX Material 3
  * and official Miuix (Xiaomi HyperOS) design system with squircle and blur support.
@@ -209,9 +220,10 @@ fun NexFusionTheme(
     val systemDark = isSystemInDarkTheme()
     val themeMode = AppPreferenceNames.normalizeTheme(themeModeRaw)
     val colorScheme = AppPreferenceNames.normalizeColorScheme(colorSchemeRaw)
+    val isAmoled = themeMode == AppSettings.THEME_AMOLED
     val isDark = when (themeMode) {
         AppSettings.THEME_LIGHT -> false
-        AppSettings.THEME_DARK -> true
+        AppSettings.THEME_DARK, AppSettings.THEME_AMOLED -> true
         else -> systemDark
     }
 
@@ -247,7 +259,9 @@ fun NexFusionTheme(
                 isDark = isDark,
             )
         }
-        val m3Equivalent = materialSchemeFromSeed(accent, isDark)
+        val m3Equivalent = materialSchemeFromSeed(accent, isDark).let {
+            if (isAmoled) it.toAmoled() else it
+        }
 
         val themeConfig = NexFusionThemeConfig(
             isMiuix = true,
@@ -255,11 +269,24 @@ fun NexFusionTheme(
             cardBorder = null,
         )
 
+        val baseMiuixColors = controller.currentColors()
+        val miuixColors = if (isAmoled) {
+            baseMiuixColors.copy(
+                background = Color.Black,
+                surface = Color.Black,
+                surfaceContainer = Color(0xFF101010),
+                surfaceContainerHigh = Color(0xFF161616),
+                surfaceContainerHighest = Color(0xFF1E1E1E),
+            )
+        } else {
+            baseMiuixColors
+        }
+
         CompositionLocalProvider(
             LocalThemeStyle provides ThemeStyle.MIUIX,
             LocalNexFusionThemeConfig provides themeConfig,
         ) {
-            MiuixTheme(controller = controller) {
+            MiuixTheme(colors = miuixColors) {
                 MaterialTheme(colorScheme = m3Equivalent) {
                     CompositionLocalProvider(
                         LocalContentColor provides m3Equivalent.onBackground,
@@ -270,7 +297,9 @@ fun NexFusionTheme(
             }
         }
     } else {
-        val m3Colors = materialSchemeFromSeed(accent, isDark)
+        val m3Colors = materialSchemeFromSeed(accent, isDark).let {
+            if (isAmoled) it.toAmoled() else it
+        }
 
         val themeConfig = NexFusionThemeConfig(
             isMiuix = false,

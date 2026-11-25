@@ -46,7 +46,7 @@ import io.github.a092devs.nexfusion.updates.AppPreferenceNames
 import io.github.a092devs.nexfusion.updates.AppSettings
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar as UnusedMiuixTopAppBar
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
@@ -116,6 +116,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     val currentThemeLabel = when (state.currentTheme) {
         AppSettings.THEME_LIGHT -> stringResource(R.string.theme_light)
         AppSettings.THEME_DARK -> stringResource(R.string.theme_dark)
+        AppSettings.THEME_AMOLED -> stringResource(R.string.theme_amoled)
         else -> stringResource(R.string.theme_system)
     }
 
@@ -152,7 +153,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            MiuixTopAppBar(
+            MiuixAlignedTopAppBar(
                 title = stringResource(R.string.nav_settings),
                 color = MaterialTheme.colorScheme.background,
                 actions = {
@@ -573,6 +574,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 AppSettings.THEME_SYSTEM to stringResource(R.string.theme_system),
                 AppSettings.THEME_LIGHT to stringResource(R.string.theme_light),
                 AppSettings.THEME_DARK to stringResource(R.string.theme_dark),
+                AppSettings.THEME_AMOLED to stringResource(R.string.theme_amoled),
             ),
             selected = state.currentTheme,
             onSelect = { viewModel.setTheme(it) },

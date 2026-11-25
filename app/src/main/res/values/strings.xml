@@ -145,6 +145,7 @@
     <string name="theme_system">System default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">Amoled dark</string>
     <string name="theme_style_title">Design system</string>
     <string name="theme_style_material3">Material 3</string>
     <string name="theme_style_miuix">Miuix</string>

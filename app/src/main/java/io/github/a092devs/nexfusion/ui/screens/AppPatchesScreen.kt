@@ -73,7 +73,7 @@ import io.github.a092devs.nexfusion.ui.DesignTokens
 import io.github.a092devs.nexfusion.ui.theme.isMiuixStyle
 import io.github.a092devs.nexfusion.ui.screens.ThemedFilledButton
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
-import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar as UnusedMiuixTopAppBar
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -582,7 +582,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            MiuixTopAppBar(
+            MiuixAlignedTopAppBar(
                 title = appName,
                 subtitle = packageName,
                 color = MaterialTheme.colorScheme.background,
