@@ -307,7 +307,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         )
                         ArrowPreference(
                             title = stringResource(R.string.telegram_channel),
-                            summary = "t.me/nexfusion",
+                            summary = stringResource(R.string.telegram_channel_summary),
                             onClick = { openUrl(context, "https://t.me/nexfusion") },
                         )
                         ArrowPreference(
@@ -527,7 +527,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 item {
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.telegram_channel)) },
-                        supportingContent = { Text("t.me/nexfusion") },
+                        supportingContent = { Text(stringResource(R.string.telegram_channel_summary)) },
                         colors = transparent,
                         modifier = Modifier.clickable { openUrl(context, "https://t.me/nexfusion") },
                     )
