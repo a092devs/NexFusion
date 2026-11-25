@@ -256,6 +256,12 @@ NexFusion is developed and maintained by **a092devs**. We gratefully acknowledge
 
 ---
 
+## ⚠️ Disclaimer
+
+This project is provided strictly for educational, research, and personal customization purposes. Modifying or hooking third-party applications at runtime may violate their Terms of Service and could result in unexpected behavior, account restrictions, or bans. **The author and contributors are not responsible or liable for any misuse, damage, data loss, or consequences resulting from the use of this software.** You use NexFusion entirely at your own risk.
+
+---
+
 ## ⚖️ License
 
 NexFusion is open-source software developed by **a092devs** and licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE). Third-party libraries and ported feature specifications retain their respective licenses and attribution.
