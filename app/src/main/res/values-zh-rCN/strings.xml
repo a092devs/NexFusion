@@ -100,6 +100,7 @@
     <string name="settings_about">关于</string>
     <string name="source_code">源代码</string>
     <string name="telegram_channel">Telegram 频道</string>
+    <string name="telegram_channel_summary">关注 @nexfusion 获取版本发布公告、补丁更新及社区支持</string>
     <string name="open_source_license">开源许可证</string>
 
     <!-- Update Channels -->
