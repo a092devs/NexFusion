@@ -5,6 +5,13 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.13
+
+- **Settings & About:**
+  * Added `Telegram Channel` (`t.me/nexfusion`) under the About section in both Miuix and Material 3 Settings layouts.
+- **Release CI / Telegram Publishing:**
+  * Formatted Telegram release changelogs with `<blockquote expandable>` sections and a full-text `sendMessage` reply fallback when notes exceed the 1024-character media caption limit.
+
 ## 5.0.12
 
 - **Diagnostic & Patcher Logging Improvements:**

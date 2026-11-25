@@ -306,6 +306,11 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             onClick = { openUrl(context, "https://github.com/${BuildConfig.UPDATE_REPOSITORY}") },
                         )
                         ArrowPreference(
+                            title = stringResource(R.string.telegram_channel),
+                            summary = "t.me/nexfusion",
+                            onClick = { openUrl(context, "https://t.me/nexfusion") },
+                        )
+                        ArrowPreference(
                             title = stringResource(R.string.open_source_license),
                             onClick = { showLicenses = true },
                         )
@@ -517,6 +522,14 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         supportingContent = { Text("github.com/${BuildConfig.UPDATE_REPOSITORY}") },
                         colors = transparent,
                         modifier = Modifier.clickable { openUrl(context, "https://github.com/${BuildConfig.UPDATE_REPOSITORY}") },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.telegram_channel)) },
+                        supportingContent = { Text("t.me/nexfusion") },
+                        colors = transparent,
+                        modifier = Modifier.clickable { openUrl(context, "https://t.me/nexfusion") },
                     )
                 }
                 item {

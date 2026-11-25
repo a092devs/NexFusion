@@ -99,6 +99,7 @@
     <string name="bundle_warning_app_update_desc">此补丁包需要 NexFusion %s 或更高版本。</string>
     <string name="settings_about">关于</string>
     <string name="source_code">源代码</string>
+    <string name="telegram_channel">Telegram 频道</string>
     <string name="open_source_license">开源许可证</string>
 
     <!-- Update Channels -->
