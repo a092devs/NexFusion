@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.15
+
+- **Startup Performance:**
+  * Kept resolved patch lookups cached across bundle updates when the target app has not changed, making app launches noticeably faster after updating bundles.
+  * Reduced unnecessary disk writes during app startup.
+
 ## 5.0.14
 
 - **Documentation:**

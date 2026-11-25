@@ -23,6 +23,8 @@ class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
         runCatching { app.createDeviceProtectedStorageContext()?.getSharedPreferences(PrefKeys.DEXKIT_CACHE, MODE_PRIVATE) }.getOrNull()
     } else null
 
+    private var dirty = false
+
     private val map = mutableMapOf<String, String>().apply {
         putAll(pref.all as Map<String, String>)
         if (isEmpty() && dpsPref != null) {
@@ -31,7 +33,10 @@ class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
     }
 
     override fun clearAll() {
-        map.clear()
+        if (map.isNotEmpty()) {
+            map.clear()
+            dirty = true
+        }
     }
 
     override fun getString(key: String, default: String?): String? = map.getOrDefault(key, default)
@@ -44,31 +49,41 @@ class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
         map.getOrDefault(key, null)?.takeIf(String::isNotBlank)?.split('|') ?: default
 
     override fun putString(key: String, value: String) {
-        map.put(key, value)
+        if (map.put(key, value) != value) {
+            dirty = true
+        }
     }
 
     override fun putStringList(key: String, value: List<String>) {
-        map.put(key, value.joinToString("|"))
+        val joined = value.joinToString("|")
+        if (map.put(key, joined) != joined) {
+            dirty = true
+        }
     }
 
     override fun remove(key: String) {
-        map.remove(key)
+        if (map.remove(key) != null) {
+            dirty = true
+        }
     }
 
     fun saveCache() {
+        if (!dirty) return
+        dirty = false
+
         val edit = pref.edit()
         edit.clear()
         map.forEach { (k, v) ->
             edit.putString(k, v)
         }
-        edit.commit()
+        edit.apply()
 
         dpsPref?.let { dps ->
             runCatching {
                 val dpsEdit = dps.edit()
                 dpsEdit.clear()
                 map.forEach { (k, v) -> dpsEdit.putString(k, v) }
-                dpsEdit.commit()
+                dpsEdit.apply()
             }
         }
     }
@@ -151,17 +166,26 @@ open class PatchSession(
     private fun loadCacheIfValid(bundle: BundleInfo) {
         val packageInfo = app.packageManager.getPackageInfo(app.packageName, 0)
         val idKey = PrefKeys.bundleCacheId(bundle.id)
+        val appTimeKey = "${idKey}_app_time"
         val bundleHash = java.io.File(bundle.apkPath).nameWithoutExtension
-        val id = "${packageInfo.lastUpdateTime}-$coreVersion-${bundle.version}-$bundleHash"
+        val appTime = packageInfo.lastUpdateTime.toString()
+        val id = "$appTime-$coreVersion-${bundle.version}-$bundleHash"
         val cachedId = cache.getString(idKey, null)
+        val cachedAppTime = cache.getString(appTimeKey, null)
         val isCached = cachedId == id
+        val appChanged = cachedAppTime != appTime
 
         PatcherLog.state { "${bundle.id} cache ID: $id, cached ID: $cachedId, using cache: $isCached" }
 
         if (!isCached) {
-            DexKitCacheBridge.clearCache(bundle.id)
+            // Only wipe DexKit's resolved method/class cache when the target app APK itself changed.
+            // When only the bundle updates, keeping existing DexKit entries avoids a full DEX rescan.
+            if (appChanged) {
+                DexKitCacheBridge.clearCache(bundle.id)
+                cache.putString(appTimeKey, appTime)
+                showToast("NexFusion is initializing ${bundle.name}, please wait...")
+            }
             cache.putString(idKey, id)
-            showToast("NexFusion is initializing ${bundle.name}, please wait...")
         }
     }
 
