@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.10
+
+- **Dynamic Dual-App & Multi-Profile Detection:**
+  * Added dynamic secondary profile detection via `UserManager` and `LauncherApps` (supporting HyperOS Dual Apps, Work Profiles, Samsung Dual Messenger, and Private Space without hardcoded OEM rules).
+  * Surfaced apps installed in secondary profiles on the Home screen with a `Dual` badge on application cards.
+- **Automatic Stale Scope Cleanup:**
+  * Automatically removes unsupported or excluded applications from LSPosed scope via `XposedService.removeScope`, with a fallback dialog prompting manual removal when needed.
+- **Branding & Icon Uniformity:**
+  * Updated repository icon assets to match the Android adaptive launcher icon.
+
 ## 5.0.9
 
 - **Android 17 & HyperOS 4 Hardening:**

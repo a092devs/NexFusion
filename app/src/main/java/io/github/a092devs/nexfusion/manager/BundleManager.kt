@@ -366,6 +366,31 @@ class BundleManager(private val context: Context, private val service: XposedSer
             .filter { it !in scope && isInstalled(it) && it !in ignored }
     }
 
+    /**
+     * Packages currently in LSPosed scope that are no longer supported by any enabled bundle
+     * (or have been explicitly excluded by the user).
+     */
+    fun staleScope(): List<String> {
+        val svc = service ?: return emptyList()
+        val enabledBundles = installed.filter { it.enabled }
+        if (enabledBundles.isEmpty()) return emptyList()
+        val supported = enabledBundles.flatMap { it.apps.keys }.toSet() - ignoredPackages
+        val scope = runCatching { svc.scope }.getOrDefault(emptyList())
+        return scope.filter { it != context.packageName && it !in supported }
+    }
+
+    /**
+     * Attempts to remove [packages] from the module scope via [XposedService.removeScope].
+     * Returns any packages that remain in scope (e.g. if the framework does not support automatic removal).
+     */
+    fun removeScope(packages: List<String>): List<String> {
+        if (packages.isEmpty()) return emptyList()
+        val svc = service ?: return packages
+        runCatching { svc.removeScope(packages) }
+        val remaining = runCatching { svc.scope.toSet() }.getOrDefault(emptySet())
+        return packages.filter { it in remaining }
+    }
+
     private fun isInstalled(packageName: String) =
         io.github.a092devs.nexfusion.core.discovery.AppDiscovery.queryPackage(context, packageName).isInstalled
 

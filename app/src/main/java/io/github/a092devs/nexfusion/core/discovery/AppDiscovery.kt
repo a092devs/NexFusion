@@ -2,10 +2,14 @@ package io.github.a092devs.nexfusion.core.discovery
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Build
+import android.os.Process
+import android.os.UserHandle
+import android.os.UserManager
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import io.github.a092devs.nexfusion.AppTarget
@@ -23,7 +27,10 @@ data class PackageLiveInfo(
     val versionName: String?,
     val versionCode: Long,
     val isInstalled: Boolean,
-)
+    val dualProfileCount: Int = 0,
+) {
+    val isDualApp: Boolean get() = dualProfileCount > 0
+}
 
 /**
  * Consolidated UI and business model representing an application in NexFusion.
@@ -45,7 +52,11 @@ data class AppItemState(
     val hasConflicts: Boolean = false,
     /** Whether this application is explicitly excluded/ignored from patching by the user. */
     val isExcluded: Boolean = false,
-)
+    /** Number of secondary user/dual/work profiles where this application is installed. */
+    val dualProfileCount: Int = 0,
+) {
+    val isDualApp: Boolean get() = dualProfileCount > 0
+}
 
 object AppDiscovery {
 
@@ -350,8 +361,12 @@ object AppDiscovery {
             }
         }
 
+        val secondaryProfiles = querySecondaryProfiles(context)
+
         return packageMap.map { (packageName, declaredName) ->
             val live = queryPackage(context, packageName)
+            val dualCount = countSecondaryProfileInstalls(context, packageName, secondaryProfiles)
+            val effectiveInstalled = live.isInstalled || dualCount > 0
             val matchingBundles = activeBundles.filter { packageName in it.apps }
             val known = KNOWN_SUPPORTED_APPS.find { it.packageName == packageName }
 
@@ -363,7 +378,7 @@ object AppDiscovery {
 
             val compatibility = if (matchingBundles.isNotEmpty()) {
                 CompatibilityEngine.resolve(live.versionName, allTargets)
-            } else if (!live.isInstalled) {
+            } else if (!effectiveInstalled) {
                 CompatibilityStatus.NotInstalled(CompatibilityEngine.recommendedVersion(allTargets))
             } else {
                 CompatibilityStatus.MissingBundle
@@ -387,7 +402,7 @@ object AppDiscovery {
                 } else {
                     declaredName
                 },
-                isInstalled = live.isInstalled,
+                isInstalled = effectiveInstalled,
                 installedVersionName = live.versionName,
                 installedVersionCode = live.versionCode,
                 recommendedVersion = recommended,
@@ -398,7 +413,37 @@ object AppDiscovery {
                 sourceNames = sourceNames,
                 hasConflicts = hasConflicts,
                 isExcluded = packageName in ignoredPackages,
+                dualProfileCount = dualCount,
             )
         }.sortedWith(compareBy({ !it.isInstalled }, { it.appName.lowercase() }))
+    }
+
+    /**
+     * Dynamically discovers all secondary user profiles on this device (such as HyperOS Dual Apps,
+     * Samsung Dual Messenger, Work Profiles, or Private Space) without hardcoding OEM user IDs.
+     */
+    private fun querySecondaryProfiles(context: Context): List<UserHandle> {
+        val current = Process.myUserHandle()
+        val um = context.getSystemService(Context.USER_SERVICE) as? UserManager ?: return emptyList()
+        return runCatching {
+            um.userProfiles.filter { it != current }
+        }.getOrDefault(emptyList())
+    }
+
+    private fun countSecondaryProfileInstalls(
+        context: Context,
+        packageName: String,
+        secondaryProfiles: List<UserHandle>,
+    ): Int {
+        if (secondaryProfiles.isEmpty()) return 0
+        val launcherApps = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? LauncherApps ?: return 0
+        var count = 0
+        for (profile in secondaryProfiles) {
+            val hasActivity = runCatching {
+                launcherApps.getActivityList(packageName, profile).isNotEmpty()
+            }.getOrDefault(false)
+            if (hasActivity) count++
+        }
+        return count
     }
 }

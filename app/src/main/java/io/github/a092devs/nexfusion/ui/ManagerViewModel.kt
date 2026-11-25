@@ -77,6 +77,8 @@ data class ManagerState(
     val sourceDownloadProgress: Map<String, SourceDownloadProgress> = emptyMap(),
     /** Installed apps patched by enabled bundles that are missing from the module scope. */
     val missingScope: List<String> = emptyList(),
+    /** Unsupported or excluded packages that could not be removed automatically from LSPosed scope. */
+    val staleScopePackages: List<String> = emptyList(),
     val appUpdate: AppRelease? = null,
     val updateDownloadState: UpdateDownloadState = UpdateDownloadState.Idle,
     val checkingUpdates: Boolean = false,
@@ -163,6 +165,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     val messages = _messages.asSharedFlow()
 
     private var ownScopeRequested = false
+    private val promptedStaleScope = mutableSetOf<String>()
     /** Current update-check job so repeated taps cancel the previous one. */
     private var updateCheckJob: Job? = null
 
@@ -295,6 +298,13 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             runCatching { mgr.syncInstalledSystemPackage() }
             val sources = store.all()
             val bundles = runCatching { mgr.installed }.getOrDefault(emptyList())
+            val stale = runCatching { mgr.staleScope() }.getOrDefault(emptyList())
+            val remainingStale = if (stale.isNotEmpty()) {
+                runCatching { mgr.removeScope(stale) }.getOrDefault(stale)
+            } else {
+                emptyList()
+            }
+            val unpromptedStale = remainingStale.filter { it !in promptedStaleScope }
             val missing = runCatching { mgr.missingScope() }.getOrDefault(emptyList())
             val ignored = runCatching { mgr.ignoredPackages }.getOrDefault(emptySet())
 
@@ -323,6 +333,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     sources = syncedSources,
                     bundles = bundles,
                     missingScope = missing,
+                    staleScopePackages = if (unpromptedStale.isNotEmpty()) unpromptedStale else state.staleScopePackages,
                     ignoredPackages = ignored,
                     appCatalog = catalog,
                     updateChannel = settings.updateChannel,
@@ -686,9 +697,19 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             _messages.tryEmit(msg)
             if (!ignored) {
                 requestMissingScope(listOf(packageName))
+            } else {
+                val remaining = runCatching { manager.removeScope(listOf(packageName)) }.getOrDefault(listOf(packageName))
+                if (remaining.isNotEmpty()) {
+                    _state.update { it.copy(staleScopePackages = (it.staleScopePackages + remaining).distinct()) }
+                }
             }
             refresh()
         }
+    }
+
+    fun dismissStaleScopeDialog() {
+        promptedStaleScope.addAll(_state.value.staleScopePackages)
+        _state.update { it.copy(staleScopePackages = emptyList()) }
     }
 
     fun requestMissingScope(packages: Collection<String> = _state.value.missingScope) {

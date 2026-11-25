@@ -24,6 +24,7 @@ import androidx.compose.material.icons.rounded.AutoFixHigh
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Science
 import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.Card
@@ -146,7 +147,11 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     val installedText = if (app.isInstalled) {
-                        "v${app.installedVersionName ?: "?"}"
+                        when {
+                            app.installedVersionName != null -> "v${app.installedVersionName}"
+                            app.isDualApp -> stringResource(R.string.badge_dual_app)
+                            else -> "v?"
+                        }
                     } else {
                         stringResource(R.string.status_not_installed)
                     }
@@ -192,6 +197,19 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
                 )
             } else {
                 CompatibilityChip(app.compatibility)
+            }
+
+            if (app.isDualApp) {
+                StatusChip(
+                    label = if (app.dualProfileCount > 1) {
+                        stringResource(R.string.badge_dual_app_count, app.dualProfileCount)
+                    } else {
+                        stringResource(R.string.badge_dual_app)
+                    },
+                    icon = Icons.Rounded.Layers,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
             }
 
             if (app.hasConflicts) {

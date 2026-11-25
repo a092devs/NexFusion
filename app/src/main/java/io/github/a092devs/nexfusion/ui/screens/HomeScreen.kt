@@ -112,6 +112,7 @@ fun HomeScreen(
         onOpenApp = { navController.navigate("${MainActivity.DESTINATION_APP}/$it") },
         onDownloadUpdate = viewModel::downloadAndInstallUpdate,
         onToggleHideUninstalled = { viewModel.setHideUninstalledApps(!state.hideUninstalledApps) },
+        onDismissStaleScope = viewModel::dismissStaleScopeDialog,
     )
 }
 
@@ -129,6 +130,7 @@ fun HomeContent(
     onOpenApp: (String) -> Unit,
     onDownloadUpdate: (AppRelease) -> Unit = {},
     onToggleHideUninstalled: () -> Unit = {},
+    onDismissStaleScope: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -656,6 +658,22 @@ fun HomeContent(
             onConfirm = { changelog = null },
         ) {
             ChangelogText(notes)
+        }
+    }
+
+    if (state.staleScopePackages.isNotEmpty()) {
+        val listText = state.staleScopePackages.joinToString("\n") { "• $it" }
+        ThemedDialog(
+            show = true,
+            title = stringResource(R.string.stale_scope_dialog_title),
+            onDismissRequest = onDismissStaleScope,
+            confirmText = stringResource(android.R.string.ok),
+            onConfirm = onDismissStaleScope,
+        ) {
+            Text(
+                text = stringResource(R.string.stale_scope_dialog_message, listText),
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
     }
 
