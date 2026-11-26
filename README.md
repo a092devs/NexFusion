@@ -124,17 +124,17 @@ The official companion patch repository is maintained at:
 - 🔗 **[a092devs/Nexfusion-Patches](https://github.com/a092devs/Nexfusion-Patches)**
 
 ### Included Bundles:
-- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering **17 supported application targets**:
-  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Stremio
-  - 💬 **Social & Communication:** Instagram, X (Twitter), Reddit, Discord, LinkedIn
-  - 🛠️ **System, Productivity & Audio:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN, 1.1.1.1, Spotify
+- **`Nexfusion-Patches`:** Unified community runtime patch distribution covering **15 supported application targets**:
+  - 🎥 **Video & Audio:** YouTube, YouTube Music, Crunchyroll, Spotify
+  - 💬 **Social Networks:** Instagram, X (Twitter), Reddit, LinkedIn
+  - 🛠️ **System, Productivity & Utilities:** Google Photos, Gboard, Gmail, Google App (Discover), Google Maps, Proton VPN, 1.1.1.1
 
 ---
 
 ## 📱 Supported Applications Matrix
 
 <details>
-<summary><b>🎥 Video, Audio & Streaming (4 Targets)</b> — <i>YouTube, YouTube Music, Crunchyroll, Stremio</i></summary>
+<summary><b>🎥 Video, Audio & Streaming (4 Targets)</b> — <i>YouTube, YouTube Music, Crunchyroll, Spotify</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
@@ -142,12 +142,12 @@ The official companion patch repository is maintained at:
 | **YouTube** | `com.google.android.youtube` | Ad-free playback, SponsorBlock, background audio, DeArrow replacement, custom speed/quality dialogs, swipe volume/brightness, miniplayer, ambient mode, Litho node bypass, channel search fix. |
 | **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners, SoundProof AI blocker, Playlist tags, offline fullscreen player, mark downloaded songs, third-party lyrics enhancement. |
 | **Crunchyroll** | `com.crunchyroll.crunchyroid` | Native Picture-in-Picture mode with contextual Skip Intro and Skip Credits controls; remove titles from Continue Watching feed. Verified targets: 3.126.0, 3.117.0. |
-| **Stremio** | `com.stremio.one` | Auto & manual intro/credits skipping using embedded chapters and stream metadata; auto-pick best stream (resolves 4K/cached stream on tap); hide episode spoilers (synopses & thumbnails); avoid SDH subtitles; audio & subtitle track language memory; smoother playback buffer expansion (120s); seamless binge watching; external player progress & subtitle hand-off (MX Player, Vimu). |
+| **Spotify** | `com.spotify.music` | Disable ad breaks, mute audio ads, hide ad sections/views/upsells, hide Premium tab, show unavailable tracks, sanitize sharing links, fix third-party launcher widgets. |
 
 </details>
 
 <details>
-<summary><b>💬 Social Networks & Messaging (5 Targets)</b> — <i>Instagram, X (Twitter), Reddit, Discord, LinkedIn</i></summary>
+<summary><b>💬 Social Networks (4 Targets)</b> — <i>Instagram, X (Twitter), Reddit, LinkedIn</i></summary>
 <br>
 
 | Application | Package Identifier | Key Patch Capabilities |
@@ -155,7 +155,6 @@ The official companion patch repository is maintained at:
 | **Instagram** | `com.instagram.android` | Media downloader for feed posts, Reels, Stories, Highlights, and profile pictures; remove sponsored feed posts, Reels, and Story ads; anonymous Story and Live viewing; strip tracking parameters; ghost mode. |
 | **X (Twitter)** | `com.twitter.android` | Promoted post and ad removal; video and GIF media downloader; bypass Compose sensitive media blur interstitials without tap-to-reveal; block forced updates; telemetry blackholing. |
 | **Reddit** | `com.reddit.frontpage` | Feed and comment ad removal; guest browsing mode; sanitize shared URLs; suppress screenshot sharing bottom sheet; unmute Redgifs streams; custom feed sorting. |
-| **Discord** | `com.discord` | Suppress crash telemetry, analytics, touch logging, and advertising identifiers; native system font typography support across chat and UI surfaces. |
 | **LinkedIn** | `com.linkedin.android` | 1-tap media downloader for photos, carousel images, and progressive MP4 videos; sanitize share links; direct URL navigation bypassing `safety/go` redirects; hide suggested posts, promoted jobs, and premium upsells; feed filters; Material You dynamic theme. |
 
 </details>
