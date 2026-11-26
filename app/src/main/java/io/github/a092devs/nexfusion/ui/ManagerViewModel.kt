@@ -995,7 +995,22 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED
         set(hidden) {
             val state = if (hidden) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            context.packageManager.setComponentEnabledSetting(launcherAlias, state, PackageManager.DONT_KILL_APP)
+            if (hidden) {
+                runCatching {
+                    val intent = android.content.Intent(context, MainActivity::class.java).apply {
+                        putExtra(MainActivity.EXTRA_DESTINATION, MainActivity.DESTINATION_SETTINGS)
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                    }
+                    context.startActivity(intent)
+                }
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    runCatching {
+                        context.packageManager.setComponentEnabledSetting(launcherAlias, state, PackageManager.DONT_KILL_APP)
+                    }
+                }, 250L)
+            } else {
+                context.packageManager.setComponentEnabledSetting(launcherAlias, state, PackageManager.DONT_KILL_APP)
+            }
             // Ensure moduleSettingsAlias is always enabled so Vector / LSPosed can launch the app even if hidden from launcher
             runCatching {
                 context.packageManager.setComponentEnabledSetting(

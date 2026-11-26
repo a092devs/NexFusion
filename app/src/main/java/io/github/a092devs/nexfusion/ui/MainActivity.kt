@@ -149,20 +149,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        // Hand off from MainActivityAlias to MainActivity so disabling the launcher alias
-        // later never causes ActivityTaskManager to finish the foreground task.
-        if (intent?.component?.className == "io.github.a092devs.nexfusion.ui.MainActivityAlias") {
-            startActivity(
-                Intent(intent).apply {
-                    component = android.content.ComponentName(this@MainActivity, MainActivity::class.java)
-                    addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                }
-            )
-            @Suppress("DEPRECATION")
-            overridePendingTransition(0, 0)
-            finish()
-            return
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val maxMode = display?.supportedModes?.maxByOrNull { it.refreshRate }
             if (maxMode != null) {
