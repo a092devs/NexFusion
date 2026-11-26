@@ -89,12 +89,7 @@ class MultiSourceArchitectureTest {
         // Ensure default NexFusion is in presets
         assertNotNull(presets.find { it.id == "default" })
         assertEquals(SourceProvenance.NEXFUSION, PatchSource.default.provenance)
-
-        // Ensure 2eno upstream suggestion is present with correct URL
-        val eno = presets.find { it.id == "2eno_upstream" }
-        assertNotNull(eno)
-        assertEquals("https://github.com/2eno/NexAlloyNext-Patches", eno.url)
-        assertEquals("2eno/NexAlloyNext-Patches", eno.githubRepository)
+        assertTrue(PatchSource.SUGGESTED_SOURCES.isEmpty())
     }
 
     @Test

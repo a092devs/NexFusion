@@ -116,18 +116,9 @@ data class PatchSource(
             provenance = SourceProvenance.NEXFUSION,
         )
 
-        /** Community source suggestion available for one-tap addition in the Add Source dialog. */
-        val SUGGESTED_2ENO = PatchSource(
-            id = "2eno_upstream",
-            name = "2eno NexAlloyNext Patches",
-            url = "https://github.com/2eno/NexAlloyNext-Patches",
-            prerelease = true,
-            provenance = SourceProvenance.COMMUNITY,
-        )
-
         /** Suggestions available in the Add Source dialog. */
-        val SUGGESTED_SOURCES = listOf(SUGGESTED_2ENO)
-        val PRESET_SOURCES = listOf(default, SUGGESTED_2ENO)
+        val SUGGESTED_SOURCES: List<PatchSource> = emptyList()
+        val PRESET_SOURCES = listOf(default)
     }
 }
 

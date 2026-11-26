@@ -801,8 +801,9 @@ fun ThemedTextField(
             onValueChange = onValueChange,
             modifier = modifier,
             label = label,
-            // See ThemedSearchField: keep the label above the stock low-contrast pairing.
+            // See ThemedSearchField: keep the label and input text readable on dark/light surfaces.
             labelColor = MiuixTheme.colorScheme.onSurfaceSecondary,
+            textStyle = MiuixTheme.textStyles.main.copy(color = MiuixTheme.colorScheme.onSurface),
             singleLine = singleLine,
         )
     } else {

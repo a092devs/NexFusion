@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.16
+
+- **Patch Sources & Dialog UI:**
+  * Removed the incompatible `2eno NexAlloyNext Patches` preset from the Add Source dialog.
+  * Fixed dark, unreadable input text in text fields inside dark-themed dialogs.
+
 ## 5.0.15
 
 - **Startup Performance:**
