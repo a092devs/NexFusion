@@ -83,7 +83,6 @@ class BundleCompatibilityTest {
             val apps = method.invoke(io.github.a092devs.nexfusion.core.BundleClassLoader, bundleFile) as List<*>
             assertTrue(apps.isNotEmpty(), "Expected extracted apps to be non-empty")
             assertTrue(apps.any { (it as io.github.a092devs.nexfusion.AppPatchInfo).packageName == "com.google.android.youtube" })
-            assertTrue(apps.any { (it as io.github.a092devs.nexfusion.AppPatchInfo).packageName == "org.telegram.messenger" })
         }
     }
 

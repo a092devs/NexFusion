@@ -307,18 +307,6 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x1ED760,
         ),
-        KnownSupportedApp(
-            packageName = "org.telegram.messenger",
-            appName = "Telegram (Experimental)",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x2AABEE,
-        ),
-        KnownSupportedApp(
-            packageName = "org.telegram.messenger.web",
-            appName = "Telegram Web (Experimental)",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x2AABEE,
-        ),
     )
 
     /**

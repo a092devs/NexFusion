@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.17
+
+- **Supported Apps:**
+  * Removed Telegram and Telegram Web from the built-in supported apps list.
+
 ## 5.0.16
 
 - **Patch Sources & Dialog UI:**
