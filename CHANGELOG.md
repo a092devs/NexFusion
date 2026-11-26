@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.0.18
+
+- **Launcher & Settings:**
+  * Fixed toggling **Hide launcher icon** in Settings closing the app instead of keeping the Settings screen open.
+
 ## 5.0.17
 
 - **Supported Apps:**
