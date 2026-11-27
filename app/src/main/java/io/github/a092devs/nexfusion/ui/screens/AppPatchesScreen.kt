@@ -495,7 +495,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                     for (group in groups) {
                         val bundleRes = bundleResCache.getOrPut(group.bundle.id) {
                             BundleManifest.loadResources(
-                                context.packageManager,
+                                context,
                                 File(context.filesDir, "bundles/${group.bundle.fileName}"),
                             )
                         }

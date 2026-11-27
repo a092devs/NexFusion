@@ -146,14 +146,27 @@ class BundleManifest(
 
         private val slugRegex = Regex("[^a-z0-9]+")
 
-        fun loadResources(packageManager: PackageManager, apk: File): BundleResources? = runCatching {
+        fun loadResources(context: Context, apk: File): BundleResources? = runCatching {
             if (!apk.exists() || apk.length() == 0L) return null
+            val pm = context.packageManager
             @Suppress("DEPRECATION")
-            val info = packageManager.getPackageArchiveInfo(apk.path, 0) ?: return null
+            val info = pm.getPackageArchiveInfo(apk.path, 0) ?: return null
             val app = info.applicationInfo ?: return null
             app.sourceDir = apk.path
             app.publicSourceDir = apk.path
-            BundleResources(packageManager.getResourcesForApplication(app), info.packageName)
+            val baseRes = pm.getResourcesForApplication(app)
+            @Suppress("DEPRECATION")
+            val localizedRes = android.content.res.Resources(
+                baseRes.assets,
+                baseRes.displayMetrics,
+                context.resources.configuration,
+            )
+            val resPkg = if (app.labelRes != 0) {
+                runCatching { baseRes.getResourcePackageName(app.labelRes) }.getOrDefault(info.packageName)
+            } else {
+                info.packageName
+            }
+            BundleResources(localizedRes, resPkg)
         }.getOrNull()
 
         fun resolvePatchStrings(

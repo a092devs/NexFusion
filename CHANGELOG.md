@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.1.02
+
+- **Languages & Patch List:**
+  * Fixed patch names and descriptions still showing in English when NexFusion's in-app language is set to Chinese.
+
 ## 5.1.01
 
 - **Languages & Patch List:**
