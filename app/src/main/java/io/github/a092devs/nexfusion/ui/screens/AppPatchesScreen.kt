@@ -3,6 +3,8 @@ package io.github.a092devs.nexfusion.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import io.github.a092devs.nexfusion.core.BundleManifest
+import java.io.File
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -102,6 +104,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     var reload by remember { mutableIntStateOf(0) }
     var menu by remember { mutableStateOf(false) }
     var patchSearchQuery by remember { mutableStateOf("") }
+    val bundleResCache = remember { mutableMapOf<String, BundleManifest.BundleResources?>() }
 
     val allMatchingBundles = state.bundles.filter { it.enabled && packageName in it.apps }
     val allTargets = allMatchingBundles.flatMap { it.targets[packageName].orEmpty() }
@@ -490,10 +493,23 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
 
                     // Patch Groups
                     for (group in groups) {
-                        val filteredPatches = group.patches.filter { (patch, _) ->
+                        val bundleRes = bundleResCache.getOrPut(group.bundle.id) {
+                            BundleManifest.loadResources(
+                                context.packageManager,
+                                File(context.filesDir, "bundles/${group.bundle.fileName}"),
+                            )
+                        }
+                        val localizedPatches = group.patches.map { (patch, on) ->
+                            val (locName, locDesc) = BundleManifest.resolvePatchStrings(bundleRes, patch.name, patch.description)
+                            Triple(patch, locName, locDesc)
+                        }
+                        val filteredPatches = localizedPatches.filter { (patch, locName, locDesc) ->
                             if (patchSearchQuery.isBlank()) true else {
                                 val q = patchSearchQuery.trim().lowercase()
-                                patch.name.lowercase().contains(q) || patch.description.lowercase().contains(q)
+                                patch.name.lowercase().contains(q) ||
+                                    patch.description.lowercase().contains(q) ||
+                                    locName.lowercase().contains(q) ||
+                                    locDesc.lowercase().contains(q)
                             }
                         }
 
@@ -514,7 +530,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                             .fillMaxWidth()
                                             .padding(horizontal = DesignTokens.contentPaddingHorizontal, vertical = DesignTokens.spaceXs),
                                     ) {
-                                        for ((patch, _) in filteredPatches) {
+                                        for ((patch, locName, locDesc) in filteredPatches) {
                                             val key = patchPreferenceKey(group.bundle.id, patch.name)
                                             val checked = enabled.value[key] ?: patch.use
                                             fun toggle(value: Boolean) {
@@ -522,7 +538,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                                 viewModel.setPatchEnabled(packageName, group.bundle, patch, value)
                                             }
                                             val isDuplicate = patch.name in group.duplicateNames
-                                            val descriptionText = patch.description.takeIf { it.isNotEmpty() }
+                                            val descriptionText = locDesc.takeIf { it.isNotEmpty() }
                                             val supportingText = if (isDuplicate) {
                                                 listOfNotNull(descriptionText, "⚠️ Duplicate: also provided by another active bundle. Handled deterministically by patch engine.").joinToString(" • ")
                                             } else {
@@ -530,7 +546,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                             }
 
                                             SwitchPreference(
-                                                title = patch.name,
+                                                title = locName,
                                                 summary = supportingText,
                                                 checked = checked,
                                                 onCheckedChange = ::toggle,
@@ -540,7 +556,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                     }
                                 }
                             } else {
-                                items(filteredPatches, key = { "${group.bundle.id}/${it.first.name}" }) { (patch, _) ->
+                                items(filteredPatches, key = { "${group.bundle.id}/${it.first.name}" }) { (patch, locName, locDesc) ->
                                     val key = patchPreferenceKey(group.bundle.id, patch.name)
                                     val checked = enabled.value[key] ?: patch.use
                                     fun toggle(value: Boolean) {
@@ -548,7 +564,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                         viewModel.setPatchEnabled(packageName, group.bundle, patch, value)
                                     }
                                     val isDuplicate = patch.name in group.duplicateNames
-                                    val descriptionText = patch.description.takeIf { it.isNotEmpty() }
+                                    val descriptionText = locDesc.takeIf { it.isNotEmpty() }
                                     val supportingText = if (isDuplicate) {
                                         listOfNotNull(descriptionText, "⚠️ Duplicate: also provided by another active bundle. Handled deterministically by patch engine.").joinToString(" • ")
                                     } else {
@@ -558,7 +574,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                     ListItem(
                                         headlineContent = {
                                             Text(
-                                                patch.name,
+                                                locName,
                                                 fontWeight = FontWeight.Medium,
                                             )
                                         },

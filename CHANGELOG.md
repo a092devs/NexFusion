@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.1.01
+
+- **Languages & Patch List:**
+  * Patch names and descriptions now appear in your device language when supported by the patch bundle (with English as the fallback), without resetting your saved toggle choices.
+
 ## 5.0.18
 
 - **Launcher & Settings:**

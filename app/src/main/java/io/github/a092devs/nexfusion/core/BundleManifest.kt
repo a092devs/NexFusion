@@ -80,6 +80,11 @@ class BundleManifest(
         return checkCompatibilityWarning(managerVersion)
     }
 
+    data class BundleResources(
+        val resources: android.content.res.Resources,
+        val packageName: String,
+    )
+
     companion object {
         const val META_ENTRY = "nexfusion.bundle.entry"
         const val META_API_VERSION = "nexfusion.bundle.apiVersion"
@@ -137,6 +142,36 @@ class BundleManifest(
                 minManagerVersion = metaString(META_MIN_MANAGER_VERSION),
                 maxManagerVersion = metaString(META_MAX_MANAGER_VERSION),
             )
+        }
+
+        private val slugRegex = Regex("[^a-z0-9]+")
+
+        fun loadResources(packageManager: PackageManager, apk: File): BundleResources? = runCatching {
+            if (!apk.exists() || apk.length() == 0L) return null
+            @Suppress("DEPRECATION")
+            val info = packageManager.getPackageArchiveInfo(apk.path, 0) ?: return null
+            val app = info.applicationInfo ?: return null
+            app.sourceDir = apk.path
+            app.publicSourceDir = apk.path
+            BundleResources(packageManager.getResourcesForApplication(app), info.packageName)
+        }.getOrNull()
+
+        fun resolvePatchStrings(
+            bundleResources: BundleResources?,
+            name: String,
+            description: String,
+        ): Pair<String, String> {
+            if (bundleResources == null) return name to description
+            val rawSlug = name.lowercase().replace(slugRegex, "_").trim('_')
+            val slug = if (rawSlug.isNotEmpty() && rawSlug[0].isDigit()) "p_$rawSlug" else rawSlug
+            if (slug.isEmpty()) return name to description
+            val res = bundleResources.resources
+            val pkg = bundleResources.packageName
+            val nameId = res.getIdentifier("patch_name_$slug", "string", pkg)
+            val descId = res.getIdentifier("patch_desc_$slug", "string", pkg)
+            val resolvedName = if (nameId != 0) runCatching { res.getString(nameId) }.getOrDefault(name) else name
+            val resolvedDesc = if (descId != 0) runCatching { res.getString(descId) }.getOrDefault(description) else description
+            return resolvedName to resolvedDesc
         }
     }
 }
