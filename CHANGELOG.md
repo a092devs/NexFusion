@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 5.1.03
+
+- **Patch Screen UI:**
+  * Removed the duplicate **App info** button since the top bar already has an info icon.
+  * Removed duplicate **Enable all**, **Disable all**, and **Force stop** entries from the overflow menu so each action appears only once.
+
 ## 5.1.02
 
 - **Languages & Patch List:**

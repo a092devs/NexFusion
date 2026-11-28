@@ -139,36 +139,6 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
             },
         ),
         ThemedMenuItem(
-            label = stringResource(R.string.action_enable_all),
-            onClick = {
-                val currentGroups = result?.getOrNull().orEmpty()
-                viewModel.setAllPatches(packageName, currentGroups, state = true)
-                val newMap = enabled.value.toMutableMap()
-                for (group in currentGroups) {
-                    for ((patch, _) in group.patches) {
-                        newMap[patchPreferenceKey(group.bundle.id, patch.name)] = true
-                    }
-                }
-                enabled.value = newMap
-                reload++
-            },
-        ),
-        ThemedMenuItem(
-            label = stringResource(R.string.action_disable_all),
-            onClick = {
-                val currentGroups = result?.getOrNull().orEmpty()
-                viewModel.setAllPatches(packageName, currentGroups, state = false)
-                val newMap = enabled.value.toMutableMap()
-                for (group in currentGroups) {
-                    for ((patch, _) in group.patches) {
-                        newMap[patchPreferenceKey(group.bundle.id, patch.name)] = false
-                    }
-                }
-                enabled.value = newMap
-                reload++
-            },
-        ),
-        ThemedMenuItem(
             label = stringResource(R.string.action_restore_defaults),
             onClick = {
                 val currentGroups = result?.getOrNull().orEmpty()
@@ -181,18 +151,6 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 }
                 enabled.value = newMap
                 reload++
-            },
-        ),
-        ThemedMenuItem(
-            label = stringResource(R.string.action_open_app_info),
-            onClick = {
-                viewModel.openAppInfo(packageName)
-            },
-        ),
-        ThemedMenuItem(
-            label = stringResource(R.string.action_force_stop),
-            onClick = {
-                viewModel.forceStopApp(packageName)
             },
         ),
     )
@@ -478,10 +436,6 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                         enabled.value = newMap
                                         reload++
                                     },
-                                )
-                                ThemedOutlinedButton(
-                                    label = stringResource(R.string.action_app_info),
-                                    onClick = { viewModel.openAppInfo(packageName) },
                                 )
                                 ThemedOutlinedButton(
                                     label = stringResource(R.string.action_force_stop),
